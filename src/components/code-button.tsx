@@ -1,3 +1,4 @@
+import { useDebounce } from "@/components/use-debounce";
 import { $isCodeNode } from "@lexical/code";
 import {
   $getNearestNodeFromDOMNode,
@@ -7,8 +8,6 @@ import {
 } from "lexical";
 import { CircleCheckIcon, CopyIcon } from "lucide-react";
 import { useState } from "react";
-
-import { useDebounce } from "@/components/use-debounce";
 
 interface Props {
   editor: LexicalEditor;

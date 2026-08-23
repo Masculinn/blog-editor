@@ -108,8 +108,6 @@ import { InsertTable } from "@/components/editor/plugins/toolbar/block-insert/in
 import { ClearFormattingToolbarPlugin } from "@/components/editor/plugins/toolbar/clear-formatting-toolbar-plugin";
 import { CodeLanguageToolbarPlugin } from "@/components/editor/plugins/toolbar/code-language-toolbar-plugin";
 import { ElementFormatToolbarPlugin } from "@/components/editor/plugins/toolbar/element-format-toolbar-plugin";
-import { FontBackgroundToolbarPlugin } from "@/components/editor/plugins/toolbar/font-background-toolbar-plugin";
-import { FontColorToolbarPlugin } from "@/components/editor/plugins/toolbar/font-color-toolbar-plugin";
 import { FontFamilyToolbarPlugin } from "@/components/editor/plugins/toolbar/font-family-toolbar-plugin";
 import { FontFormatToolbarPlugin } from "@/components/editor/plugins/toolbar/font-format-toolbar-plugin";
 import { FontSizeToolbarPlugin } from "@/components/editor/plugins/toolbar/font-size-toolbar-plugin";
@@ -160,24 +158,10 @@ const EDITOR_NODES = [
 ];
 
 type EditorProps = {
-  /**
-   * Initial Lexical EditorState.
-   *
-   * This is treated as INITIAL state, not as a controlled value.
-   */
   editorState?: EditorState;
-
-  /**
-   * Initial serialized Lexical state.
-   *
-   * Takes precedence over `editorState` when both are provided.
-   */
   editorSerializedState?: SerializedEditorState;
-
   onChange?: (editorState: EditorState) => void;
-
   onSerializedChange?: (editorSerializedState: SerializedEditorState) => void;
-
   className?: string;
 };
 
@@ -193,40 +177,15 @@ export function Editor({
 
   const [isLinkEditMode, setIsLinkEditMode] = useState(false);
 
-  /**
-   * IMPORTANT:
-   *
-   * LexicalExtensionComposer expects the supplied extension to remain
-   * stable for the lifetime of this editor.
-   *
-   * Therefore we intentionally snapshot the initial-state props once.
-   *
-   * If the parent needs to load an entirely different document later,
-   * remount this Editor with a different React `key`, or add a dedicated
-   * state-synchronization plugin.
-   */
   const initialStateRef = useRef({
     editorState,
     editorSerializedState,
   });
 
-  /**
-   * The callback ref itself must also remain stable.
-   *
-   * Otherwise React can detach/re-attach a callback ref when its function
-   * identity changes between renders.
-   */
   const onFloatingAnchorRef = useCallback((element: HTMLDivElement | null) => {
     setFloatingAnchorElem(element);
   }, []);
 
-  /**
-   * Semantic memoization.
-   *
-   * This isn't just a render optimization. LexicalExtensionComposer uses
-   * the extension identity when creating the editor. Recreating this
-   * extension can result in a new Lexical editor instance.
-   */
   const editorExtension = useMemo(
     () =>
       defineExtension({
@@ -237,18 +196,9 @@ export function Editor({
 
         dependencies: [
           RichTextExtension,
-
           AutoFocusExtension,
           SelectionAlwaysOnDisplayExtension,
-
           HistoryExtension,
-
-          /**
-           * Lexical >= 0.45 moved code-block runtime behavior into
-           * CodeExtension.
-           *
-           * It also registers CodeNode and CodeHighlightNode.
-           */
           CodeExtension,
 
           configExtension(LinkExtension, {
@@ -295,19 +245,11 @@ export function Editor({
             editorSerializedState: initialSerializedState,
           } = initialStateRef.current;
 
-          /**
-           * Serialized state wins if both props were supplied.
-           */
           if (initialSerializedState) {
             const parsedEditorState = editor.parseEditorState(
               initialSerializedState,
             );
 
-            /**
-             * parseEditorState() only PARSES.
-             *
-             * It does not install the resulting EditorState automatically.
-             */
             editor.setEditorState(parsedEditorState);
 
             return;
@@ -372,9 +314,6 @@ export function Editor({
                       />
 
                       <ClearFormattingToolbarPlugin />
-
-                      <FontColorToolbarPlugin />
-                      <FontBackgroundToolbarPlugin />
 
                       <ElementFormatToolbarPlugin />
 
