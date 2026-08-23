@@ -13,7 +13,7 @@ export const editorTheme: EditorThemeClasses = {
     h5: "scroll-m-20 text-lg font-semibold tracking-tight",
     h6: "scroll-m-20 text-base font-semibold tracking-tight",
   },
-  paragraph: "leading-7 [&:not(:first-child)]:mt-6",
+  paragraph: "leading-7 ",
   quote: "mt-6 border-l-2 pl-6 italic",
   link: "text-primary underline-offset-4 hover:underline hover:cursor-pointer",
   list: {
@@ -113,8 +113,8 @@ export const editorTheme: EditorThemeClasses = {
     "EditorTheme__tableRowStriping m-0 border-t p-0 even:bg-muted",
   tableSelected: "EditorTheme__tableSelected ring-2 ring-primary ring-offset-2",
   tableSelection: "EditorTheme__tableSelection bg-transparent",
-  layoutItem: "border border-dashed px-4 py-2",
-  layoutContainer: "grid gap-2.5 my-2.5 mx-0",
+  layoutItem: "border border-dashed px-4",
+  layoutContainer: "grid gap-2.5 mx-0",
   autocomplete: "text-muted-foreground",
   blockCursor: "",
   embedBlock: {

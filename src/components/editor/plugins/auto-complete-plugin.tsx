@@ -1,3 +1,8 @@
+import {
+  $createAutocompleteNode,
+  AutocompleteNode,
+} from "@/components/editor/nodes/autocomplete-node";
+import { addSwipeRightListener } from "@/components/swipe";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import {
   $getSelectionStyleValueForProperty,
@@ -20,11 +25,6 @@ import {
 } from "lexical";
 import type { JSX } from "react";
 import { useCallback, useEffect } from "react";
-import {
-  $createAutocompleteNode,
-  AutocompleteNode,
-} from "@/components/editor/nodes/autocomplete-node";
-import { addSwipeRightListener } from "@/components/swipe";
 
 const HISTORY_MERGE = { tag: HISTORY_MERGE_TAG };
 
@@ -280,13 +280,9 @@ export function AutoCompletePlugin(): JSX.Element | null {
   return null;
 }
 
-/*
- * Simulate an asynchronous autocomplete server (typical in more common use cases like GMail where
- * the data is not static).
- */
 class AutocompleteServer {
   DATABASE = DICTIONARY;
-  LATENCY = 200;
+  LATENCY = 100;
 
   query = (searchText: string): SearchPromise => {
     let isDismissed = false;
@@ -294,6 +290,7 @@ class AutocompleteServer {
     const dismiss = () => {
       isDismissed = true;
     };
+
     const promise: Promise<null | string> = new Promise((resolve, reject) => {
       setTimeout(() => {
         if (isDismissed) {

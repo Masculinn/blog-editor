@@ -1,3 +1,5 @@
+import { Button } from "@/components/ui/button";
+import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut";
 import { $createCodeNode, $isCodeNode } from "@lexical/code";
 import {
   $convertFromMarkdownString,
@@ -7,7 +9,6 @@ import {
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { $createTextNode, $getRoot } from "lexical";
 import { FileTextIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 export function MarkdownTogglePlugin({
   shouldPreserveNewLinesInMarkdown,
@@ -18,7 +19,12 @@ export function MarkdownTogglePlugin({
 }) {
   const [editor] = useLexicalComposerContext();
 
-  const handleMarkdownToggle = () => {
+  useKeyboardShortcut(["Control", "M"], handleMarkdownToggle, {
+    allowInEditable: true,
+    stopPropagation: true,
+  });
+
+  function handleMarkdownToggle() {
     editor.update(() => {
       const root = $getRoot();
       const firstChild = root.getFirstChild();
@@ -27,7 +33,7 @@ export function MarkdownTogglePlugin({
         $convertFromMarkdownString(
           firstChild.getTextContent(),
           transformers,
-          undefined, // node
+          undefined,
           shouldPreserveNewLinesInMarkdown,
         );
       } else {
@@ -47,7 +53,7 @@ export function MarkdownTogglePlugin({
         }
       }
     });
-  };
+  }
 
   return (
     <Button

@@ -1,3 +1,8 @@
+import { getSelectedNode } from "@/components/get-selected-node";
+import { setFloatingElemPositionForLinkEditor } from "@/components/set-floating-elem-position-for-link-editor";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { sanitizeUrl } from "@/utils/editor/validateUrl";
 import {
   $createLinkNode,
   $isAutoLinkNode,
@@ -32,11 +37,6 @@ import {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
-import { getSelectedNode } from "@/components/get-selected-node";
-import { setFloatingElemPositionForLinkEditor } from "@/components/set-floating-elem-position-for-link-editor";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { sanitizeUrl } from "@/utils/editor/validateUrl";
 
 function FloatingLinkEditor({
   editor,
@@ -51,25 +51,16 @@ function FloatingLinkEditor({
   setIsLink: Dispatch<SetStateAction<boolean>>;
   anchorElem: HTMLElement;
   isLinkEditMode: boolean;
-  setIsLinkEditMode: Dispatch<SetStateAction<boolean>>;
+  setIsLinkEditMode: Dispatch<boolean>;
 }): JSX.Element {
   const editorRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // This value does not affect rendering, so it belongs in a ref rather
-  // than React state. This avoids a render whenever Lexical's selection changes.
   const lastSelectionRef = useRef<BaseSelection | null>(null);
 
   const [linkUrl, setLinkUrl] = useState("");
   const [editedLinkUrl, setEditedLinkUrl] = useState("https://");
 
-  /**
-   * This logic is invoked by subscriptions installed inside Effects.
-   *
-   * useEffectEvent lets it always see the latest props/state without forcing
-   * those subscriptions to unregister and register again whenever, for example,
-   * isLinkEditMode changes.
-   */
   const $updateLinkEditor = useEffectEvent(() => {
     const selection = $getSelection();
 
@@ -87,8 +78,6 @@ function FloatingLinkEditor({
 
       setLinkUrl(nextLinkUrl);
 
-      // Use the URL calculated during this read instead of the linkUrl
-      // React state from a previous render.
       if (isLinkEditMode) {
         setEditedLinkUrl(nextLinkUrl);
       }
@@ -96,9 +85,7 @@ function FloatingLinkEditor({
 
     const editorElem = editorRef.current;
 
-    if (editorElem === null) {
-      return;
-    }
+    if (editorElem === null) return;
 
     const rootElement = editor.getRootElement();
     const nativeSelection = window.getSelection();
@@ -127,8 +114,6 @@ function FloatingLinkEditor({
       return;
     }
 
-    // Do not close the floating editor merely because focus moved from
-    // Lexical into its URL input/buttons.
     if (!floatingEditorHasFocus) {
       if (rootElement !== null) {
         setFloatingElemPositionForLinkEditor(null, editorElem, anchorElem);
@@ -140,10 +125,6 @@ function FloatingLinkEditor({
     }
   });
 
-  /**
-   * The Escape command must read the current isLink value, but changing
-   * isLink should not require re-registering the Lexical command.
-   */
   const handleEscapeCommand = useEffectEvent(() => {
     if (!isLink) {
       return false;
@@ -155,12 +136,6 @@ function FloatingLinkEditor({
     return true;
   });
 
-  /**
-   * Keep positioning synchronized with viewport/scroller movement.
-   *
-   * anchorElem itself is the dependency. anchorElem.parentElement is not a
-   * reactive value and should not be placed directly in the dependency array.
-   */
   useEffect(() => {
     const scrollerElem = anchorElem.parentElement;
 
@@ -185,10 +160,6 @@ function FloatingLinkEditor({
     };
   }, [anchorElem, editor]);
 
-  /**
-   * Lexical subscriptions only need to be recreated if the editor instance
-   * itself changes.
-   */
   useEffect(() => {
     return mergeRegister(
       editor.registerUpdateListener(({ editorState }) => {
@@ -214,18 +185,12 @@ function FloatingLinkEditor({
     );
   }, [editor]);
 
-  /**
-   * Initialize the floating editor against the current editor state.
-   */
   useEffect(() => {
     editor.getEditorState().read(() => {
       $updateLinkEditor();
     });
   }, [editor]);
 
-  /**
-   * This Effect has one job: synchronize edit mode with DOM focus.
-   */
   useEffect(() => {
     if (isLinkEditMode) {
       inputRef.current?.focus();
@@ -296,7 +261,7 @@ function FloatingLinkEditor({
               setEditedLinkUrl(event.target.value);
             }}
             onKeyDown={monitorInputInteraction}
-            className="h-8 flex-grow"
+            className="h-8 grow"
           />
 
           <Button
@@ -479,7 +444,7 @@ export function FloatingLinkEditorPlugin({
 }: {
   anchorElem: HTMLDivElement | null;
   isLinkEditMode: boolean;
-  setIsLinkEditMode: Dispatch<boolean>;
+  setIsLinkEditMode: Dispatch<SetStateAction<boolean>>;
 }): JSX.Element | null {
   const [editor] = useLexicalComposerContext();
 

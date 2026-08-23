@@ -1,4 +1,3 @@
-import { PlusIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -6,8 +5,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useEditorModal } from "@/components/use-modal";
+import { cn } from "@/lib/utils";
+import { PlusIcon } from "lucide-react";
 
-export function BlockInsertPlugin({ children }: { children: React.ReactNode }) {
+export function BlockInsertPlugin({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   const [modal] = useEditorModal();
 
   return (
@@ -15,7 +22,13 @@ export function BlockInsertPlugin({ children }: { children: React.ReactNode }) {
       {modal}
       <DropdownMenu>
         <DropdownMenuTrigger
-          render={<Button variant="ghost" size="sm" className="gap-1 px-2" />}
+          render={
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn("gap-1 px-2", className)}
+            />
+          }
         >
           <PlusIcon className="size-4" />
           <span className="text-sm">Insert</span>

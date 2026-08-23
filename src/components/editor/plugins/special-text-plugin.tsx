@@ -9,12 +9,12 @@ import {
   SpecialTextNode,
 } from "@/components/editor/nodes/special-text-node";
 
-const BRACKETED_TEXT_REGEX = /\[([^[\]]+)\]/; // eslint-disable-line
+const BRACKETED_TEXT_REGEX = /\[([^[\]]+)\]/;
 
 function $findAndTransformText(node: TextNode): null | TextNode {
   const text = node.getTextContent();
-
   const match = BRACKETED_TEXT_REGEX.exec(text);
+
   if (match) {
     const matchedText = match[1];
     const startIndex = match.index;

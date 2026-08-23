@@ -45,7 +45,7 @@ function ComponentPickerMenu({
   }, [selectedIndex]);
 
   return (
-    <div className="bg-popover text-popover-foreground absolute h-min min-w-48 rounded-md border shadow-md">
+    <div className="bg-popover text-popover-foreground absolute h-min min-w-48 rounded-md border shadow-md z-999">
       <Command
         onKeyDown={(event) => {
           if (event.key === "ArrowUp") {

@@ -1,11 +1,11 @@
 "use client";
 
-import * as React from "react";
-
 import { cn } from "@/lib/utils";
+import type * as React from "react";
 
 function Label({ className, ...props }: React.ComponentProps<"label">) {
   return (
+    // biome-ignore lint/a11y/noLabelWithoutControl: input comes to downstream
     <label
       data-slot="label"
       className={cn(

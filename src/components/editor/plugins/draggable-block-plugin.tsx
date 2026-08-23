@@ -1,3 +1,13 @@
+import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { useEditorModal } from "@/components/use-modal";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { DraggableBlockPlugin_EXPERIMENTAL } from "@lexical/react/LexicalDraggableBlockPlugin";
 import {
@@ -19,16 +29,6 @@ import {
   useState,
 } from "react";
 import * as ReactDOM from "react-dom";
-import { Button } from "@/components/ui/button";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import { useEditorModal } from "@/components/use-modal";
 
 import type { ComponentPickerOption } from "../../component-picker-option";
 
@@ -210,7 +210,7 @@ export function DraggableBlockPlugin({
         ? ReactDOM.createPortal(
             <div
               ref={pickerRef}
-              className="absolute z-50 w-56 rounded-md shadow-md"
+              className="absolute z-999 w-56 rounded-md shadow-md"
               style={{
                 left: pickerPosition.left,
                 top: pickerPosition.top,
@@ -258,7 +258,7 @@ export function DraggableBlockPlugin({
         menuComponent={
           <div
             ref={menuRef}
-            className="draggable-block-menu absolute top-0 left-0 flex items-center opacity-0 will-change-transform"
+            className="draggable-block-menu absolute top-0 right-0 flex items-center opacity-0 will-change-transform"
           >
             <Button
               variant="ghost"

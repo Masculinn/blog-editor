@@ -1,6 +1,5 @@
 import type {
   EditorConfig,
-  LexicalNode,
   NodeKey,
   SerializedTextNode,
   Spread,
@@ -66,12 +65,6 @@ export class EmojiNode extends TextNode {
     const self = this.getLatest();
     return self.__className;
   }
-}
-
-export function $isEmojiNode(
-  node: LexicalNode | null | undefined,
-): node is EmojiNode {
-  return node instanceof EmojiNode;
 }
 
 export function $createEmojiNode(

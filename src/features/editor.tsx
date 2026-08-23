@@ -67,9 +67,7 @@ import { DraggableBlockPlugin } from "@/components/editor/plugins/draggable-bloc
 import { EmojiPickerPlugin } from "@/components/editor/plugins/emoji-picker-plugin";
 import { FloatingLinkEditorPlugin } from "@/components/editor/plugins/floating-link-editor-plugin";
 import { FloatingTextFormatToolbarPlugin } from "@/components/editor/plugins/floating-text-format-plugin";
-import { LayoutPlugin } from "@/components/editor/plugins/layout-plugin";
 
-import { AlignmentPickerPlugin } from "@/components/editor/plugins/picker/alignment-picker-plugin";
 import { BulletedListPickerPlugin } from "@/components/editor/plugins/picker/bulleted-list-picker-plugin";
 import { CheckListPickerPlugin } from "@/components/editor/plugins/picker/check-list-picker-plugin";
 import { CodePickerPlugin } from "@/components/editor/plugins/picker/code-picker-plugin";
@@ -104,7 +102,6 @@ import { InsertTable } from "@/components/editor/plugins/toolbar/block-insert/in
 
 import { ClearFormattingToolbarPlugin } from "@/components/editor/plugins/toolbar/clear-formatting-toolbar-plugin";
 import { CodeLanguageToolbarPlugin } from "@/components/editor/plugins/toolbar/code-language-toolbar-plugin";
-import { ElementFormatToolbarPlugin } from "@/components/editor/plugins/toolbar/element-format-toolbar-plugin";
 import { FontFormatToolbarPlugin } from "@/components/editor/plugins/toolbar/font-format-toolbar-plugin";
 import { HistoryToolbarPlugin } from "@/components/editor/plugins/toolbar/history-toolbar-plugin";
 import { LinkToolbarPlugin } from "@/components/editor/plugins/toolbar/link-toolbar-plugin";
@@ -120,6 +117,7 @@ import { TABLE } from "@/components/editor/transformers/markdown-table-transform
 import { Separator } from "@/components/ui/separator";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
+import { DragDropPasteExtension } from "@/components/drag-drop-paste-extension";
 import { cn } from "@/lib/utils";
 import { validateUrl } from "@/utils/editor/validateUrl";
 
@@ -183,18 +181,16 @@ export function Editor({
   const editorExtension = useMemo(
     () =>
       defineExtension({
-        name: "@shadcn-editor",
+        name: "ta",
         namespace: "Playground",
-
         theme: editorTheme,
-
         dependencies: [
           RichTextExtension,
           AutoFocusExtension,
           SelectionAlwaysOnDisplayExtension,
           HistoryExtension,
           CodeExtension,
-
+          DragDropPasteExtension,
           configExtension(LinkExtension, {
             validateUrl,
             attributes: {
@@ -260,7 +256,7 @@ export function Editor({
   return (
     <div
       className={cn(
-        "bg-background w-full overflow-hidden rounded-lg border shadow",
+        "bg-background/65 w-full overflow-hidden rounded-lg border shadow flex flex-col",
         className,
       )}
     >
@@ -272,37 +268,41 @@ export function Editor({
           <div className="relative">
             <ToolbarPlugin>
               {({ blockType }) => (
-                <div className="vertical-align-middle sticky top-0 z-10 flex items-center gap-2 overflow-auto border-b p-1">
-                  <HistoryToolbarPlugin />
-                  <Separator orientation="vertical" className="h-7!" />
-                  <BlockFormatDropDown>
-                    <FormatParagraph />
-                    <FormatHeading
-                      levels={["h1", "h2", "h3", "h4", "h5", "h6"]}
-                    />
-                    <FormatNumberedList />
-                    <FormatBulletedList />
-                    <FormatCheckList />
-                    <FormatCodeBlock />
-                    <FormatQuote />
-                  </BlockFormatDropDown>
+                <div className="vertical-align-middle sticky top-0 z-10 flex items-between justify-between gap-2 overflow-auto border-b p-1">
+                  <div className="flex flex-row gap-1">
+                    <HistoryToolbarPlugin />
+                    <Separator orientation="vertical" className="h-7!" />
+                    <BlockFormatDropDown>
+                      <FormatParagraph />
+                      <FormatHeading
+                        levels={["h1", "h2", "h3", "h4", "h5", "h6"]}
+                      />
+                      <FormatNumberedList />
+                      <FormatBulletedList />
+                      <FormatCheckList />
+                      <FormatCodeBlock />
+                      <FormatQuote />
+                    </BlockFormatDropDown>
+                  </div>
 
                   {blockType === "code" ? (
                     <CodeLanguageToolbarPlugin />
                   ) : (
                     <>
-                      <Separator orientation="vertical" className="h-7!" />
-                      <FontFormatToolbarPlugin />
-                      <LinkToolbarPlugin
-                        setIsLinkEditMode={setIsLinkEditMode}
-                      />
-                      <ClearFormattingToolbarPlugin />
-                      <ElementFormatToolbarPlugin />
-                      <BlockInsertPlugin>
-                        <InsertHorizontalRule />
-                        <InsertImage />
-                        <InsertTable />
-                      </BlockInsertPlugin>
+                      <div className="flex flex-row gap-0.5">
+                        <FontFormatToolbarPlugin />
+                        <LinkToolbarPlugin
+                          setIsLinkEditMode={setIsLinkEditMode}
+                        />
+                      </div>
+                      <div className="flex flex-row gap-0.5">
+                        <ClearFormattingToolbarPlugin />
+                        <BlockInsertPlugin>
+                          <InsertHorizontalRule />
+                          <InsertImage />
+                          <InsertTable />
+                        </BlockInsertPlugin>
+                      </div>
                     </>
                   )}
                 </div>
@@ -339,22 +339,6 @@ export function Editor({
                   DividerPickerPlugin(),
                   ImagePickerPlugin(),
                   DateTimePickerPlugin(),
-
-                  AlignmentPickerPlugin({
-                    alignment: "left",
-                  }),
-
-                  AlignmentPickerPlugin({
-                    alignment: "center",
-                  }),
-
-                  AlignmentPickerPlugin({
-                    alignment: "right",
-                  }),
-
-                  AlignmentPickerPlugin({
-                    alignment: "justify",
-                  }),
                 ]}
                 dynamicOptionsFn={DynamicTablePickerPlugin}
               />
@@ -373,8 +357,6 @@ export function Editor({
               <CodeHighlightPlugin />
 
               <TablePlugin />
-
-              <LayoutPlugin />
 
               <DraggableBlockPlugin
                 anchorElem={floatingAnchorElem}
@@ -396,22 +378,6 @@ export function Editor({
                   DividerPickerPlugin(),
                   ImagePickerPlugin(),
                   DateTimePickerPlugin(),
-
-                  AlignmentPickerPlugin({
-                    alignment: "left",
-                  }),
-
-                  AlignmentPickerPlugin({
-                    alignment: "center",
-                  }),
-
-                  AlignmentPickerPlugin({
-                    alignment: "right",
-                  }),
-
-                  AlignmentPickerPlugin({
-                    alignment: "justify",
-                  }),
                 ]}
                 dynamicOptionsFn={DynamicTablePickerPlugin}
               />
@@ -465,7 +431,6 @@ export function Editor({
             ignoreSelectionChange
             onChange={(nextEditorState) => {
               onChange?.(nextEditorState);
-
               onSerializedChange?.(nextEditorState.toJSON());
             }}
           />
