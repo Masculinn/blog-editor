@@ -49,8 +49,6 @@ export const editorTheme: EditorThemeClasses = {
     code: "bg-muted text-foreground px-1 py-0.5 rounded-sm font-mono text-[0.9em]",
     italic: "italic",
     strikethrough: "line-through",
-    subscript: "sub",
-    superscript: "sup",
     underline: "underline",
     underlineStrikethrough: "[text-decoration:underline_line-through]",
   },

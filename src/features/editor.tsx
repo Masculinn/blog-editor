@@ -32,7 +32,7 @@ import {
   type EditorState,
   type SerializedEditorState,
 } from "lexical";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import { ContentEditable } from "@/components/content-editable";
 
@@ -57,7 +57,6 @@ import { EditModeTogglePlugin } from "@/components/editor/plugins/actions/edit-m
 import { ImportExportPlugin } from "@/components/editor/plugins/actions/import-export-plugin";
 import { MarkdownTogglePlugin } from "@/components/editor/plugins/actions/markdown-toggle-plugin";
 import { ShareContentPlugin } from "@/components/editor/plugins/actions/share-content-plugin";
-import { TreeViewPlugin } from "@/components/editor/plugins/actions/tree-view-plugin";
 
 import { AutoCompletePlugin } from "@/components/editor/plugins/auto-complete-plugin";
 import { CodeActionMenuPlugin } from "@/components/editor/plugins/code-action-menu-plugin";
@@ -74,7 +73,6 @@ import { AlignmentPickerPlugin } from "@/components/editor/plugins/picker/alignm
 import { BulletedListPickerPlugin } from "@/components/editor/plugins/picker/bulleted-list-picker-plugin";
 import { CheckListPickerPlugin } from "@/components/editor/plugins/picker/check-list-picker-plugin";
 import { CodePickerPlugin } from "@/components/editor/plugins/picker/code-picker-plugin";
-import { ColumnsLayoutPickerPlugin } from "@/components/editor/plugins/picker/columns-layout-picker-plugin";
 import { DateTimePickerPlugin } from "@/components/editor/plugins/picker/date-time-picker-plugin";
 import { DividerPickerPlugin } from "@/components/editor/plugins/picker/divider-picker-plugin";
 import { HeadingPickerPlugin } from "@/components/editor/plugins/picker/heading-picker-plugin";
@@ -100,7 +98,6 @@ import { FormatParagraph } from "@/components/editor/plugins/toolbar/block-forma
 import { FormatQuote } from "@/components/editor/plugins/toolbar/block-format/format-quote";
 
 import { BlockInsertPlugin } from "@/components/editor/plugins/toolbar/block-insert-plugin";
-import { InsertColumnsLayout } from "@/components/editor/plugins/toolbar/block-insert/insert-columns-layout";
 import { InsertHorizontalRule } from "@/components/editor/plugins/toolbar/block-insert/insert-horizontal-rule";
 import { InsertImage } from "@/components/editor/plugins/toolbar/block-insert/insert-image";
 import { InsertTable } from "@/components/editor/plugins/toolbar/block-insert/insert-table";
@@ -108,12 +105,9 @@ import { InsertTable } from "@/components/editor/plugins/toolbar/block-insert/in
 import { ClearFormattingToolbarPlugin } from "@/components/editor/plugins/toolbar/clear-formatting-toolbar-plugin";
 import { CodeLanguageToolbarPlugin } from "@/components/editor/plugins/toolbar/code-language-toolbar-plugin";
 import { ElementFormatToolbarPlugin } from "@/components/editor/plugins/toolbar/element-format-toolbar-plugin";
-import { FontFamilyToolbarPlugin } from "@/components/editor/plugins/toolbar/font-family-toolbar-plugin";
 import { FontFormatToolbarPlugin } from "@/components/editor/plugins/toolbar/font-format-toolbar-plugin";
-import { FontSizeToolbarPlugin } from "@/components/editor/plugins/toolbar/font-size-toolbar-plugin";
 import { HistoryToolbarPlugin } from "@/components/editor/plugins/toolbar/history-toolbar-plugin";
 import { LinkToolbarPlugin } from "@/components/editor/plugins/toolbar/link-toolbar-plugin";
-import { SubSuperToolbarPlugin } from "@/components/editor/plugins/toolbar/subsuper-toolbar-plugin";
 import { ToolbarPlugin } from "@/components/editor/plugins/toolbar/toolbar-plugin";
 
 import { editorTheme } from "@/components/editor/themes/editor-theme";
@@ -182,9 +176,9 @@ export function Editor({
     editorSerializedState,
   });
 
-  const onFloatingAnchorRef = useCallback((element: HTMLDivElement | null) => {
+  const onFloatingAnchorRef = (element: HTMLDivElement | null) => {
     setFloatingAnchorElem(element);
-  }, []);
+  };
 
   const editorExtension = useMemo(
     () =>
@@ -280,16 +274,12 @@ export function Editor({
               {({ blockType }) => (
                 <div className="vertical-align-middle sticky top-0 z-10 flex items-center gap-2 overflow-auto border-b p-1">
                   <HistoryToolbarPlugin />
-
                   <Separator orientation="vertical" className="h-7!" />
-
                   <BlockFormatDropDown>
                     <FormatParagraph />
-
                     <FormatHeading
                       levels={["h1", "h2", "h3", "h4", "h5", "h6"]}
                     />
-
                     <FormatNumberedList />
                     <FormatBulletedList />
                     <FormatCheckList />
@@ -301,27 +291,17 @@ export function Editor({
                     <CodeLanguageToolbarPlugin />
                   ) : (
                     <>
-                      <FontFamilyToolbarPlugin />
-
                       <Separator orientation="vertical" className="h-7!" />
-
-                      <FontSizeToolbarPlugin />
                       <FontFormatToolbarPlugin />
-                      <SubSuperToolbarPlugin />
-
                       <LinkToolbarPlugin
                         setIsLinkEditMode={setIsLinkEditMode}
                       />
-
                       <ClearFormattingToolbarPlugin />
-
                       <ElementFormatToolbarPlugin />
-
                       <BlockInsertPlugin>
                         <InsertHorizontalRule />
                         <InsertImage />
                         <InsertTable />
-                        <InsertColumnsLayout />
                       </BlockInsertPlugin>
                     </>
                   )}
@@ -344,6 +324,9 @@ export function Editor({
                   HeadingPickerPlugin({ n: 1 }),
                   HeadingPickerPlugin({ n: 2 }),
                   HeadingPickerPlugin({ n: 3 }),
+                  HeadingPickerPlugin({ n: 4 }),
+                  HeadingPickerPlugin({ n: 5 }),
+                  HeadingPickerPlugin({ n: 6 }),
 
                   TablePickerPlugin(),
 
@@ -355,7 +338,6 @@ export function Editor({
                   CodePickerPlugin(),
                   DividerPickerPlugin(),
                   ImagePickerPlugin(),
-                  ColumnsLayoutPickerPlugin(),
                   DateTimePickerPlugin(),
 
                   AlignmentPickerPlugin({
@@ -413,7 +395,6 @@ export function Editor({
                   CodePickerPlugin(),
                   DividerPickerPlugin(),
                   ImagePickerPlugin(),
-                  ColumnsLayoutPickerPlugin(),
                   DateTimePickerPlugin(),
 
                   AlignmentPickerPlugin({
@@ -475,8 +456,6 @@ export function Editor({
                   <EditModeTogglePlugin />
 
                   <ClearEditorActionPlugin />
-
-                  <TreeViewPlugin />
                 </div>
               </div>
             </ActionsPlugin>

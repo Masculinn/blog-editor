@@ -18,8 +18,6 @@ import {
   ItalicIcon,
   LinkIcon,
   StrikethroughIcon,
-  SubscriptIcon,
-  SuperscriptIcon,
   UnderlineIcon,
 } from "lucide-react";
 import {
@@ -47,8 +45,6 @@ function TextFormatFloatingToolbar({
   isUnderline,
   isCode,
   isStrikethrough,
-  isSubscript,
-  isSuperscript,
   setIsLinkEditMode,
 }: {
   editor: LexicalEditor;
@@ -58,8 +54,6 @@ function TextFormatFloatingToolbar({
   isItalic: boolean;
   isLink: boolean;
   isStrikethrough: boolean;
-  isSubscript: boolean;
-  isSuperscript: boolean;
   isUnderline: boolean;
   setIsLinkEditMode: Dispatch<boolean>;
 }): JSX.Element {
@@ -197,116 +191,76 @@ function TextFormatFloatingToolbar({
       className="bg-popover text-popover-foreground absolute top-0 left-0 flex gap-1 rounded-md border p-1 opacity-0 shadow-md transition-opacity duration-300 will-change-transform"
     >
       {editor.isEditable() && (
-        <>
-          <ToggleGroup
-            value={[
-              isBold ? "bold" : "",
-              isItalic ? "italic" : "",
-              isUnderline ? "underline" : "",
-              isStrikethrough ? "strikethrough" : "",
-              isSubscript ? "subscript" : "",
-              isSuperscript ? "superscript" : "",
-              isCode ? "code" : "",
-              isLink ? "link" : "",
-            ]}
+        <ToggleGroup
+          value={[
+            isBold ? "bold" : "",
+            isItalic ? "italic" : "",
+            isUnderline ? "underline" : "",
+            isStrikethrough ? "strikethrough" : "",
+            isCode ? "code" : "",
+            isLink ? "link" : "",
+          ]}
+        >
+          <ToggleGroupItem
+            value="bold"
+            aria-label="Toggle bold"
+            onClick={() => {
+              editor.dispatchCommand(FORMAT_TEXT_COMMAND, "bold");
+            }}
+            size="sm"
           >
-            <ToggleGroupItem
-              value="bold"
-              aria-label="Toggle bold"
-              onClick={() => {
-                editor.dispatchCommand(FORMAT_TEXT_COMMAND, "bold");
-              }}
-              size="sm"
-            >
-              <BoldIcon className="size-4" />
-            </ToggleGroupItem>
-
-            <ToggleGroupItem
-              value="italic"
-              aria-label="Toggle italic"
-              onClick={() => {
-                editor.dispatchCommand(FORMAT_TEXT_COMMAND, "italic");
-              }}
-              size="sm"
-            >
-              <ItalicIcon className="size-4" />
-            </ToggleGroupItem>
-
-            <ToggleGroupItem
-              value="underline"
-              aria-label="Toggle underline"
-              onClick={() => {
-                editor.dispatchCommand(FORMAT_TEXT_COMMAND, "underline");
-              }}
-              size="sm"
-            >
-              <UnderlineIcon className="size-4" />
-            </ToggleGroupItem>
-
-            <ToggleGroupItem
-              value="strikethrough"
-              aria-label="Toggle strikethrough"
-              onClick={() => {
-                editor.dispatchCommand(FORMAT_TEXT_COMMAND, "strikethrough");
-              }}
-              size="sm"
-            >
-              <StrikethroughIcon className="size-4" />
-            </ToggleGroupItem>
-
-            <Separator orientation="vertical" />
-
-            <ToggleGroupItem
-              value="code"
-              aria-label="Toggle code"
-              onClick={() => {
-                editor.dispatchCommand(FORMAT_TEXT_COMMAND, "code");
-              }}
-              size="sm"
-            >
-              <CodeIcon className="size-4" />
-            </ToggleGroupItem>
-
-            <ToggleGroupItem
-              value="link"
-              aria-label="Toggle link"
-              onClick={insertLink}
-              size="sm"
-            >
-              <LinkIcon className="size-4" />
-            </ToggleGroupItem>
-
-            <Separator orientation="vertical" />
-          </ToggleGroup>
-
-          <ToggleGroup
-            defaultValue={
-              isSubscript ? ["subscript"] : isSuperscript ? ["superscript"] : []
-            }
+            <BoldIcon className="size-4" />
+          </ToggleGroupItem>
+          <ToggleGroupItem
+            value="italic"
+            aria-label="Toggle italic"
+            onClick={() => {
+              editor.dispatchCommand(FORMAT_TEXT_COMMAND, "italic");
+            }}
+            size="sm"
           >
-            <ToggleGroupItem
-              value="subscript"
-              aria-label="Toggle subscript"
-              onClick={() => {
-                editor.dispatchCommand(FORMAT_TEXT_COMMAND, "subscript");
-              }}
-              size="sm"
-            >
-              <SubscriptIcon className="size-4" />
-            </ToggleGroupItem>
-
-            <ToggleGroupItem
-              value="superscript"
-              aria-label="Toggle superscript"
-              onClick={() => {
-                editor.dispatchCommand(FORMAT_TEXT_COMMAND, "superscript");
-              }}
-              size="sm"
-            >
-              <SuperscriptIcon className="size-4" />
-            </ToggleGroupItem>
-          </ToggleGroup>
-        </>
+            <ItalicIcon className="size-4" />
+          </ToggleGroupItem>
+          <ToggleGroupItem
+            value="underline"
+            aria-label="Toggle underline"
+            onClick={() => {
+              editor.dispatchCommand(FORMAT_TEXT_COMMAND, "underline");
+            }}
+            size="sm"
+          >
+            <UnderlineIcon className="size-4" />
+          </ToggleGroupItem>
+          <ToggleGroupItem
+            value="strikethrough"
+            aria-label="Toggle strikethrough"
+            onClick={() => {
+              editor.dispatchCommand(FORMAT_TEXT_COMMAND, "strikethrough");
+            }}
+            size="sm"
+          >
+            <StrikethroughIcon className="size-4" />
+          </ToggleGroupItem>
+          <Separator orientation="vertical" />
+          <ToggleGroupItem
+            value="code"
+            aria-label="Toggle code"
+            onClick={() => {
+              editor.dispatchCommand(FORMAT_TEXT_COMMAND, "code");
+            }}
+            size="sm"
+          >
+            <CodeIcon className="size-4" />
+          </ToggleGroupItem>
+          <ToggleGroupItem
+            value="link"
+            aria-label="Toggle link"
+            onClick={insertLink}
+            size="sm"
+          >
+            <LinkIcon className="size-4" />
+          </ToggleGroupItem>
+        </ToggleGroup>
       )}
     </div>
   );
@@ -323,16 +277,13 @@ function useFloatingTextFormatToolbar(
   const [isItalic, setIsItalic] = useState(false);
   const [isUnderline, setIsUnderline] = useState(false);
   const [isStrikethrough, setIsStrikethrough] = useState(false);
-  const [isSubscript, setIsSubscript] = useState(false);
-  const [isSuperscript, setIsSuperscript] = useState(false);
   const [isCode, setIsCode] = useState(false);
 
   const updatePopup = useCallback(() => {
     editor.getEditorState().read(() => {
       // Should not to pop up the floating toolbar when using IME input
-      if (editor.isComposing()) {
-        return;
-      }
+      if (editor.isComposing()) return;
+
       const selection = $getSelection();
       const nativeSelection = window.getSelection();
       const rootElement = editor.getRootElement();
@@ -347,9 +298,7 @@ function useFloatingTextFormatToolbar(
         return;
       }
 
-      if (!$isRangeSelection(selection)) {
-        return;
-      }
+      if (!$isRangeSelection(selection)) return;
 
       const node = getSelectedNode(selection);
 
@@ -358,8 +307,6 @@ function useFloatingTextFormatToolbar(
       setIsItalic(selection.hasFormat("italic"));
       setIsUnderline(selection.hasFormat("underline"));
       setIsStrikethrough(selection.hasFormat("strikethrough"));
-      setIsSubscript(selection.hasFormat("subscript"));
-      setIsSuperscript(selection.hasFormat("superscript"));
       setIsCode(selection.hasFormat("code"));
 
       // Update links
@@ -419,8 +366,6 @@ function useFloatingTextFormatToolbar(
       isBold={isBold}
       isItalic={isItalic}
       isStrikethrough={isStrikethrough}
-      isSubscript={isSubscript}
-      isSuperscript={isSuperscript}
       isUnderline={isUnderline}
       isCode={isCode}
       setIsLinkEditMode={setIsLinkEditMode}
