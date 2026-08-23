@@ -1,0 +1,82 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.2.0/schema.json",
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "off",
+        "recommended": true
+      }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["src/services/**", "src/components/app-background.tsx"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "off"
+          }
+        }
+      }
+    }
+  ],
+  "files": {
+    "ignoreUnknown": true,
+    "includes": [
+      "**",
+      "!node_modules",
+      "!.next",
+      "!dist",
+      "!build",
+      "!package.json",
+      "!tsconfig.json"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2
+  },
+  "linter": {
+    "domains": {
+      "next": "recommended",
+      "react": "recommended"
+    },
+    "enabled": true,
+    "rules": {
+      "style": {
+        "noNonNullAssertion": "off"
+      },
+      "a11y": {
+        "useMediaCaption": "off"
+      },
+      "correctness": {
+        "noConstructorReturn": "off",
+        "useExhaustiveDependencies": {
+          "level": "on",
+          "options": {
+            "hooks": [
+              {
+                "name": "useProxy",
+                "closureIndex": 0,
+                "dependenciesIndex": 1,
+                "stableResult": ["proxy", "setProxy"]
+              }
+            ]
+          }
+        }
+      },
+      "recommended": true,
+      "suspicious": {
+        "noUnknownAtRules": "off",
+        "noControlCharactersInRegex": "off"
+      }
+    }
+  },
+
+  "vcs": {
+    "clientKind": "git",
+    "enabled": true,
+    "useIgnoreFile": true
+  }
+}

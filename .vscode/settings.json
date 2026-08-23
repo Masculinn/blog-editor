@@ -1,0 +1,11 @@
+{
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit",
+    "source.organizeImports.biome": "explicit",
+    "source.sortImports": "always",
+    "source.addMissingImports.ts": "explicit",
+    "source.removeUnusedImports": "explicit"
+  },
+  "js/ts.tsdk.path": "node_modules\\typescript\\lib",
+  "js/ts.experimental.useTsgo": true
+}
