@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button";
-import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut";
+import { useCallback } from "react";
+
 import { $createCodeNode, $isCodeNode } from "@lexical/code";
 import {
   $convertFromMarkdownString,
@@ -7,62 +7,73 @@ import {
   type Transformer,
 } from "@lexical/markdown";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { $createTextNode, $getRoot } from "lexical";
+import { $createTextNode, $getRoot, $setSelection } from "lexical";
 import { FileTextIcon } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
 
 export function MarkdownTogglePlugin({
   shouldPreserveNewLinesInMarkdown,
   transformers,
 }: {
   shouldPreserveNewLinesInMarkdown: boolean;
-  transformers: Array<Transformer>;
+  transformers: Transformer[];
 }) {
   const [editor] = useLexicalComposerContext();
 
-  useKeyboardShortcut(["Control", "M"], handleMarkdownToggle, {
-    allowInEditable: true,
-    stopPropagation: true,
-  });
-
-  function handleMarkdownToggle() {
+  const handleMarkdownToggle = useCallback(() => {
     editor.update(() => {
       const root = $getRoot();
       const firstChild = root.getFirstChild();
 
       if ($isCodeNode(firstChild) && firstChild.getLanguage() === "markdown") {
+        const markdown = firstChild.getTextContent();
+
+        $setSelection(null);
+
         $convertFromMarkdownString(
-          firstChild.getTextContent(),
+          markdown,
           transformers,
           undefined,
           shouldPreserveNewLinesInMarkdown,
         );
-      } else {
-        const markdown = $convertToMarkdownString(
-          transformers,
-          undefined, // node
-          shouldPreserveNewLinesInMarkdown,
-        );
 
-        const codeNode = $createCodeNode("markdown");
-        codeNode.append($createTextNode(markdown));
+        $getRoot().selectEnd();
 
-        root.clear().append(codeNode);
-
-        if (markdown.length === 0) {
-          codeNode.select();
-        }
+        return;
       }
+
+      const markdown = $convertToMarkdownString(
+        transformers,
+        undefined,
+        shouldPreserveNewLinesInMarkdown,
+      );
+
+      $setSelection(null);
+
+      const codeNode = $createCodeNode("markdown");
+
+      codeNode.append($createTextNode(markdown));
+
+      root.clear();
+      root.append(codeNode);
+
+      codeNode.selectEnd();
     });
-  }
+  }, [editor, shouldPreserveNewLinesInMarkdown, transformers]);
 
   return (
     <Button
+      type="button"
       variant="ghost"
-      onClick={handleMarkdownToggle}
-      title="Convert From Markdown"
-      aria-label="Convert from markdown"
       size="sm"
       className="p-2"
+      title="Toggle Markdown"
+      aria-label="Toggle Markdown"
+      onMouseDown={(event) => {
+        event.preventDefault();
+      }}
+      onClick={handleMarkdownToggle}
     >
       <FileTextIcon className="size-4" />
     </Button>

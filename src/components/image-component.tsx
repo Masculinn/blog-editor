@@ -371,7 +371,14 @@ export default function ImageComponent({
   }, []);
 
   return (
-    <Suspense fallback={null}>
+    <Suspense
+      fallback={
+        <div
+          className="flex items-center justify-center bg-muted animate-pulse rounded-md"
+          style={{ width, height }}
+        />
+      }
+    >
       <div draggable={draggable}>
         {!isLoadError && (
           <LazyImage

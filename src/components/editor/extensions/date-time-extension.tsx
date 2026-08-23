@@ -19,7 +19,7 @@ export const INSERT_DATETIME_COMMAND: LexicalCommand<CommandPayload> =
   createCommand("INSERT_DATETIME_COMMAND");
 
 export const DateTimeExtension = defineExtension({
-  name: "@shadcn-editor/DateTime",
+  name: "DateTime",
   nodes: [DateTimeNode],
   register: (editor) =>
     editor.registerCommand<CommandPayload>(

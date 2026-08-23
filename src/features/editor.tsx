@@ -6,7 +6,6 @@ import {
   ClearEditorExtension,
   DecoratorTextExtension,
   HorizontalRuleExtension,
-  SelectionAlwaysOnDisplayExtension,
 } from "@lexical/extension";
 import { HistoryExtension } from "@lexical/history";
 import { ClickableLinkExtension, LinkExtension } from "@lexical/link";
@@ -43,11 +42,9 @@ import { ImagesExtension } from "@/components/editor/extensions/images-extension
 import { MarkdownShortcutsExtension } from "@/components/editor/extensions/markdown-shortcuts-extension";
 import { MaxLengthExtension } from "@/components/editor/extensions/max-length-extension";
 
-import { AutocompleteNode } from "@/components/editor/nodes/autocomplete-node";
 import { EmojiNode } from "@/components/editor/nodes/emoji-node";
 import { LayoutContainerNode } from "@/components/editor/nodes/layout-container-node";
 import { LayoutItemNode } from "@/components/editor/nodes/layout-item-node";
-import { MentionNode } from "@/components/editor/nodes/mention-node";
 import { SpecialTextNode } from "@/components/editor/nodes/special-text-node";
 
 import { ActionsPlugin } from "@/components/editor/plugins/actions/actions-plugin";
@@ -58,7 +55,6 @@ import { ImportExportPlugin } from "@/components/editor/plugins/actions/import-e
 import { MarkdownTogglePlugin } from "@/components/editor/plugins/actions/markdown-toggle-plugin";
 import { ShareContentPlugin } from "@/components/editor/plugins/actions/share-content-plugin";
 
-import { AutoCompletePlugin } from "@/components/editor/plugins/auto-complete-plugin";
 import { CodeActionMenuPlugin } from "@/components/editor/plugins/code-action-menu-plugin";
 import { CodeHighlightPlugin } from "@/components/editor/plugins/code-highlight-plugin";
 import { ComponentPickerMenuPlugin } from "@/components/editor/plugins/component-picker-menu-plugin";
@@ -117,7 +113,8 @@ import { TABLE } from "@/components/editor/transformers/markdown-table-transform
 import { Separator } from "@/components/ui/separator";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-import { DragDropPasteExtension } from "@/components/drag-drop-paste-extension";
+import { DisableDragDropExtension } from "@/components/editor/extensions/disable-drag-drop-extension";
+import { AutoCompletePlugin } from "@/components/editor/plugins/auto-complete-plugin";
 import { cn } from "@/lib/utils";
 import { validateUrl } from "@/utils/editor/validateUrl";
 
@@ -139,8 +136,6 @@ const MARKDOWN_TRANSFORMERS = [
 const EDITOR_NODES = [
   OverflowNode,
   EmojiNode,
-  MentionNode,
-  AutocompleteNode,
   SpecialTextNode,
   TableNode,
   TableCellNode,
@@ -187,10 +182,9 @@ export function Editor({
         dependencies: [
           RichTextExtension,
           AutoFocusExtension,
-          SelectionAlwaysOnDisplayExtension,
           HistoryExtension,
           CodeExtension,
-          DragDropPasteExtension,
+          DisableDragDropExtension,
           configExtension(LinkExtension, {
             validateUrl,
             attributes: {
@@ -256,7 +250,7 @@ export function Editor({
   return (
     <div
       className={cn(
-        "bg-background/65 w-full overflow-hidden rounded-lg border shadow flex flex-col",
+        "bg-background/65 size-full rounded-lg border shadow flex flex-col",
         className,
       )}
     >
@@ -309,18 +303,47 @@ export function Editor({
               )}
             </ToolbarPlugin>
 
-            <div className="relative">
+            <div className="relative size-full ">
               <div ref={onFloatingAnchorRef}>
                 <ContentEditable
                   placeholder={PLACEHOLDER}
-                  className="h-[calc(100vh-141px)] pl-4"
+                  className="h-[calc(100vh-141px)] overflow-y-scroll scrollbar-custom p-8"
+                  placeholderClassName="top-8 left-8"
                 />
               </div>
-
               <ComponentPickerMenuPlugin
                 baseOptions={[
                   ParagraphPickerPlugin(),
-
+                  HeadingPickerPlugin({ n: 1 }),
+                  HeadingPickerPlugin({ n: 2 }),
+                  HeadingPickerPlugin({ n: 3 }),
+                  HeadingPickerPlugin({ n: 4 }),
+                  HeadingPickerPlugin({ n: 5 }),
+                  HeadingPickerPlugin({ n: 6 }),
+                  TablePickerPlugin(),
+                  CheckListPickerPlugin(),
+                  NumberedListPickerPlugin(),
+                  BulletedListPickerPlugin(),
+                  QuotePickerPlugin(),
+                  CodePickerPlugin(),
+                  DividerPickerPlugin(),
+                  ImagePickerPlugin(),
+                  DateTimePickerPlugin(),
+                ]}
+                dynamicOptionsFn={DynamicTablePickerPlugin}
+              />
+              <EmojiPickerPlugin />
+              <AutoCompletePlugin />
+              <ContextMenuPlugin />
+              <SpecialTextPlugin />
+              <TabFocusPlugin />
+              <TabIndentationPlugin />
+              <CodeHighlightPlugin />
+              <TablePlugin />
+              <DraggableBlockPlugin
+                anchorElem={floatingAnchorElem}
+                baseOptions={[
+                  ParagraphPickerPlugin(),
                   HeadingPickerPlugin({ n: 1 }),
                   HeadingPickerPlugin({ n: 2 }),
                   HeadingPickerPlugin({ n: 3 }),
@@ -342,60 +365,17 @@ export function Editor({
                 ]}
                 dynamicOptionsFn={DynamicTablePickerPlugin}
               />
-
-              <EmojiPickerPlugin />
-
-              <AutoCompletePlugin />
-
-              <ContextMenuPlugin />
-
-              <SpecialTextPlugin />
-
-              <TabFocusPlugin />
-              <TabIndentationPlugin />
-
-              <CodeHighlightPlugin />
-
-              <TablePlugin />
-
-              <DraggableBlockPlugin
-                anchorElem={floatingAnchorElem}
-                baseOptions={[
-                  ParagraphPickerPlugin(),
-
-                  HeadingPickerPlugin({ n: 1 }),
-                  HeadingPickerPlugin({ n: 2 }),
-                  HeadingPickerPlugin({ n: 3 }),
-
-                  TablePickerPlugin(),
-
-                  CheckListPickerPlugin(),
-                  NumberedListPickerPlugin(),
-                  BulletedListPickerPlugin(),
-
-                  QuotePickerPlugin(),
-                  CodePickerPlugin(),
-                  DividerPickerPlugin(),
-                  ImagePickerPlugin(),
-                  DateTimePickerPlugin(),
-                ]}
-                dynamicOptionsFn={DynamicTablePickerPlugin}
-              />
-
               <FloatingTextFormatToolbarPlugin
                 anchorElem={floatingAnchorElem}
                 setIsLinkEditMode={setIsLinkEditMode}
               />
-
               <FloatingLinkEditorPlugin
                 anchorElem={floatingAnchorElem}
                 isLinkEditMode={isLinkEditMode}
                 setIsLinkEditMode={setIsLinkEditMode}
               />
-
               <CodeActionMenuPlugin anchorElem={floatingAnchorElem} />
             </div>
-
             <ActionsPlugin>
               <div className="clear-both flex items-center justify-between gap-2 overflow-auto border-t p-1">
                 <div className="flex flex-1 justify-start text-xs text-gray-500">
@@ -404,29 +384,22 @@ export function Editor({
                     charset="UTF-16"
                   />
                 </div>
-
                 <div>
                   <CounterCharacterPlugin charset="UTF-16" />
                 </div>
-
                 <div className="flex flex-1 justify-end">
                   <ShareContentPlugin />
-
                   <ImportExportPlugin />
-
                   <MarkdownTogglePlugin
                     shouldPreserveNewLinesInMarkdown
                     transformers={MARKDOWN_TRANSFORMERS}
                   />
-
                   <EditModeTogglePlugin />
-
                   <ClearEditorActionPlugin />
                 </div>
               </div>
             </ActionsPlugin>
           </div>
-
           <OnChangePlugin
             ignoreSelectionChange
             onChange={(nextEditorState) => {

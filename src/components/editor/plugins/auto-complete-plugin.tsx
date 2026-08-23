@@ -1,334 +1,358 @@
-import {
-  $createAutocompleteNode,
-  AutocompleteNode,
-} from "@/components/editor/nodes/autocomplete-node";
-import { addSwipeRightListener } from "@/components/swipe";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import {
-  $getSelectionStyleValueForProperty,
-  $isAtNodeEnd,
-} from "@lexical/selection";
 import { mergeRegister } from "@lexical/utils";
-import type { BaseSelection, NodeKey, TextNode } from "lexical";
 import {
-  $addUpdateTag,
-  $createTextNode,
   $getNodeByKey,
   $getSelection,
   $isRangeSelection,
   $isTextNode,
-  $setSelection,
   COMMAND_PRIORITY_LOW,
-  HISTORY_MERGE_TAG,
   KEY_ARROW_RIGHT_COMMAND,
   KEY_TAB_COMMAND,
+  type EditorState,
+  type LexicalEditor,
 } from "lexical";
-import type { JSX } from "react";
-import { useCallback, useEffect } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type JSX,
+} from "react";
+import { createPortal } from "react-dom";
 
-const HISTORY_MERGE = { tag: HISTORY_MERGE_TAG };
+import { addSwipeRightListener } from "@/components/swipe";
+import { Kbd } from "@/components/ui/kbd";
 
-declare global {
-  interface Navigator {
-    userAgentData?: {
-      mobile: boolean;
-    };
-  }
-}
+const MIN_SEARCH_LENGTH = 4;
 
-type SearchPromise = {
-  dismiss: () => void;
-  promise: Promise<null | string>;
+type SuggestionPosition = {
+  left: number;
+  top: number;
+  font: string;
+  lineHeight: string;
+  letterSpacing: string;
 };
 
-export const uuid = Math.random()
-  .toString(36)
-  .replace(/[^a-z]+/g, "")
-  .substring(0, 5);
+function $getSearchText(): string | null {
+  const selection = $getSelection();
 
-// TODO lookup should be custom
-function $search(selection: null | BaseSelection): [boolean, string] {
   if (!$isRangeSelection(selection) || !selection.isCollapsed()) {
-    return [false, ""];
+    return null;
   }
 
-  const node = selection.getNodes()[0];
   const anchor = selection.anchor;
 
-  if (!$isTextNode(node) || !node.isSimpleText() || !$isAtNodeEnd(anchor)) {
-    return [false, ""];
+  if (anchor.type !== "text" || anchor.offset < 0) {
+    return null;
   }
 
-  const text = node.getTextContent();
-  const word: string[] = [];
+  const node = $getNodeByKey(anchor.key);
 
-  let i = text.length - 1;
-
-  while (i >= 0) {
-    const char = text[i];
-
-    if (char === " ") {
-      break;
-    }
-
-    word.push(char);
-    i--;
+  if (!$isTextNode(node) || !node.isAttached() || !node.isSimpleText()) {
+    return null;
   }
 
-  if (word.length === 0) {
-    return [false, ""];
+  const textSize = node.getTextContentSize();
+
+  if (anchor.offset > textSize || anchor.offset !== textSize) {
+    return null;
   }
 
-  return [true, word.reverse().join("")];
+  const textBeforeCaret = node.getTextContent().slice(0, anchor.offset);
+
+  const match = textBeforeCaret.match(/[\p{L}\p{N}'’-]+$/u);
+
+  if (!match) {
+    return null;
+  }
+
+  return match[0];
 }
 
-// TODO query should be custom
-function useQuery(): (searchText: string) => SearchPromise {
-  return useCallback((searchText: string) => {
-    const server = new AutocompleteServer();
-    console.time("query");
-    const response = server.query(searchText);
-    console.timeEnd("query");
-    return response;
-  }, []);
+function getSuggestion(searchText: string): string | null {
+  if (searchText.length < MIN_SEARCH_LENGTH) {
+    return null;
+  }
+
+  const normalizedSearchText = searchText.toLocaleLowerCase();
+
+  const match = DICTIONARY.find((word) =>
+    word.toLocaleLowerCase().startsWith(normalizedSearchText),
+  );
+
+  if (!match || match.length <= searchText.length) {
+    return null;
+  }
+
+  return match.slice(searchText.length);
 }
 
-function formatSuggestionText(suggestion: string): string {
-  const userAgentData = window.navigator.userAgentData;
-  const isMobile =
-    userAgentData !== undefined
-      ? userAgentData.mobile
-      : window.innerWidth <= 800 && window.innerHeight <= 600;
+function getCaretPosition(editor: LexicalEditor): SuggestionPosition | null {
+  const rootElement = editor.getRootElement();
 
-  return `${suggestion} ${isMobile ? "(SWIPE \u2B95)" : "(TAB)"}`;
+  if (!rootElement) {
+    return null;
+  }
+
+  const nativeSelection = rootElement.ownerDocument.getSelection();
+
+  if (
+    !nativeSelection ||
+    !nativeSelection.isCollapsed ||
+    nativeSelection.rangeCount === 0 ||
+    !nativeSelection.anchorNode ||
+    !rootElement.contains(nativeSelection.anchorNode)
+  ) {
+    return null;
+  }
+
+  const range = nativeSelection.getRangeAt(0).cloneRange();
+
+  const clientRects = range.getClientRects();
+
+  const rect =
+    clientRects.length > 0 ? clientRects[0] : range.getBoundingClientRect();
+
+  const anchorNode = nativeSelection.anchorNode;
+
+  const anchorElement =
+    anchorNode.nodeType === Node.ELEMENT_NODE
+      ? (anchorNode as HTMLElement)
+      : anchorNode.parentElement;
+
+  const computedStyle = anchorElement
+    ? window.getComputedStyle(anchorElement)
+    : null;
+
+  return {
+    left: rect.right,
+    top: rect.top,
+    font: computedStyle?.font ?? "inherit",
+    lineHeight: computedStyle?.lineHeight ?? "normal",
+    letterSpacing: computedStyle?.letterSpacing ?? "normal",
+  };
 }
 
 export function AutoCompletePlugin(): JSX.Element | null {
   const [editor] = useLexicalComposerContext();
-  const query = useQuery();
-  // const {toolbarState} = useToolbarState();
 
-  useEffect(() => {
-    let autocompleteNodeKey: null | NodeKey = null;
-    let lastMatch: null | string = null;
-    let lastSuggestion: null | string = null;
-    let searchPromise: null | SearchPromise = null;
-    let prevNodeFormat: number = 0;
-    function $clearSuggestion() {
-      const autocompleteNode =
-        autocompleteNodeKey !== null
-          ? $getNodeByKey(autocompleteNodeKey)
-          : null;
-      if (autocompleteNode?.isAttached()) {
-        autocompleteNode.remove();
-        autocompleteNodeKey = null;
-      }
-      if (searchPromise !== null) {
-        searchPromise.dismiss();
-        searchPromise = null;
-      }
-      lastMatch = null;
-      lastSuggestion = null;
-      prevNodeFormat = 0;
+  const [suggestion, setSuggestion] = useState<string | null>(null);
+
+  const [position, setPosition] = useState<SuggestionPosition | null>(null);
+
+  const searchTextRef = useRef<string | null>(null);
+  const suggestionRef = useRef<string | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+
+  const clearSuggestion = useCallback(() => {
+    searchTextRef.current = null;
+    suggestionRef.current = null;
+
+    setSuggestion(null);
+    setPosition(null);
+
+    if (animationFrameRef.current !== null) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
     }
-    function updateAsyncSuggestion(
-      refSearchPromise: SearchPromise,
-      newSuggestion: null | string,
-    ) {
-      if (searchPromise !== refSearchPromise || newSuggestion === null) {
-        // Outdated or no suggestion
+  }, []);
+
+  const schedulePositionUpdate = useCallback(() => {
+    if (animationFrameRef.current !== null) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+
+    animationFrameRef.current = requestAnimationFrame(() => {
+      animationFrameRef.current = null;
+
+      if (suggestionRef.current === null) {
+        setPosition(null);
         return;
       }
-      editor.update(() => {
-        const selection = $getSelection();
-        const [hasMatch, match] = $search(selection);
-        if (!hasMatch || match !== lastMatch || !$isRangeSelection(selection)) {
-          // Outdated
+
+      setPosition(getCaretPosition(editor));
+    });
+  }, [editor]);
+
+  const updateSuggestion = useCallback(
+    (editorState: EditorState) => {
+      let searchText: string | null = null;
+
+      editorState.read(() => {
+        if (editor.isComposing()) {
           return;
         }
-        const fontSize = $getSelectionStyleValueForProperty(
-          selection,
-          "font-size",
-          "16px",
-        );
 
-        const selectionCopy = selection.clone();
-        const prevNode = selection.getNodes()[0] as TextNode;
-        prevNodeFormat = prevNode.getFormat();
-        const node = $createAutocompleteNode(
-          formatSuggestionText(newSuggestion),
-          uuid,
-        )
-          .setFormat(prevNodeFormat)
-          .setStyle(`font-size: ${fontSize}`);
-        autocompleteNodeKey = node.getKey();
-        selection.insertNodes([node]);
-        $setSelection(selectionCopy);
-        lastSuggestion = newSuggestion;
-      }, HISTORY_MERGE);
-    }
+        searchText = $getSearchText();
+      });
 
-    function $handleAutocompleteNodeTransform(node: AutocompleteNode) {
-      const key = node.getKey();
-      if (node.__uuid === uuid && key !== autocompleteNodeKey) {
-        // Max one Autocomplete node per session
-        $clearSuggestion();
-      }
-    }
-    function handleUpdate() {
-      editor.update(() => {
-        const selection = $getSelection();
-        const [hasMatch, match] = $search(selection);
-        if (!hasMatch) {
-          $clearSuggestion();
-          return;
-        }
-        if (match === lastMatch) {
-          return;
-        }
-        $clearSuggestion();
-        searchPromise = query(match);
-        searchPromise.promise
-          .then((newSuggestion) => {
-            if (searchPromise !== null) {
-              updateAsyncSuggestion(searchPromise, newSuggestion);
-            }
-          })
-          .catch((e) => {
-            if (e !== "Dismissed") {
-              console.error(e);
-            }
-          });
-        lastMatch = match;
-      }, HISTORY_MERGE);
-    }
-    function $handleAutocompleteIntent(): boolean {
-      if (lastSuggestion === null || autocompleteNodeKey === null) {
-        return false;
-      }
-      const autocompleteNode = $getNodeByKey(autocompleteNodeKey);
-      if (autocompleteNode === null) {
-        return false;
+      if (!searchText) {
+        clearSuggestion();
+        return;
       }
 
-      const selection = $getSelection();
-      if (!$isRangeSelection(selection)) {
-        // Outdated
-        return false;
-      }
-      const fontSize = $getSelectionStyleValueForProperty(
-        selection,
-        "font-size",
-        "16px",
-      );
+      const nextSuggestion = getSuggestion(searchText);
 
-      const textNode = $createTextNode(lastSuggestion)
-        .setFormat(prevNodeFormat)
-        .setStyle(`font-size: ${fontSize}`);
-      autocompleteNode.replace(textNode);
-      textNode.selectNext();
-      $clearSuggestion();
-      return true;
-    }
-    function $handleKeypressCommand(e: Event) {
-      if ($handleAutocompleteIntent()) {
-        e.preventDefault();
-        return true;
+      if (!nextSuggestion) {
+        clearSuggestion();
+        return;
       }
+
+      searchTextRef.current = searchText;
+      suggestionRef.current = nextSuggestion;
+
+      setSuggestion(nextSuggestion);
+
+      schedulePositionUpdate();
+    },
+    [clearSuggestion, editor, schedulePositionUpdate],
+  );
+
+  const $acceptSuggestion = useCallback((): boolean => {
+    const expectedSearchText = searchTextRef.current;
+    const completion = suggestionRef.current;
+
+    if (expectedSearchText === null || completion === null) {
       return false;
     }
-    function handleSwipeRight(_force: number, e: TouchEvent) {
-      editor.update(() => {
-        if ($handleAutocompleteIntent()) {
-          e.preventDefault();
-        } else {
-          $addUpdateTag(HISTORY_MERGE.tag);
-        }
-      });
-    }
-    function unmountSuggestion() {
-      editor.update(() => {
-        $clearSuggestion();
-      }, HISTORY_MERGE);
+
+    const currentSearchText = $getSearchText();
+
+    if (currentSearchText !== expectedSearchText) {
+      clearSuggestion();
+      return false;
     }
 
-    const rootElem = editor.getRootElement();
+    const selection = $getSelection();
 
-    return mergeRegister(
-      editor.registerNodeTransform(
-        AutocompleteNode,
-        $handleAutocompleteNodeTransform,
-      ),
-      editor.registerUpdateListener(handleUpdate),
-      editor.registerCommand(
-        KEY_TAB_COMMAND,
-        $handleKeypressCommand,
-        COMMAND_PRIORITY_LOW,
-      ),
-      editor.registerCommand(
-        KEY_ARROW_RIGHT_COMMAND,
-        $handleKeypressCommand,
-        COMMAND_PRIORITY_LOW,
-      ),
-      ...(rootElem !== null
-        ? [addSwipeRightListener(rootElem, handleSwipeRight)]
-        : []),
-      unmountSuggestion,
-    );
-  }, [editor, query]);
+    if (!$isRangeSelection(selection) || !selection.isCollapsed()) {
+      clearSuggestion();
+      return false;
+    }
 
-  return null;
-}
+    selection.insertText(completion);
 
-class AutocompleteServer {
-  DATABASE = DICTIONARY;
-  LATENCY = 100;
+    clearSuggestion();
 
-  query = (searchText: string): SearchPromise => {
-    let isDismissed = false;
+    return true;
+  }, [clearSuggestion]);
 
-    const dismiss = () => {
-      isDismissed = true;
-    };
+  useEffect(() => {
+    updateSuggestion(editor.getEditorState());
 
-    const promise: Promise<null | string> = new Promise((resolve, reject) => {
-      setTimeout(() => {
-        if (isDismissed) {
-          // TODO cache result
-          return reject("Dismissed");
-        }
-        const searchTextLength = searchText.length;
-        if (searchText === "" || searchTextLength < 4) {
-          return resolve(null);
-        }
-        const char0 = searchText.charCodeAt(0);
-        const isCapitalized = char0 >= 65 && char0 <= 90;
-        const caseInsensitiveSearchText = isCapitalized
-          ? String.fromCharCode(char0 + 32) + searchText.substring(1)
-          : searchText;
-        const match = this.DATABASE.find(
-          (dictionaryWord) =>
-            dictionaryWord.startsWith(caseInsensitiveSearchText) ?? null,
-        );
-        if (match === undefined) {
-          return resolve(null);
-        }
-        const matchCapitalized = isCapitalized
-          ? String.fromCharCode(match.charCodeAt(0) - 32) + match.substring(1)
-          : match;
-        const autocompleteChunk = matchCapitalized.substring(searchTextLength);
-        if (autocompleteChunk === "") {
-          return resolve(null);
-        }
-        return resolve(autocompleteChunk);
-      }, this.LATENCY);
+    let removeSwipeListener: (() => void) | null = null;
+
+    const removeRootListener = editor.registerRootListener((rootElement) => {
+      removeSwipeListener?.();
+      removeSwipeListener = null;
+
+      if (!rootElement) {
+        return;
+      }
+
+      removeSwipeListener = addSwipeRightListener(
+        rootElement,
+        (_force, event) => {
+          editor.update(() => {
+            if ($acceptSuggestion()) {
+              event.preventDefault();
+            }
+          });
+        },
+      );
     });
 
-    return {
-      dismiss,
-      promise,
+    return mergeRegister(
+      editor.registerUpdateListener(({ editorState }) => {
+        updateSuggestion(editorState);
+      }),
+
+      editor.registerCommand(
+        KEY_TAB_COMMAND,
+        (event) => {
+          if (!$acceptSuggestion()) {
+            return false;
+          }
+
+          event?.preventDefault();
+
+          return true;
+        },
+        COMMAND_PRIORITY_LOW,
+      ),
+
+      editor.registerCommand(
+        KEY_ARROW_RIGHT_COMMAND,
+        (event) => {
+          if (!$acceptSuggestion()) {
+            return false;
+          }
+
+          event?.preventDefault();
+
+          return true;
+        },
+        COMMAND_PRIORITY_LOW,
+      ),
+
+      removeRootListener,
+
+      () => {
+        removeSwipeListener?.();
+
+        if (animationFrameRef.current !== null) {
+          cancelAnimationFrame(animationFrameRef.current);
+        }
+      },
+    );
+  }, [editor, updateSuggestion, $acceptSuggestion]);
+
+  useEffect(() => {
+    const updatePosition = () => {
+      if (suggestionRef.current !== null) {
+        schedulePositionUpdate();
+      }
     };
+
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [schedulePositionUpdate]);
+
+  if (
+    suggestion === null ||
+    position === null ||
+    typeof document === "undefined"
+  ) {
+    return null;
+  }
+
+  const style: CSSProperties = {
+    left: position.left,
+    top: position.top - 2.75,
+    font: position.font,
+    lineHeight: position.lineHeight,
+    letterSpacing: position.letterSpacing,
   };
+
+  return createPortal(
+    <span
+      aria-hidden="true"
+      className="pointer-events-none absolute select-none z-50 whitespace-pre text-muted-foreground/50"
+      style={style}
+    >
+      <span>{suggestion}</span>
+      <Kbd className="ml-1 text-xs opacity-70">Tab ↩</Kbd>
+      <Kbd className="ml-1 text-xs opacity-70">or</Kbd>
+      <Kbd className="ml-1 text-xs opacity-70">🡒</Kbd>
+    </span>,
+    document.body,
+  );
 }
 
 // https://raw.githubusercontent.com/first20hours/google-10000-english/master/google-10000-english-usa-no-swears-long.txt

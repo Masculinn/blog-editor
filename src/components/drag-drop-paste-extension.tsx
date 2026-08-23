@@ -135,7 +135,7 @@ function $selectDropPoint(event: DragEvent, editor: LexicalEditor) {
 }
 
 export const DragDropPasteExtension = defineExtension({
-  name: "@shadcn-editor/DragDropPaste",
+  name: "DragDropPaste",
 
   register: (editor) =>
     mergeRegister(

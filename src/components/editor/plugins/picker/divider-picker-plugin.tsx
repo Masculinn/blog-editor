@@ -7,11 +7,8 @@ export function DividerPickerPlugin() {
   return new ComponentPickerOption("Divider", {
     icon: <MinusIcon className="size-4" />,
     keywords: ["horizontal rule", "divider", "hr"],
-
     onSelect: (_, editor) => {
-      queueMicrotask(() => {
-        editor.dispatchCommand(INSERT_HORIZONTAL_RULE_COMMAND, undefined);
-      });
+      editor.dispatchCommand(INSERT_HORIZONTAL_RULE_COMMAND, undefined);
     },
   });
 }

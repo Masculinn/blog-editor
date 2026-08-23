@@ -3,13 +3,16 @@ import { $isLinkNode, TOGGLE_LINK_COMMAND } from "@lexical/link";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { mergeRegister } from "@lexical/utils";
 import {
+  $getNodeByKey,
   $getSelection,
+  $isElementNode,
   $isParagraphNode,
   $isRangeSelection,
   $isTextNode,
   COMMAND_PRIORITY_LOW,
   FORMAT_TEXT_COMMAND,
   type LexicalEditor,
+  type RangeSelection,
   SELECTION_CHANGE_COMMAND,
 } from "lexical";
 import {
@@ -30,11 +33,56 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 
-import { getDOMRangeRect } from "@/components/get-dom-range-rect";
 import { getSelectedNode } from "@/components/get-selected-node";
 import { setFloatingElemPosition } from "@/components/set-floating-elem-position";
 import { Separator } from "@/components/ui/separator";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+
+/**
+ * A RangeSelection may briefly outlive the TextNode/ElementNode it referenced
+ * while Lexical reconciles a structural change such as inserting a decorator
+ * node (horizontal rule, image, etc.).
+ *
+ * Never call getSelectedNode(), getTextContent(), or point.getNode() until
+ * both points have been verified.
+ */
+function $isValidRangeSelection(selection: RangeSelection): boolean {
+  const points = [selection.anchor, selection.focus];
+
+  for (const point of points) {
+    if (point.offset < 0) {
+      return false;
+    }
+
+    const node = $getNodeByKey(point.key);
+
+    if (node === null || !node.isAttached()) {
+      return false;
+    }
+
+    if (point.type === "text") {
+      if (!$isTextNode(node)) {
+        return false;
+      }
+
+      if (point.offset > node.getTextContentSize()) {
+        return false;
+      }
+
+      continue;
+    }
+
+    if (!$isElementNode(node)) {
+      return false;
+    }
+
+    if (point.offset > node.getChildrenSize()) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 function TextFormatFloatingToolbar({
   editor,
@@ -57,27 +105,66 @@ function TextFormatFloatingToolbar({
   isUnderline: boolean;
   setIsLinkEditMode: Dispatch<boolean>;
 }): JSX.Element {
-  const popupCharStylesEditorRef = useRef<HTMLDivElement | null>(null);
+  const toolbarRef = useRef<HTMLDivElement | null>(null);
 
   const insertLink = useCallback(() => {
-    if (!isLink) {
-      setIsLinkEditMode(true);
-      editor.dispatchCommand(TOGGLE_LINK_COMMAND, "https://");
-    } else {
+    if (isLink) {
       setIsLinkEditMode(false);
       editor.dispatchCommand(TOGGLE_LINK_COMMAND, null);
+      return;
     }
+
+    setIsLinkEditMode(true);
+    editor.dispatchCommand(TOGGLE_LINK_COMMAND, "https://");
   }, [editor, isLink, setIsLinkEditMode]);
 
+  const updatePosition = useCallback(() => {
+    const toolbar = toolbarRef.current;
+    const rootElement = editor.getRootElement();
+
+    if (toolbar === null || rootElement === null) {
+      return;
+    }
+
+    const nativeSelection = rootElement.ownerDocument.getSelection();
+
+    if (
+      nativeSelection === null ||
+      nativeSelection.isCollapsed ||
+      nativeSelection.rangeCount === 0
+    ) {
+      return;
+    }
+
+    const range = nativeSelection.getRangeAt(0);
+
+    if (
+      !rootElement.contains(range.startContainer) ||
+      !rootElement.contains(range.endContainer)
+    ) {
+      return;
+    }
+
+    const rect = range.getBoundingClientRect();
+
+    setFloatingElemPosition(rect, toolbar, anchorElem, isLink);
+  }, [editor, anchorElem, isLink]);
+
   useEffect(() => {
+    const toolbar = toolbarRef.current;
+
+    if (toolbar === null) {
+      return;
+    }
+
     const mouseMoveListener = (event: MouseEvent) => {
-      const popup = popupCharStylesEditorRef.current;
+      const popup = toolbarRef.current;
 
-      if (!popup || (event.buttons !== 1 && event.buttons !== 3)) {
-        return;
-      }
-
-      if (popup.style.pointerEvents === "none") {
+      if (
+        popup === null ||
+        (event.buttons !== 1 && event.buttons !== 3) ||
+        popup.style.pointerEvents === "none"
+      ) {
         return;
       }
 
@@ -86,16 +173,15 @@ function TextFormatFloatingToolbar({
         event.clientY,
       );
 
-      if (!elementUnderMouse || !popup.contains(elementUnderMouse)) {
-        // Mouse is not over the target element, so this is probably a drag.
+      if (elementUnderMouse === null || !popup.contains(elementUnderMouse)) {
         popup.style.pointerEvents = "none";
       }
     };
 
     const mouseUpListener = () => {
-      const popup = popupCharStylesEditorRef.current;
+      const popup = toolbarRef.current;
 
-      if (popup && popup.style.pointerEvents !== "auto") {
+      if (popup !== null && popup.style.pointerEvents !== "auto") {
         popup.style.pointerEvents = "auto";
       }
     };
@@ -109,85 +195,51 @@ function TextFormatFloatingToolbar({
     };
   }, []);
 
-  const $updateTextFormatFloatingToolbar = useCallback(() => {
-    const selection = $getSelection();
-    const popupCharStylesEditorElem = popupCharStylesEditorRef.current;
-    const nativeSelection = window.getSelection();
-
-    if (popupCharStylesEditorElem === null) {
-      return;
-    }
-
-    const rootElement = editor.getRootElement();
-
-    if (
-      selection !== null &&
-      nativeSelection !== null &&
-      !nativeSelection.isCollapsed &&
-      rootElement !== null &&
-      rootElement.contains(nativeSelection.anchorNode)
-    ) {
-      const rangeRect = getDOMRangeRect(nativeSelection, rootElement);
-
-      setFloatingElemPosition(
-        rangeRect,
-        popupCharStylesEditorElem,
-        anchorElem,
-        isLink,
-      );
-    }
-  }, [editor, anchorElem, isLink]);
-
   useEffect(() => {
     const scrollerElem = anchorElem.parentElement;
 
     const update = () => {
-      editor.getEditorState().read(() => {
-        $updateTextFormatFloatingToolbar();
-      });
+      updatePosition();
     };
 
     window.addEventListener("resize", update);
 
-    if (scrollerElem) {
-      scrollerElem.addEventListener("scroll", update);
-    }
+    scrollerElem?.addEventListener("scroll", update);
 
     return () => {
       window.removeEventListener("resize", update);
 
-      if (scrollerElem) {
-        scrollerElem.removeEventListener("scroll", update);
-      }
+      scrollerElem?.removeEventListener("scroll", update);
     };
-  }, [editor, $updateTextFormatFloatingToolbar, anchorElem]);
+  }, [anchorElem, updatePosition]);
 
   useEffect(() => {
-    editor.getEditorState().read(() => {
-      $updateTextFormatFloatingToolbar();
-    });
+    updatePosition();
 
     return mergeRegister(
-      editor.registerUpdateListener(({ editorState }) => {
-        editorState.read(() => {
-          $updateTextFormatFloatingToolbar();
-        });
+      editor.registerUpdateListener(() => {
+        updatePosition();
       }),
 
       editor.registerCommand(
         SELECTION_CHANGE_COMMAND,
         () => {
-          $updateTextFormatFloatingToolbar();
+          updatePosition();
           return false;
         },
         COMMAND_PRIORITY_LOW,
       ),
     );
-  }, [editor, $updateTextFormatFloatingToolbar]);
+  }, [editor, updatePosition]);
 
   return (
     <div
-      ref={popupCharStylesEditorRef}
+      ref={toolbarRef}
+      role="toolbar"
+      onMouseDown={(event) => {
+        // Keep the editor selection alive while clicking toolbar controls.
+        event.preventDefault();
+      }}
       className="bg-popover text-popover-foreground absolute top-0 left-0 flex gap-1 rounded-md border p-1 opacity-0 shadow-md transition-opacity duration-300 will-change-transform"
     >
       {editor.isEditable() && (
@@ -211,6 +263,7 @@ function TextFormatFloatingToolbar({
           >
             <BoldIcon className="size-4" />
           </ToggleGroupItem>
+
           <ToggleGroupItem
             value="italic"
             aria-label="Toggle italic"
@@ -221,6 +274,7 @@ function TextFormatFloatingToolbar({
           >
             <ItalicIcon className="size-4" />
           </ToggleGroupItem>
+
           <ToggleGroupItem
             value="underline"
             aria-label="Toggle underline"
@@ -231,6 +285,7 @@ function TextFormatFloatingToolbar({
           >
             <UnderlineIcon className="size-4" />
           </ToggleGroupItem>
+
           <ToggleGroupItem
             value="strikethrough"
             aria-label="Toggle strikethrough"
@@ -241,7 +296,9 @@ function TextFormatFloatingToolbar({
           >
             <StrikethroughIcon className="size-4" />
           </ToggleGroupItem>
+
           <Separator orientation="vertical" />
+
           <ToggleGroupItem
             value="code"
             aria-label="Toggle code"
@@ -252,6 +309,7 @@ function TextFormatFloatingToolbar({
           >
             <CodeIcon className="size-4" />
           </ToggleGroupItem>
+
           <ToggleGroupItem
             value="link"
             aria-label="Toggle link"
@@ -279,81 +337,133 @@ function useFloatingTextFormatToolbar(
   const [isStrikethrough, setIsStrikethrough] = useState(false);
   const [isCode, setIsCode] = useState(false);
 
-  const updatePopup = useCallback(() => {
-    editor.getEditorState().read(() => {
-      if (editor.isComposing()) return;
+  const $updatePopup = useCallback(() => {
+    if (editor.isComposing()) {
+      setIsText(false);
+      return;
+    }
 
-      const selection = $getSelection();
-      const nativeSelection = window.getSelection();
-      const rootElement = editor.getRootElement();
+    const selection = $getSelection();
 
-      if (
-        nativeSelection !== null &&
-        (!$isRangeSelection(selection) ||
-          rootElement === null ||
-          !rootElement.contains(nativeSelection.anchorNode))
-      ) {
-        setIsText(false);
-        return;
-      }
+    if (!$isRangeSelection(selection)) {
+      setIsText(false);
+      return;
+    }
 
-      if (!$isRangeSelection(selection)) return;
+    /**
+     * This is the important guard.
+     *
+     * A stale selection containing offset -1 must be ignored before anything
+     * tries to resolve its TextNode.
+     */
+    if (!$isValidRangeSelection(selection)) {
+      setIsText(false);
+      return;
+    }
 
-      const node = getSelectedNode(selection);
+    if (selection.isCollapsed()) {
+      setIsText(false);
+      return;
+    }
 
-      // Update text format
-      setIsBold(selection.hasFormat("bold"));
-      setIsItalic(selection.hasFormat("italic"));
-      setIsUnderline(selection.hasFormat("underline"));
-      setIsStrikethrough(selection.hasFormat("strikethrough"));
-      setIsCode(selection.hasFormat("code"));
+    const rootElement = editor.getRootElement();
 
-      // Update links
-      const parent = node.getParent();
-      if ($isLinkNode(parent) || $isLinkNode(node)) {
-        setIsLink(true);
-      } else {
-        setIsLink(false);
-      }
+    if (rootElement === null) {
+      setIsText(false);
+      return;
+    }
 
-      if (
-        !$isCodeHighlightNode(selection.anchor.getNode()) &&
-        selection.getTextContent() !== ""
-      ) {
-        setIsText($isTextNode(node) || $isParagraphNode(node));
-      } else {
-        setIsText(false);
-      }
+    const nativeSelection = rootElement.ownerDocument.getSelection();
 
-      const rawTextContent = selection.getTextContent().replace(/\n/g, "");
-      if (!selection.isCollapsed() && rawTextContent === "") {
-        setIsText(false);
-        return;
-      }
-    });
+    if (
+      nativeSelection === null ||
+      nativeSelection.isCollapsed ||
+      nativeSelection.rangeCount === 0
+    ) {
+      setIsText(false);
+      return;
+    }
+
+    const nativeRange = nativeSelection.getRangeAt(0);
+
+    if (
+      !rootElement.contains(nativeRange.startContainer) ||
+      !rootElement.contains(nativeRange.endContainer)
+    ) {
+      setIsText(false);
+      return;
+    }
+
+    /*
+     * Everything below this point is now allowed to consume the selection.
+     */
+    const node = getSelectedNode(selection);
+    const textContent = selection.getTextContent().replace(/\n/g, "");
+
+    if (textContent === "") {
+      setIsText(false);
+      return;
+    }
+
+    const anchorNode = $getNodeByKey(selection.anchor.key);
+
+    if (anchorNode === null) {
+      setIsText(false);
+      return;
+    }
+
+    setIsBold(selection.hasFormat("bold"));
+    setIsItalic(selection.hasFormat("italic"));
+    setIsUnderline(selection.hasFormat("underline"));
+    setIsStrikethrough(selection.hasFormat("strikethrough"));
+    setIsCode(selection.hasFormat("code"));
+
+    const parent = node.getParent();
+
+    setIsLink($isLinkNode(node) || $isLinkNode(parent));
+
+    setIsText(
+      !$isCodeHighlightNode(anchorNode) &&
+        ($isTextNode(node) || $isParagraphNode(node)),
+    );
   }, [editor]);
 
   useEffect(() => {
-    document.addEventListener("selectionchange", updatePopup);
-    return () => {
-      document.removeEventListener("selectionchange", updatePopup);
+    const update = () => {
+      editor.read("latest", () => {
+        $updatePopup();
+      });
     };
-  }, [updatePopup]);
 
-  useEffect(() => {
+    update();
+
     return mergeRegister(
-      editor.registerUpdateListener(() => {
-        updatePopup();
+      editor.registerUpdateListener(({ editorState }) => {
+        editorState.read(() => {
+          $updatePopup();
+        });
       }),
-      editor.registerRootListener(() => {
-        if (editor.getRootElement() === null) {
+
+      editor.registerCommand(
+        SELECTION_CHANGE_COMMAND,
+        () => {
+          $updatePopup();
+          return false;
+        },
+        COMMAND_PRIORITY_LOW,
+      ),
+
+      editor.registerRootListener((rootElement) => {
+        if (rootElement === null) {
           setIsText(false);
         }
       }),
     );
-  }, [editor, updatePopup]);
+  }, [editor, $updatePopup]);
 
-  if (!isText || !anchorElem) return null;
+  if (!isText || anchorElem === null) {
+    return null;
+  }
 
   return createPortal(
     <TextFormatFloatingToolbar
@@ -362,8 +472,8 @@ function useFloatingTextFormatToolbar(
       isLink={isLink}
       isBold={isBold}
       isItalic={isItalic}
-      isStrikethrough={isStrikethrough}
       isUnderline={isUnderline}
+      isStrikethrough={isStrikethrough}
       isCode={isCode}
       setIsLinkEditMode={setIsLinkEditMode}
     />,

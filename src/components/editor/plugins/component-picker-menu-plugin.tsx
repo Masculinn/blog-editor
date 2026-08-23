@@ -4,7 +4,14 @@ import {
   useBasicTypeaheadTriggerMatch,
 } from "@lexical/react/LexicalTypeaheadMenuPlugin";
 import type { TextNode } from "lexical";
-import { type JSX, useEffect, useRef, useState } from "react";
+import {
+  type JSX,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { createPortal } from "react-dom";
 
 import {
@@ -26,7 +33,7 @@ function ComponentPickerMenu({
   selectOptionAndCleanUp,
   setHighlightedIndex,
 }: {
-  options: Array<ComponentPickerOption>;
+  options: ComponentPickerOption[];
   selectedIndex: number | null;
   selectOptionAndCleanUp: (option: ComponentPickerOption) => void;
   setHighlightedIndex: (index: number) => void;
@@ -45,9 +52,13 @@ function ComponentPickerMenu({
   }, [selectedIndex]);
 
   return (
-    <div className="bg-popover text-popover-foreground absolute h-min min-w-48 rounded-md border shadow-md z-999">
+    <div className="bg-popover text-popover-foreground absolute z-999 h-min min-w-48 rounded-md border shadow-md">
       <Command
         onKeyDown={(event) => {
+          if (options.length === 0) {
+            return;
+          }
+
           if (event.key === "ArrowUp") {
             event.preventDefault();
 
@@ -56,7 +67,11 @@ function ComponentPickerMenu({
                 ? (selectedIndex - 1 + options.length) % options.length
                 : options.length - 1,
             );
-          } else if (event.key === "ArrowDown") {
+
+            return;
+          }
+
+          if (event.key === "ArrowDown") {
             event.preventDefault();
 
             setHighlightedIndex(
@@ -99,50 +114,59 @@ export function ComponentPickerMenuPlugin({
   baseOptions = EMPTY_OPTIONS,
   dynamicOptionsFn,
 }: {
-  baseOptions?: Array<ComponentPickerOption>;
+  baseOptions?: ComponentPickerOption[];
   dynamicOptionsFn?: ({
     queryString,
   }: {
     queryString: string;
-  }) => Array<ComponentPickerOption>;
+  }) => ComponentPickerOption[];
 }): JSX.Element {
   const [editor] = useLexicalComposerContext();
   const [modal, showModal] = useEditorModal();
+
   const [queryString, setQueryString] = useState<string | null>(null);
 
   const checkForTriggerMatch = useBasicTypeaheadTriggerMatch("/", {
+    allowWhitespace: true,
     minLength: 0,
   });
 
-  let options = baseOptions;
+  const options = useMemo(() => {
+    if (!queryString) {
+      return baseOptions;
+    }
 
-  if (queryString) {
-    const regex = new RegExp(queryString, "i");
+    const escapedQuery = queryString.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(escapedQuery, "i");
 
-    options = [
+    return [
       ...(dynamicOptionsFn?.({ queryString }) ?? []),
+
       ...baseOptions.filter(
         (option) =>
           regex.test(option.title) ||
           option.keywords.some((keyword) => regex.test(keyword)),
       ),
     ];
-  }
+  }, [baseOptions, dynamicOptionsFn, queryString]);
 
-  function onSelectOption(
-    selectedOption: ComponentPickerOption,
-    nodeToRemove: TextNode | null,
-    closeMenu: () => void,
-    matchingString: string,
-  ) {
-    editor.update(() => {
-      nodeToRemove?.remove();
+  const onSelectOption = useCallback(
+    (
+      selectedOption: ComponentPickerOption,
+      nodeToRemove: TextNode | null,
+      closeMenu: () => void,
+      matchingString: string,
+    ) => {
+      editor.update(() => {
+        nodeToRemove?.remove();
 
-      selectedOption.onSelect(matchingString, editor, showModal);
+        selectedOption.onSelect(matchingString, editor, showModal);
 
-      closeMenu();
-    });
-  }
+        closeMenu();
+      });
+    },
+    [editor, showModal],
+  );
 
   return (
     <>
@@ -157,7 +181,7 @@ export function ComponentPickerMenuPlugin({
           anchorElementRef,
           { selectedIndex, selectOptionAndCleanUp, setHighlightedIndex },
         ) =>
-          anchorElementRef.current && options.length > 0
+          anchorElementRef.current !== null && options.length > 0
             ? createPortal(
                 <ComponentPickerMenu
                   options={options}

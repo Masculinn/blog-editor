@@ -3,6 +3,7 @@ import { LockIcon, UnlockIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Kbd } from "@/components/ui/kbd";
 import {
   Tooltip,
   TooltipContent,
@@ -52,7 +53,14 @@ export function EditModeTogglePlugin() {
       </TooltipTrigger>
 
       <TooltipContent>
-        {isEditable ? "View Only Mode" : "Edit Mode"}
+        {isEditable ? (
+          <>
+            <span>"View Only Mode</span> <Kbd>Control</Kbd>
+            <Kbd>e</Kbd>
+          </>
+        ) : (
+          "Edit Mode"
+        )}
       </TooltipContent>
     </Tooltip>
   );
