@@ -10,7 +10,8 @@
     "format": "biome format --write",
     "knip": "knip",
     "lint:type": "tsc --noEmit",
-    "check": "npm run lint:type && npm run lint && npm run knip"
+    "check": "npm run lint:type && npm run lint && npm run knip",
+    "db:types": "supabase gen types typescript --linked --schema public > src/types/database.types.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
@@ -30,6 +31,7 @@
     "@lexical/table": "^0.49.0",
     "@lexical/text": "^0.49.0",
     "@lexical/utils": "^0.49.0",
+    "@supabase/supabase-js": "^2.112.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -41,6 +43,7 @@
     "react": "19.2.8",
     "react-day-picker": "^10.0.1",
     "react-dom": "19.2.8",
+    "server-only": "^0.0.1",
     "shadcn": "^4.19.0",
     "sonner": "^2.0.8",
     "tailwind-merge": "^3.6.0",
@@ -55,7 +58,8 @@
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "1.0.0",
     "knip": "^6.32.2",
+    "supabase": "^2.115.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^7.0.2"
   }
 }
