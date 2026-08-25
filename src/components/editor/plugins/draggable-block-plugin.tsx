@@ -210,7 +210,7 @@ export function DraggableBlockPlugin({
         ? ReactDOM.createPortal(
             <div
               ref={pickerRef}
-              className="absolute z-999 w-56 rounded-md shadow-md"
+              className="absolute z-9999 w-56 rounded-md shadow-md"
               style={{
                 left: pickerPosition.left,
                 top: pickerPosition.top,

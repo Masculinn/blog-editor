@@ -47,11 +47,8 @@ import { LayoutContainerNode } from "@/components/editor/nodes/layout-container-
 import { LayoutItemNode } from "@/components/editor/nodes/layout-item-node";
 import { SpecialTextNode } from "@/components/editor/nodes/special-text-node";
 
-import { ActionsPlugin } from "@/components/editor/plugins/actions/actions-plugin";
 import { ClearEditorActionPlugin } from "@/components/editor/plugins/actions/clear-editor-plugin";
 import { CounterCharacterPlugin } from "@/components/editor/plugins/actions/counter-character-plugin";
-import { EditModeTogglePlugin } from "@/components/editor/plugins/actions/edit-mode-toggle-plugin";
-import { ImportExportPlugin } from "@/components/editor/plugins/actions/import-export-plugin";
 import { MarkdownTogglePlugin } from "@/components/editor/plugins/actions/markdown-toggle-plugin";
 import { ShareContentPlugin } from "@/components/editor/plugins/actions/share-content-plugin";
 
@@ -115,6 +112,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 
 import { DisableDragDropExtension } from "@/components/editor/extensions/disable-drag-drop-extension";
 import { AutoCompletePlugin } from "@/components/editor/plugins/auto-complete-plugin";
+import { UrlDocumentSyncPlugin } from "@/components/editor/plugins/url-document-sync-plugin";
 import { cn } from "@/lib/utils";
 import { validateUrl } from "@/utils/editor/validateUrl";
 
@@ -147,6 +145,7 @@ const EDITOR_NODES = [
 type EditorProps = {
   editorState?: EditorState;
   editorSerializedState?: SerializedEditorState;
+  documentHash?: string | null;
   onChange?: (editorState: EditorState) => void;
   onSerializedChange?: (editorSerializedState: SerializedEditorState) => void;
   className?: string;
@@ -158,6 +157,7 @@ export function Editor({
   onChange,
   onSerializedChange,
   className,
+  documentHash,
 }: EditorProps) {
   const [floatingAnchorElem, setFloatingAnchorElem] =
     useState<HTMLDivElement | null>(null);
@@ -176,8 +176,8 @@ export function Editor({
   const editorExtension = useMemo(
     () =>
       defineExtension({
-        name: "ta",
-        namespace: "Playground",
+        name: "burakdev-blog-editor",
+        namespace: "Editor",
         theme: editorTheme,
         dependencies: [
           RichTextExtension,
@@ -212,6 +212,7 @@ export function Editor({
 
           configExtension(ListExtension, {
             shouldPreserveNumbering: false,
+            hasStrictIndent: false,
           }),
 
           CheckListExtension,
@@ -259,7 +260,7 @@ export function Editor({
         contentEditable={null}
       >
         <TooltipProvider>
-          <div className="relative">
+          <div className="relative size-full">
             <ToolbarPlugin>
               {({ blockType }) => (
                 <div className="vertical-align-middle sticky top-0 z-10 flex items-between justify-between gap-2 overflow-auto border-b p-1">
@@ -278,24 +279,37 @@ export function Editor({
                       <FormatQuote />
                     </BlockFormatDropDown>
                   </div>
-
                   {blockType === "code" ? (
-                    <CodeLanguageToolbarPlugin />
+                    <>
+                      <CodeLanguageToolbarPlugin />
+                      <MarkdownTogglePlugin
+                        shouldPreserveNewLinesInMarkdown
+                        transformers={MARKDOWN_TRANSFORMERS}
+                      />
+                    </>
                   ) : (
                     <>
                       <div className="flex flex-row gap-0.5">
+                        <Separator orientation="vertical" className="h-7!" />
                         <FontFormatToolbarPlugin />
+                        <Separator orientation="vertical" className="h-7!" />
                         <LinkToolbarPlugin
                           setIsLinkEditMode={setIsLinkEditMode}
                         />
+                        <ClearFormattingToolbarPlugin />
+                        <Separator orientation="vertical" className="h-7!" />
                       </div>
                       <div className="flex flex-row gap-0.5">
-                        <ClearFormattingToolbarPlugin />
+                        <ShareContentPlugin />
                         <BlockInsertPlugin>
                           <InsertHorizontalRule />
                           <InsertImage />
                           <InsertTable />
                         </BlockInsertPlugin>
+                        <MarkdownTogglePlugin
+                          shouldPreserveNewLinesInMarkdown
+                          transformers={MARKDOWN_TRANSFORMERS}
+                        />
                       </div>
                     </>
                   )}
@@ -303,12 +317,15 @@ export function Editor({
               )}
             </ToolbarPlugin>
 
-            <div className="relative size-full ">
-              <div ref={onFloatingAnchorRef}>
+            <div className="relative size-full w-full">
+              <div
+                ref={onFloatingAnchorRef}
+                className="overflow-y-scroll max-h-[calc(100%-5.5rem)] h-full scrollbar-custom scroll-fade"
+              >
                 <ContentEditable
                   placeholder={PLACEHOLDER}
-                  className="h-[calc(100vh-141px)] overflow-y-scroll scrollbar-custom p-8"
-                  placeholderClassName="top-8 left-8"
+                  className="p-4 size-full"
+                  placeholderClassName="top-4 left-4"
                 />
               </div>
               <ComponentPickerMenuPlugin
@@ -332,6 +349,7 @@ export function Editor({
                 ]}
                 dynamicOptionsFn={DynamicTablePickerPlugin}
               />
+              <UrlDocumentSyncPlugin documentHash={documentHash} />{" "}
               <EmojiPickerPlugin />
               <AutoCompletePlugin />
               <ContextMenuPlugin />
@@ -376,29 +394,19 @@ export function Editor({
               />
               <CodeActionMenuPlugin anchorElem={floatingAnchorElem} />
             </div>
-            <ActionsPlugin>
-              <div className="clear-both flex items-center justify-between gap-2 overflow-auto border-t p-1">
-                <div className="flex flex-1 justify-start text-xs text-gray-500">
-                  <CharacterLimitPlugin
-                    maxLength={MAX_LENGTH}
-                    charset="UTF-16"
-                  />
-                </div>
-                <div>
-                  <CounterCharacterPlugin charset="UTF-16" />
-                </div>
-                <div className="flex flex-1 justify-end">
-                  <ShareContentPlugin />
-                  <ImportExportPlugin />
-                  <MarkdownTogglePlugin
-                    shouldPreserveNewLinesInMarkdown
-                    transformers={MARKDOWN_TRANSFORMERS}
-                  />
-                  <EditModeTogglePlugin />
-                  <ClearEditorActionPlugin />
-                </div>
+            <div className="absolute bottom-0  w-full flex items-center justify-between border-t p-1">
+              <div className="flex flex-1 justify-start text-xs text-gray-500">
+                <CharacterLimitPlugin maxLength={MAX_LENGTH} charset="UTF-16" />
               </div>
-            </ActionsPlugin>
+              <div>
+                <CounterCharacterPlugin charset="UTF-16" />
+              </div>
+              <div className="flex flex-1 justify-end">
+                {/* <ImportExportPlugin /> */}
+                {/* <EditModeTogglePlugin /> */}
+                <ClearEditorActionPlugin />
+              </div>
+            </div>
           </div>
           <OnChangePlugin
             ignoreSelectionChange

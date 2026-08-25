@@ -1,6 +1,8 @@
-﻿export function EditorBg() {
+﻿import { cn } from "@/lib/utils";
+
+export function EditorBg({ className }: { className?: string }) {
   return (
-    <>
+    <div className={cn("p-8 size-full absolute inset-0 -z-10", className)}>
       <div
         className="absolute inset-0 z-0"
         style={{
@@ -37,6 +39,6 @@
         className="absolute inset-0 -z-5 mix-blend-soft-light"
         style={{ opacity: 0.22 }}
       />
-    </>
+    </div>
   );
 }

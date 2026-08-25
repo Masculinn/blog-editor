@@ -1,4 +1,6 @@
+import { getAnimation } from "@/lib/motion/getAnimation";
 import { cn } from "@/lib/utils";
+import { MotionText } from "@/motion/components/motion-text";
 import { ContentEditable as LexicalContentEditable } from "@lexical/react/LexicalContentEditable";
 import type { JSX } from "react";
 
@@ -16,20 +18,23 @@ export function ContentEditable({
   return (
     <LexicalContentEditable
       className={cn(
-        "ContentEditable__root relative block min-h-72 focus:outline-none",
+        "ContentEditable__root relative focus:outline-none",
         className,
       )}
       aria-placeholder={placeholder}
       placeholder={
         <div
           className={cn(
-            "text-muted-foreground pointer-events-none absolute  text-ellipsis select-none",
+            "text-muted-foreground pointer-events-none absolute text-ellipsis select-none",
             placeholderClassName,
           )}
         >
-          {placeholder}
+          <MotionText {...getAnimation("contentEditablePlaceholder")}>
+            {placeholder}
+          </MotionText>
         </div>
       }
+      tabIndex={0}
     />
   );
 }

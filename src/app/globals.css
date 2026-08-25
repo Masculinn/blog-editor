@@ -11,6 +11,7 @@
   --color-foreground: var(--foreground);
   --font-primary: var(--font-primary);
   --font-secondary: var(--font-secondary);
+  --font-accent: var(--font-cyberpunk);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -100,10 +101,6 @@
   html {
     @apply font-sans;
   }
-}
-
-::-webkit-scrollbar {
-  display: none;
 }
 
 .scrollbar-custom::-webkit-scrollbar {

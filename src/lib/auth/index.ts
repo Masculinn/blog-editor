@@ -140,10 +140,6 @@ async function deriveUserIdKey(rootKey: CryptoKey): Promise<CryptoKey> {
   );
 }
 
-/**
- * Converts an ArrayBuffer-backed Uint8Array
- * into RFC 4648 Base64URL without padding.
- */
 function toBase64Url(bytes: Uint8Array<ArrayBuffer>): string {
   let binary = "";
 
@@ -157,24 +153,12 @@ function toBase64Url(bytes: Uint8Array<ArrayBuffer>): string {
     .replace(/=+$/g, "");
 }
 
-/**
- * Converts RFC 4648 Base64URL into a typed array
- * explicitly backed by ArrayBuffer.
- *
- * The explicit ArrayBuffer allocation is important:
- * Web Crypto's BufferSource types reject
- * Uint8Array<ArrayBufferLike> because that could
- * theoretically contain SharedArrayBuffer.
- */
 function fromBase64Url(input: string): Uint8Array<ArrayBuffer> {
   const base64 = input.replace(/-/g, "+").replace(/_/g, "/");
-
   const padded = base64 + "=".repeat((4 - (base64.length % 4)) % 4);
-
   const binary = atob(padded);
 
   const buffer = new ArrayBuffer(binary.length);
-
   const bytes = new Uint8Array(buffer);
 
   for (let index = 0; index < binary.length; index += 1) {
@@ -250,10 +234,7 @@ export async function verifyIdentityToken(
 ): Promise<IdentityPayload | null> {
   try {
     const parts = token.split(".");
-
-    if (parts.length !== 4) {
-      return null;
-    }
+    if (parts.length !== 4) return null;
 
     const [version, ivEncoded, ciphertextEncoded, signatureEncoded] = parts;
 
@@ -281,45 +262,29 @@ export async function verifyIdentityToken(
     const validSignature = await crypto.subtle.verify(
       "HMAC",
       signingKey,
-
-      // Explicit ArrayBuffer prevents the
-      // Uint8Array<ArrayBufferLike> mismatch.
       signature.buffer,
-
       encoder.encode(body),
     );
 
-    if (!validSignature) {
-      return null;
-    }
+    if (!validSignature) return null;
 
     const iv = fromBase64Url(ivEncoded);
-
-    if (iv.length !== 12) {
-      return null;
-    }
+    if (iv.length !== 12) return null;
 
     const ciphertext = fromBase64Url(ciphertextEncoded);
 
     const plaintext = await crypto.subtle.decrypt(
       {
         name: "AES-GCM",
-
-        // Explicit ArrayBuffer-backed source.
         iv: iv.buffer,
       },
-
       encryptionKey,
-
-      // Explicit ArrayBuffer-backed source.
       ciphertext.buffer,
     );
 
     const parsed: unknown = JSON.parse(decoder.decode(plaintext));
 
-    if (!isIdentityPayload(parsed)) {
-      return null;
-    }
+    if (!isIdentityPayload(parsed)) return null;
 
     const expectedUserId = await createUserId(currentIdentity, userIdKey);
 
@@ -338,9 +303,7 @@ export async function verifyIdentityToken(
 }
 
 function isIdentityPayload(value: unknown): value is IdentityPayload {
-  if (typeof value !== "object" || value === null) {
-    return false;
-  }
+  if (typeof value !== "object" || value === null) return false;
 
   const payload = value as Record<string, unknown>;
 

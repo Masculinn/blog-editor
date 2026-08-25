@@ -1,28 +1,130 @@
 "use client";
 
 import {
-  editorStateFromSerializedDocument,
   type SerializedDocument,
   serializedDocumentFromEditorState,
 } from "@lexical/file";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { CLEAR_HISTORY_COMMAND } from "lexical";
-import { DatabaseIcon, SendIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { DatabaseIcon, GlobeIcon } from "lucide-react";
+import {
+  type FormEvent,
+  startTransition,
+  useActionState,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { toast } from "sonner";
 
 import { createSmallTalkAction } from "@/app/actions/create-small-talk";
-import { docFromHash, docToHash } from "@/components/doc-serialization";
+import { docToHash } from "@/components/doc-serialization";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+type SaveState =
+  | {
+      status: "idle";
+      message: "";
+    }
+  | {
+      status: "success";
+      message: string;
+    }
+  | {
+      status: "error";
+      message: string;
+    };
+
+type SaveDocumentPayload = {
+  doc: SerializedDocument;
+  title: string;
+};
+
+const INITIAL_SAVE_STATE: SaveState = {
+  status: "idle",
+  message: "",
+};
+
+async function saveDocumentAction(
+  _previousState: SaveState,
+  payload: SaveDocumentPayload,
+): Promise<SaveState> {
+  const title = payload.title.trim();
+
+  if (!title) {
+    return {
+      status: "error",
+      message: "A title is required.",
+    };
+  }
+
+  try {
+    const hash = await docToHash(payload.doc);
+
+    const contentHashed = hash.startsWith("#") ? hash : `#${hash}`;
+
+    const res = await createSmallTalkAction(contentHashed, title);
+
+    if (!res.success) {
+      return {
+        status: "error",
+        message: res.message,
+      };
+    }
+
+    return {
+      status: "success",
+      message: "Content published",
+    };
+  } catch {
+    return {
+      status: "error",
+      message: "Content could not be saved",
+    };
+  }
+}
+
 export function ShareContentPlugin() {
   const [editor] = useLexicalComposerContext();
-  const [isSaving, setIsSaving] = useState(false);
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const formRef = useRef<HTMLFormElement>(null);
+
+  const [saveState, saveAction, isSaving] = useActionState(
+    saveDocumentAction,
+    INITIAL_SAVE_STATE,
+  );
+
+  useEffect(() => {
+    if (saveState.status === "success") {
+      toast.success(saveState.message);
+
+      formRef.current?.reset();
+      setDialogOpen(false);
+
+      return;
+    }
+
+    if (saveState.status === "error") {
+      toast.error(saveState.message);
+    }
+  }, [saveState]);
 
   function getSerializedDocument(): SerializedDocument {
     return serializedDocumentFromEditorState(editor.getEditorState(), {
@@ -30,107 +132,132 @@ export function ShareContentPlugin() {
     });
   }
 
-  async function getDocumentHash(doc: SerializedDocument): Promise<string> {
-    const hash = await docToHash(doc);
-
-    return hash.startsWith("#") ? hash : `#${hash}`;
-  }
-
-  async function shareDoc(doc: SerializedDocument): Promise<void> {
-    const url = new URL(window.location.toString());
-
-    url.hash = await getDocumentHash(doc);
-
-    const newUrl = url.toString();
-
-    window.history.replaceState({}, "", newUrl);
-
-    await window.navigator.clipboard.writeText(newUrl);
-  }
-
-  async function saveDoc(): Promise<void> {
+  function handleDialogOpenChange(open: boolean): void {
+    // Prevent dismissing the dialog while the publication is in flight.
     if (isSaving) {
       return;
     }
 
-    setIsSaving(true);
-
-    try {
-      const doc = getSerializedDocument();
-      const contentHashed = await getDocumentHash(doc);
-
-      const result = await createSmallTalkAction(contentHashed);
-
-      if (!result.success) {
-        toast.error(result.message);
-        return;
-      }
-
-      toast.success("Content saved");
-    } catch {
-      toast.error("Content could not be saved");
-    } finally {
-      setIsSaving(false);
-    }
+    setDialogOpen(open);
   }
 
-  useEffect(() => {
-    docFromHash(window.location.hash).then((doc) => {
-      if (doc && doc.source === "editor") {
-        editor.setEditorState(editorStateFromSerializedDocument(editor, doc));
+  function saveDoc(event: FormEvent<HTMLFormElement>): void {
+    event.preventDefault();
 
-        editor.dispatchCommand(CLEAR_HISTORY_COMMAND, undefined);
-      }
+    const formData = new FormData(event.currentTarget);
+    const titleValue = formData.get("title");
+
+    if (typeof titleValue !== "string") {
+      toast.error("A title is required.");
+      return;
+    }
+
+    const title = titleValue.trim();
+
+    // `required` catches an empty input natively.
+    // This additionally rejects whitespace-only titles.
+    if (!title) {
+      toast.error("A title is required.");
+      return;
+    }
+
+    const doc = getSerializedDocument();
+
+    startTransition(() => {
+      saveAction({
+        doc,
+        title,
+      });
     });
-  }, [editor]);
+  }
 
   return (
-    <>
+    <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
       <Tooltip>
         <TooltipTrigger
           render={
             <Button
-              variant="ghost"
-              onClick={() =>
-                shareDoc(getSerializedDocument()).then(
-                  () => toast.success("URL copied to clipboard"),
-                  () => toast.error("URL could not be copied to clipboard"),
-                )
-              }
-              title="Share"
-              aria-label="Share current editor content"
               size="sm"
-              className="p-2"
-            />
-          }
-        >
-          <SendIcon className="size-4" />
-        </TooltipTrigger>
-
-        <TooltipContent>Share Content</TooltipContent>
-      </Tooltip>
-
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Button
-              variant="ghost"
-              onClick={saveDoc}
+              variant="success"
+              onClick={() => setDialogOpen(true)}
               disabled={isSaving}
-              title="Save"
-              aria-label="Save current editor content"
-              size="sm"
+              title="Publish"
+              aria-label="Publish current editor content"
               className="p-2"
             />
           }
         >
-          <DatabaseIcon className="size-4" />
+          <GlobeIcon />
+          Publish
         </TooltipTrigger>
 
         <TooltipContent>
-          {isSaving ? "Saving..." : "Save Content"}
+          {isSaving ? (
+            <>
+              <span className="pr-1">Saving</span>
+              <Spinner className="size-4" />
+            </>
+          ) : (
+            "Publish Content"
+          )}
         </TooltipContent>
       </Tooltip>
-    </>
+
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Publish document</DialogTitle>
+
+          <DialogDescription>
+            Give your document a title before publishing it. The title and
+            document will be publicly visible in Posts.
+          </DialogDescription>
+        </DialogHeader>
+
+        <form ref={formRef} onSubmit={saveDoc} className="grid gap-6">
+          <div className="grid gap-2">
+            <Label htmlFor="document-title">Document title</Label>
+            <Input
+              id="document-title"
+              name="title"
+              type="text"
+              placeholder="Give this document a title"
+              autoComplete="off"
+              maxLength={37}
+              disabled={isSaving}
+              required
+              autoFocus
+            />
+            <p className="text-xs text-muted-foreground">
+              This title will identify your document in the public Posts list.
+            </p>
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isSaving}
+              onClick={() => setDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+
+            <Button type="submit" disabled={isSaving}>
+              {isSaving ? (
+                <>
+                  <Spinner className="size-4" />
+                  Publishing...
+                </>
+              ) : (
+                <>
+                  <DatabaseIcon className="size-4" />
+                  Publish
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -1,23 +1,24 @@
 ﻿import "server-only";
 
 import { supabaseServer } from "@/lib/db/server";
-import type { Database } from "@/types/database.types";
-
-type SmallTalk = Database["public"]["Tables"]["small_talks"]["Row"];
+import type { SmallTalk } from "@/types/supabase";
 
 type CreateSmallTalkInput = {
   contentHashed: string;
+  title: string;
   userId: string;
 };
 
 export async function createSmallTalk({
   contentHashed,
+  title,
   userId,
 }: CreateSmallTalkInput): Promise<SmallTalk> {
   const { data, error } = await supabaseServer
     .from("small_talks")
     .insert({
       content_hashed: contentHashed,
+      title,
       user_id: userId,
     })
     .select("*")

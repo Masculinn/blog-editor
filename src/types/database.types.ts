@@ -52,18 +52,21 @@ export type Database = {
           content_hashed: string
           id: string
           timestamp: string
+          title: string
           user_id: string
         }
         Insert: {
           content_hashed: string
           id?: string
           timestamp?: string
+          title?: string
           user_id: string
         }
         Update: {
           content_hashed?: string
           id?: string
           timestamp?: string
+          title?: string
           user_id?: string
         }
         Relationships: []
