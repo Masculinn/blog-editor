@@ -15,7 +15,7 @@ import Link from "next/link";
 
 export default function Banner() {
   return (
-    <div className="size-full relative pl-3 pb-3 overflow-hidden">
+    <div className="size-full relative md:pl-3 md:pb-3 overflow-hidden">
       <Card
         className="size-full relative bg-transparent overflow-hidden group pl-3"
         size="sm"

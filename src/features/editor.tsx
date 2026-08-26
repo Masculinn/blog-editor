@@ -248,7 +248,7 @@ export function Editor({
             <ToolbarPlugin>
               {({ blockType }) => (
                 <div className="vertical-align-middle sticky top-0 z-10 flex items-between justify-between gap-2 overflow-auto border-b p-1">
-                  <div className="flex flex-row gap-1 items-center">
+                  <div className="flex md:flex-row flex-wrap gap-1 items-center">
                     <HistoryToolbarPlugin />
                     <Separator orientation="vertical" className="h-7!" />
                     <BlockFormatDropDown>

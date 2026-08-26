@@ -18,11 +18,12 @@ export default async function Page({ searchParams }: Props) {
   await connection();
 
   const params = await searchParams;
+
   const postId = typeof params.post === "string" ? params.post : undefined;
 
   let documentHash: string | null = null;
-  let title: string = "";
-  let timestamp: string = "";
+  let title = "";
+  let timestamp = "";
 
   if (postId) {
     const { data, error } = await db
@@ -31,7 +32,9 @@ export default async function Page({ searchParams }: Props) {
       .eq("id", postId)
       .maybeSingle();
 
-    if (error) return notFound();
+    if (error) {
+      return notFound();
+    }
 
     documentHash = data?.content_hashed ?? null;
     title = data?.title ?? "";
@@ -39,14 +42,109 @@ export default async function Page({ searchParams }: Props) {
   }
 
   return (
-    <main className="relative size-full overflow-hidden laptop:p-12 desktop:p-12 grid grid-cols-12 grid-rows-6 place-items-center-safe font-primary">
-      <section className="col-span-4 row-span-2 size-full overflow-hidden relative">
-        <Guide />
-      </section>
-      <section className="col-span-8 row-span-1 size-full">
+    <main
+      className="
+        relative
+        grid
+        min-h-dvh
+        w-full
+        grid-cols-1
+        gap-3
+        overflow-x-hidden
+        overflow-y-auto
+        p-3
+        font-primary
+
+        laptop:h-dvh
+        laptop:grid-cols-12
+        laptop:grid-rows-6
+        laptop:gap-0
+        laptop:overflow-hidden
+        laptop:p-12
+
+        desktop:p-12
+      "
+    >
+      {/* Mobile: 1st */}
+      {/* Laptop/Desktop: top-right */}
+      <section
+        className="
+          min-w-0
+          w-full
+
+          laptop:col-start-5
+          laptop:col-span-8
+          laptop:row-start-1
+          laptop:row-span-1
+          laptop:h-full
+        "
+      >
         <Banner />
       </section>
-      <section className="row-span-6 size-full col-span-8 pl-3">
+
+      {/* Mobile: 2nd */}
+      {/* Laptop/Desktop: top-left */}
+      <section
+        className="
+          relative
+          min-h-64
+          min-w-0
+          w-full
+          overflow-hidden
+
+          laptop:col-start-1
+          laptop:col-span-4
+          laptop:row-start-1
+          laptop:row-span-2
+          laptop:h-full
+          laptop:min-h-0
+        "
+      >
+        <Guide />
+      </section>
+
+      {/* Mobile: 3rd */}
+      {/* Laptop/Desktop: bottom-left */}
+      <section
+        className="
+          min-w-0
+          w-full
+          pb-3
+
+          laptop:col-start-1
+          laptop:col-span-4
+          laptop:row-start-3
+          laptop:row-span-4
+          laptop:h-full
+          laptop:pt-3
+          laptop:pb-0
+        "
+      >
+        <Suspense
+          fallback={<div className="size-full bg-muted" />}
+          name="posts-suspense"
+        >
+          <Posts />
+        </Suspense>
+      </section>
+
+      {/* Mobile: 4th */}
+      {/* Laptop/Desktop: right side beneath Banner */}
+      <section
+        className="
+          min-h-[70dvh]
+          min-w-0
+          w-full
+
+          laptop:col-start-5
+          laptop:col-span-8
+          laptop:row-start-2
+          laptop:row-span-5
+          laptop:h-full
+          laptop:min-h-0
+          laptop:pl-3
+        "
+      >
         {documentHash ? (
           <DocumentViewer
             documentHash={documentHash}
@@ -56,11 +154,6 @@ export default async function Page({ searchParams }: Props) {
         ) : (
           <Editor className="z-50" documentHash={documentHash} />
         )}
-      </section>
-      <section className="col-start-1 col-span-4 row-span-4 size-full pt-3">
-        <Suspense fallback={<div className="bg-muted" />} name="posts-suspense">
-          <Posts />
-        </Suspense>
       </section>
     </main>
   );

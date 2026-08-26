@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import Autoplay from "embla-carousel-autoplay";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
 import {
@@ -9,7 +10,7 @@ import {
   CarouselContent,
   CarouselItem,
 } from "@/components/ui/carousel";
-import Image from "next/image";
+
 import slides from "../constants/guide.data";
 
 const DEFAULT_SLIDE_DURATION_MS = 5200;
@@ -26,6 +27,7 @@ export function Guide() {
       stopOnInteraction: false,
       stopOnMouseEnter: false,
       stopOnFocusIn: false,
+
       delay: (scrollSnapList) =>
         scrollSnapList.map(
           (_, index) => slides[index]?.timeoutMs ?? DEFAULT_SLIDE_DURATION_MS,
@@ -38,6 +40,7 @@ export function Guide() {
 
     function syncSelectedSlide() {
       if (!api) return;
+
       setCurrent(api.selectedScrollSnap());
       setProgress(0);
     }
@@ -58,7 +61,9 @@ export function Guide() {
 
     function updateProgress() {
       if (!api) return;
+
       const index = api.selectedScrollSnap();
+
       const duration = slides[index]?.timeoutMs ?? DEFAULT_SLIDE_DURATION_MS;
 
       const timeUntilNext = autoplay.timeUntilNext();
@@ -83,7 +88,7 @@ export function Guide() {
   }, [api, autoplay]);
 
   return (
-    <div className="relative size-full overflow-hidden border rounded-t-2xl rounded-b-md">
+    <div className="relative w-full overflow-hidden rounded-t-2xl rounded-b-md border">
       <Carousel
         opts={{
           align: "start",
@@ -92,20 +97,34 @@ export function Guide() {
         }}
         plugins={[autoplay]}
         setApi={setApi}
-        className="pointer-events-none size-full select-none"
+        className="pointer-events-none w-full select-none"
       >
-        <CarouselContent className="ml-0 size-full">
+        <CarouselContent className="ml-0">
           {slides.map((slide, index) => (
-            <CarouselItem key={slide.id} className="size-full pl-0">
-              <article className="relative overflow-hidden laptop:h-58 desktop:h-72">
+            <CarouselItem key={slide.id} className="basis-full pl-0">
+              <article
+                className="
+                  relative
+                  h-64
+                  w-full
+                  overflow-hidden
+
+                  laptop:h-58
+                  desktop:h-72
+                "
+              >
                 <Image
                   unoptimized
                   src={slide.image}
                   alt={slide.alt}
-                  className="absolute inset-0 size-full object-cover"
-                  draggable={false}
                   fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  draggable={false}
+                  className="object-cover"
+                  sizes="
+                    (max-width: 1023px) 100vw,
+                    (max-width: 1439px) 33vw,
+                    33vw
+                  "
                   loading={index === 0 ? "eager" : "lazy"}
                   decoding="async"
                   fetchPriority={index === 0 ? "high" : "auto"}
@@ -113,11 +132,33 @@ export function Guide() {
 
                 <div className="absolute inset-0 bg-linear-to-t from-black via-black/25 to-black/10" />
 
-                <div className="absolute inset-x-0 bottom-0 z-10 p-4 sm:p-6">
-                  <span className="text-muted-foreground tracking-widest uppercase text-xs">
+                <div
+                  className="
+                    absolute
+                    inset-x-0
+                    bottom-0
+                    z-10
+                    p-4
+
+                    laptop:p-6
+                  "
+                >
+                  <span className="text-xs tracking-widest text-muted-foreground uppercase">
                     {slide.title}
                   </span>
-                  <p className="mt-2 text-xs leading-relaxed text-foreground sm:text-sm font-secondary tracking-tighter">
+
+                  <p
+                    className="
+                      mt-2
+                      font-secondary
+                      text-xs
+                      leading-relaxed
+                      tracking-tighter
+                      text-foreground
+
+                      laptop:text-sm
+                    "
+                  >
                     {slide.description}
                   </p>
                 </div>

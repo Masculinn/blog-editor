@@ -119,9 +119,9 @@ export function DocumentViewer({
       )}
     >
       <Item
-        className="top-4 right-4 absolute w-72"
-        size={"xs"}
-        variant={"outline"}
+        className="md:top-4 md:right-4 md:bottom-auto bottom-4 right-4  absolute w-72"
+        size="xs"
+        variant="outline"
       >
         <ItemContent>
           <ItemTitle>{title}</ItemTitle>
