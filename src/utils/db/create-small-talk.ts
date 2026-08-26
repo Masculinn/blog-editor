@@ -1,6 +1,6 @@
 ﻿import "server-only";
 
-import { supabaseServer } from "@/lib/db/server";
+import { db } from "@/lib/db/server";
 import type { SmallTalk } from "@/types/supabase";
 
 type CreateSmallTalkInput = {
@@ -14,7 +14,7 @@ export async function createSmallTalk({
   title,
   userId,
 }: CreateSmallTalkInput): Promise<SmallTalk> {
-  const { data, error } = await supabaseServer
+  const { data, error } = await db
     .from("small_talks")
     .insert({
       content_hashed: contentHashed,

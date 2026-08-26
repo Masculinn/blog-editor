@@ -2,7 +2,6 @@
 const decoder = new TextDecoder();
 
 const HKDF_SALT = encoder.encode("editor-app:identity:v1");
-
 export const IDENTITY_COOKIE_NAME = "editor_identity";
 
 type HeaderReader = {

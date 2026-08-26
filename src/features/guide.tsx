@@ -99,6 +99,7 @@ export function Guide() {
             <CarouselItem key={slide.id} className="size-full pl-0">
               <article className="relative overflow-hidden laptop:h-58 desktop:h-72">
                 <Image
+                  unoptimized
                   src={slide.image}
                   alt={slide.alt}
                   className="absolute inset-0 size-full object-cover"

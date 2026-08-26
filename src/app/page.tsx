@@ -1,8 +1,9 @@
 import Banner from "@/features/banner";
 import { Editor } from "@/features/editor";
+import { DocumentViewer } from "@/features/editor/document-viewer";
 import { Guide } from "@/features/guide";
 import { Posts } from "@/features/posts";
-import { supabaseServer } from "@/lib/db/server";
+import { db } from "@/lib/db/server";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
@@ -20,17 +21,21 @@ export default async function Page({ searchParams }: Props) {
   const postId = typeof params.post === "string" ? params.post : undefined;
 
   let documentHash: string | null = null;
+  let title: string = "";
+  let timestamp: string = "";
 
   if (postId) {
-    const { data, error } = await supabaseServer
+    const { data, error } = await db
       .from("small_talks")
-      .select("content_hashed")
+      .select("*")
       .eq("id", postId)
       .maybeSingle();
 
     if (error) return notFound();
 
     documentHash = data?.content_hashed ?? null;
+    title = data?.title ?? "";
+    timestamp = data?.timestamp ?? "";
   }
 
   return (
@@ -42,7 +47,15 @@ export default async function Page({ searchParams }: Props) {
         <Banner />
       </section>
       <section className="row-span-6 size-full col-span-8 pl-3">
-        <Editor className="z-50" documentHash={documentHash} />
+        {documentHash ? (
+          <DocumentViewer
+            documentHash={documentHash}
+            title={title}
+            timestamp={timestamp}
+          />
+        ) : (
+          <Editor className="z-50" documentHash={documentHash} />
+        )}
       </section>
       <section className="col-start-1 col-span-4 row-span-4 size-full pt-3">
         <Suspense fallback={<div className="bg-muted" />} name="posts-suspense">

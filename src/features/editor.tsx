@@ -10,13 +10,6 @@ import {
 import { HistoryExtension } from "@lexical/history";
 import { ClickableLinkExtension, LinkExtension } from "@lexical/link";
 import { CheckListExtension, ListExtension } from "@lexical/list";
-import {
-  CHECK_LIST,
-  ELEMENT_TRANSFORMERS,
-  MULTILINE_ELEMENT_TRANSFORMERS,
-  TEXT_FORMAT_TRANSFORMERS,
-  TEXT_MATCH_TRANSFORMERS,
-} from "@lexical/markdown";
 import { OverflowNode } from "@lexical/overflow";
 import { LexicalExtensionComposer } from "@lexical/react/LexicalExtensionComposer";
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
@@ -101,34 +94,23 @@ import { ToolbarPlugin } from "@/components/editor/plugins/toolbar/toolbar-plugi
 
 import { editorTheme } from "@/components/editor/themes/editor-theme";
 
-import { EMOJI } from "@/components/editor/transformers/markdown-emoji-transformer";
-import { HR } from "@/components/editor/transformers/markdown-hr-transformer";
-import { IMAGE } from "@/components/editor/transformers/markdown-image-transformer";
-import { TABLE } from "@/components/editor/transformers/markdown-table-transformer";
-
 import { Separator } from "@/components/ui/separator";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-import { DisableDragDropExtension } from "@/components/editor/extensions/disable-drag-drop-extension";
+import { DetailsContainerNode } from "@/components/editor/nodes/details-container-node";
+import { DetailsContentNode } from "@/components/editor/nodes/details-content-node";
+import { DetailsSummaryNode } from "@/components/editor/nodes/details-summary-node";
 import { AutoCompletePlugin } from "@/components/editor/plugins/auto-complete-plugin";
+import { DetailsPickerPlugin } from "@/components/editor/plugins/details-picker-plugin";
 import { UrlDocumentSyncPlugin } from "@/components/editor/plugins/url-document-sync-plugin";
+import { MARKDOWN_TRANSFORMERS } from "@/components/editor/transformers";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { validateUrl } from "@/utils/editor/validateUrl";
+import { CharacterLimitPlugin } from "@lexical/react/LexicalCharacterLimitPlugin";
 
-const PLACEHOLDER = "Press / for commands...";
+const PLACEHOLDER = "Press / to open up the commands";
 const MAX_LENGTH = Infinity;
-
-const MARKDOWN_TRANSFORMERS = [
-  TABLE,
-  HR,
-  IMAGE,
-  EMOJI,
-  CHECK_LIST,
-  ...ELEMENT_TRANSFORMERS,
-  ...MULTILINE_ELEMENT_TRANSFORMERS,
-  ...TEXT_FORMAT_TRANSFORMERS,
-  ...TEXT_MATCH_TRANSFORMERS,
-];
 
 const EDITOR_NODES = [
   OverflowNode,
@@ -139,6 +121,10 @@ const EDITOR_NODES = [
   TableRowNode,
   LayoutContainerNode,
   LayoutItemNode,
+
+  DetailsContainerNode,
+  DetailsSummaryNode,
+  DetailsContentNode,
 ];
 
 type EditorProps = {
@@ -158,10 +144,9 @@ export function Editor({
   className,
   documentHash,
 }: EditorProps) {
+  const [isLinkEditMode, setIsLinkEditMode] = useState(false);
   const [floatingAnchorElem, setFloatingAnchorElem] =
     useState<HTMLDivElement | null>(null);
-
-  const [isLinkEditMode, setIsLinkEditMode] = useState(false);
 
   const initialStateRef = useRef({
     editorState,
@@ -183,7 +168,6 @@ export function Editor({
           AutoFocusExtension,
           HistoryExtension,
           CodeExtension,
-          DisableDragDropExtension,
           configExtension(LinkExtension, {
             validateUrl,
             attributes: {
@@ -250,6 +234,7 @@ export function Editor({
   return (
     <div
       className={cn(
+        //650.5
         "bg-background/65 size-full rounded-lg border shadow flex flex-col",
         className,
       )}
@@ -263,7 +248,7 @@ export function Editor({
             <ToolbarPlugin>
               {({ blockType }) => (
                 <div className="vertical-align-middle sticky top-0 z-10 flex items-between justify-between gap-2 overflow-auto border-b p-1">
-                  <div className="flex flex-row gap-1">
+                  <div className="flex flex-row gap-1 items-center">
                     <HistoryToolbarPlugin />
                     <Separator orientation="vertical" className="h-7!" />
                     <BlockFormatDropDown>
@@ -279,13 +264,7 @@ export function Editor({
                     </BlockFormatDropDown>
                   </div>
                   {blockType === "code" ? (
-                    <>
-                      <CodeLanguageToolbarPlugin />
-                      <MarkdownTogglePlugin
-                        shouldPreserveNewLinesInMarkdown
-                        transformers={MARKDOWN_TRANSFORMERS}
-                      />
-                    </>
+                    <CodeLanguageToolbarPlugin />
                   ) : (
                     <>
                       <div className="flex flex-row gap-0.5">
@@ -295,22 +274,18 @@ export function Editor({
                         <LinkToolbarPlugin
                           setIsLinkEditMode={setIsLinkEditMode}
                         />
+
                         <ClearFormattingToolbarPlugin />
                         <Separator orientation="vertical" className="h-7!" />
                       </div>
-                      <div className="flex flex-row gap-0.5">
+                      <div className="flex flex-row gap-0.5 items-center">
                         <ShareContentPlugin />
                         <ClearEditorActionPlugin />
-
                         <BlockInsertPlugin>
                           <InsertHorizontalRule />
                           <InsertImage />
                           <InsertTable />
                         </BlockInsertPlugin>
-                        <MarkdownTogglePlugin
-                          shouldPreserveNewLinesInMarkdown
-                          transformers={MARKDOWN_TRANSFORMERS}
-                        />
                       </div>
                     </>
                   )}
@@ -325,7 +300,7 @@ export function Editor({
               >
                 <ContentEditable
                   placeholder={PLACEHOLDER}
-                  className="p-4 size-full selection:bg-primary selection:text-primary-foreground"
+                  className="p-4 size-full selection:bg-primary/50 selection:text-foreground"
                   placeholderClassName="top-4 left-4"
                 />
               </div>
@@ -347,10 +322,11 @@ export function Editor({
                   DividerPickerPlugin(),
                   ImagePickerPlugin(),
                   DateTimePickerPlugin(),
+                  DetailsPickerPlugin(),
                 ]}
                 dynamicOptionsFn={DynamicTablePickerPlugin}
               />
-              <UrlDocumentSyncPlugin documentHash={documentHash} />{" "}
+              <UrlDocumentSyncPlugin documentHash={documentHash} />
               <EmojiPickerPlugin />
               <AutoCompletePlugin />
               <ContextMenuPlugin />
@@ -371,7 +347,7 @@ export function Editor({
                   HeadingPickerPlugin({ n: 6 }),
 
                   TablePickerPlugin(),
-
+                  DetailsPickerPlugin(),
                   CheckListPickerPlugin(),
                   NumberedListPickerPlugin(),
                   BulletedListPickerPlugin(),
@@ -395,15 +371,23 @@ export function Editor({
               />
               <CodeActionMenuPlugin anchorElem={floatingAnchorElem} />
             </div>
-            <div className="absolute bottom-0  w-full flex items-center justify-between border-t p-1">
-              <CounterCharacterPlugin charset="UTF-16" />
-              {/* <div className="flex flex-1 justify-start text-xs text-gray-500">
+            <div className="absolute bottom-0  w-full flex items-center justify-between border-t p-1 pl-2">
+              <Badge variant="destructive" className="text-[10px]">
                 <CharacterLimitPlugin maxLength={MAX_LENGTH} charset="UTF-16" />
-              </div> */}
-              <div className="flex flex-1 justify-end">
-                {/* <ImportExportPlugin /> */}
-                {/* <EditModeTogglePlugin /> */}
+                char left
+              </Badge>
+              <CounterCharacterPlugin charset="UTF-16" />
+              <div className="flex-1 items-center justify-end flex text-xs">
+                <MarkdownTogglePlugin
+                  id="markdown-mode-footer"
+                  shouldPreserveNewLinesInMarkdown
+                  transformers={MARKDOWN_TRANSFORMERS}
+                />
               </div>
+              {/* <div className="flex flex-1 justify-end"> */}
+              {/* <ImportExportPlugin /> */}
+              {/* <EditModeTogglePlugin /> */}
+              {/* </div> */}
             </div>
           </div>
           <OnChangePlugin

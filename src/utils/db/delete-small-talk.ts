@@ -2,7 +2,7 @@
 
 import "server-only";
 
-import { supabaseServer } from "@/lib/db/server";
+import { db } from "@/lib/db/server";
 
 type DeleteSmallTalkInput = {
   id: string;
@@ -13,7 +13,7 @@ export async function deleteSmallTalk({
   id,
   userId,
 }: DeleteSmallTalkInput): Promise<boolean> {
-  const { data, error } = await supabaseServer
+  const { data, error } = await db
     .from("small_talks")
     .delete()
     .eq("id", id)

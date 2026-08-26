@@ -1,37 +1,62 @@
+import type { JSX } from "react";
+import { useEffect } from "react";
+
+import { $isCodeNode } from "@lexical/code";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import type { LexicalEditor } from "lexical";
 import { TextNode } from "lexical";
-import type { JSX } from "react";
-import { useEffect } from "react";
 
 import {
   $createSpecialTextNode,
   SpecialTextNode,
 } from "@/components/editor/nodes/special-text-node";
 
-const BRACKETED_TEXT_REGEX = /\[([^[\]]+)\]/;
+/*
+ * Special text now uses:
+ *
+ * [[special text]]
+ *
+ * This intentionally does NOT match:
+ *
+ * [link label](url)
+ * ![image alt](url)
+ */
+const SPECIAL_TEXT_REGEX = /\[\[([^[\]]+)\]\]/;
 
 function $findAndTransformText(node: TextNode): null | TextNode {
-  const text = node.getTextContent();
-  const match = BRACKETED_TEXT_REGEX.exec(text);
+  /*
+   * Never transform Markdown/code content.
+   */
+  const parent = node.getParent();
 
-  if (match) {
-    const matchedText = match[1];
-    const startIndex = match.index;
-
-    let targetNode: TextNode;
-    if (startIndex === 0) {
-      [targetNode] = node.splitText(startIndex + match[0].length);
-    } else {
-      [, targetNode] = node.splitText(startIndex, startIndex + match[0].length);
-    }
-
-    const specialTextNode = $createSpecialTextNode(matchedText);
-    targetNode.replace(specialTextNode);
-    return specialTextNode;
+  if ($isCodeNode(parent)) {
+    return null;
   }
 
-  return null;
+  const text = node.getTextContent();
+  const match = SPECIAL_TEXT_REGEX.exec(text);
+
+  if (!match) {
+    return null;
+  }
+
+  const matchedText = match[1];
+  const startIndex = match.index;
+  const endIndex = startIndex + match[0].length;
+
+  let targetNode: TextNode;
+
+  if (startIndex === 0) {
+    [targetNode] = node.splitText(endIndex);
+  } else {
+    [, targetNode] = node.splitText(startIndex, endIndex);
+  }
+
+  const specialTextNode = $createSpecialTextNode(matchedText);
+
+  targetNode.replace(specialTextNode);
+
+  return specialTextNode;
 }
 
 function $textNodeTransform(node: TextNode): void {
@@ -60,6 +85,8 @@ function useTextTransformation(editor: LexicalEditor): void {
 
 export function SpecialTextPlugin(): JSX.Element | null {
   const [editor] = useLexicalComposerContext();
+
   useTextTransformation(editor);
+
   return null;
 }

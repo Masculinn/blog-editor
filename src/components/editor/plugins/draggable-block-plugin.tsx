@@ -17,6 +17,10 @@ import {
   $getNodeByKey,
   $isParagraphNode,
   $isTextNode,
+  COMMAND_PRIORITY_CRITICAL,
+  DRAGOVER_COMMAND,
+  DROP_COMMAND,
+  mergeRegister,
   type NodeKey,
 } from "lexical";
 import { GripVerticalIcon, PlusIcon } from "lucide-react";
@@ -43,6 +47,19 @@ function isOnMenu(element: HTMLElement): boolean {
   return !!element.closest(`.${DRAGGABLE_BLOCK_MENU_CLASSNAME}`);
 }
 
+function isFileDrag(event: DragEvent): boolean {
+  const dataTransfer = event.dataTransfer;
+
+  if (!dataTransfer) {
+    return false;
+  }
+
+  return (
+    dataTransfer.files.length > 0 ||
+    Array.from(dataTransfer.types).includes("Files")
+  );
+}
+
 export function DraggableBlockPlugin({
   anchorElem,
   baseOptions = [],
@@ -58,26 +75,81 @@ export function DraggableBlockPlugin({
 }): JSX.Element | null {
   const [editor] = useLexicalComposerContext();
   const [modal, showModal] = useEditorModal();
+
   const menuRef = useRef<HTMLDivElement>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
   const targetLineRef = useRef<HTMLDivElement>(null);
+
   const [draggableElement, setDraggableElement] = useState<HTMLElement | null>(
     null,
   );
+
   const [pickerState, setPickerState] = useState<PickerState | null>(null);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [queryString, setQueryString] = useState("");
   const [highlightedIndex, setHighlightedIndex] = useState(0);
+
   const [pickerPosition, setPickerPosition] = useState<{
     left: number;
     top: number;
   } | null>(null);
 
+  /*
+   * Block only external/file drops.
+   *
+   * Do NOT globally disable DRAGOVER_COMMAND / DROP_COMMAND because
+   * LexicalDraggableBlockPlugin uses those commands to reorder blocks.
+   */
+  useEffect(() => {
+    return mergeRegister(
+      editor.registerCommand(
+        DRAGOVER_COMMAND,
+        (event) => {
+          if (!isFileDrag(event)) {
+            return false;
+          }
+
+          event.preventDefault();
+
+          if (event.dataTransfer) {
+            event.dataTransfer.dropEffect = "none";
+          }
+
+          return true;
+        },
+        COMMAND_PRIORITY_CRITICAL,
+      ),
+
+      editor.registerCommand(
+        DROP_COMMAND,
+        (event) => {
+          if (!isFileDrag(event)) {
+            return false;
+          }
+
+          event.preventDefault();
+          event.stopPropagation();
+
+          return true;
+        },
+        COMMAND_PRIORITY_CRITICAL,
+      ),
+    );
+  }, [editor]);
+
   const options = useMemo(() => {
     if (!queryString) {
       return baseOptions;
     }
-    const regex = new RegExp(queryString, "i");
+
+    let regex: RegExp;
+
+    try {
+      regex = new RegExp(queryString, "i");
+    } catch {
+      return baseOptions;
+    }
+
     return [
       ...(dynamicOptionsFn?.({ queryString }) ?? []),
       ...baseOptions.filter(
@@ -89,27 +161,39 @@ export function DraggableBlockPlugin({
   }, [baseOptions, dynamicOptionsFn, queryString]);
 
   useEffect(() => {
-    if (!isPickerOpen) return;
+    if (!isPickerOpen) {
+      return;
+    }
+
     setHighlightedIndex((current) =>
       Math.min(current, Math.max(options.length - 1, 0)),
     );
   }, [isPickerOpen, options.length]);
 
   useEffect(() => {
-    if (!isPickerOpen) return;
+    if (!isPickerOpen) {
+      return;
+    }
+
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node | null;
+
       if (
         pickerRef.current?.contains(target) ||
         menuRef.current?.contains(target)
       ) {
         return;
       }
+
       setIsPickerOpen(false);
       setPickerState(null);
     };
+
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, [isPickerOpen]);
 
   const selectOption = useCallback(
@@ -118,94 +202,163 @@ export function DraggableBlockPlugin({
         setIsPickerOpen(false);
         return;
       }
+
       setIsPickerOpen(false);
+
       editor.update(() => {
         const node = $getNodeByKey(pickerState.targetNodeKey);
-        if (!node) return;
+
+        if (!node) {
+          return;
+        }
+
         const placeholder = $createParagraphNode();
         const textNode = $createTextNode("");
+
         placeholder.append(textNode);
+
         if (pickerState.insertBefore) {
           node.insertBefore(placeholder);
         } else {
           node.insertAfter(placeholder);
         }
+
         textNode.select();
+
         option.onSelect(queryString, editor, showModal);
+
         const latestPlaceholder = placeholder.getLatest();
-        if ($isParagraphNode(latestPlaceholder)) {
-          const onlyChild = latestPlaceholder.getFirstChild();
-          if (
-            $isTextNode(onlyChild) &&
-            onlyChild.getTextContent().length === 0 &&
-            latestPlaceholder.getChildrenSize() === 1
-          ) {
-            latestPlaceholder.remove();
-          }
+
+        if (!$isParagraphNode(latestPlaceholder)) {
+          return;
+        }
+
+        const onlyChild = latestPlaceholder.getFirstChild();
+
+        if (
+          $isTextNode(onlyChild) &&
+          onlyChild.getTextContent().length === 0 &&
+          latestPlaceholder.getChildrenSize() === 1
+        ) {
+          latestPlaceholder.remove();
         }
       });
+
+      setPickerState(null);
+      setQueryString("");
     },
     [editor, pickerState, queryString, showModal],
   );
 
   useEffect(() => {
-    if (!isPickerOpen) return;
+    if (!isPickerOpen) {
+      return;
+    }
+
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (!options.length) return;
-      if (event.key === "ArrowDown") {
+      if (event.key === "Escape") {
         event.preventDefault();
-        setHighlightedIndex((i) => (i + 1 >= options.length ? 0 : i + 1));
-      } else if (event.key === "ArrowUp") {
-        event.preventDefault();
-        setHighlightedIndex((i) => (i - 1 < 0 ? options.length - 1 : i - 1));
-      } else if (event.key === "Enter") {
-        event.preventDefault();
-        const option = options[highlightedIndex];
-        if (option) selectOption(option);
-      } else if (event.key === "Escape") {
-        event.preventDefault();
+
         setIsPickerOpen(false);
         setPickerState(null);
+
+        return;
+      }
+
+      if (!options.length) {
+        return;
+      }
+
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+
+        setHighlightedIndex((index) =>
+          index + 1 >= options.length ? 0 : index + 1,
+        );
+
+        return;
+      }
+
+      if (event.key === "ArrowUp") {
+        event.preventDefault();
+
+        setHighlightedIndex((index) =>
+          index - 1 < 0 ? options.length - 1 : index - 1,
+        );
+
+        return;
+      }
+
+      if (event.key === "Enter") {
+        event.preventDefault();
+
+        const option = options[highlightedIndex];
+
+        if (option) {
+          selectOption(option);
+        }
       }
     };
+
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, [highlightedIndex, isPickerOpen, options, selectOption]);
 
-  function openComponentPicker(e: React.MouseEvent) {
-    if (!draggableElement || !editor) return;
-
-    let targetNodeKey: NodeKey | null = null;
-    editor.read(() => {
-      const resolvedNode = $getNearestNodeFromDOMNode(draggableElement);
-      if (resolvedNode) {
-        targetNodeKey = resolvedNode.getKey();
+  const openComponentPicker = useCallback(
+    (event: React.MouseEvent<HTMLButtonElement>) => {
+      if (!draggableElement) {
+        return;
       }
-    });
 
-    if (!targetNodeKey) return;
+      let targetNodeKey: NodeKey | null = null;
 
-    const insertBefore = e.altKey || e.ctrlKey;
-    const rect = menuRef.current?.getBoundingClientRect();
-    setPickerPosition(
-      rect
-        ? {
-            left: rect.left + rect.width + window.scrollX + 8,
-            top: rect.top + window.scrollY,
-          }
-        : null,
-    );
-    setPickerState({ insertBefore, targetNodeKey });
-    setQueryString("");
-    setHighlightedIndex(0);
-    setIsPickerOpen(true);
+      editor.read(() => {
+        const node = $getNearestNodeFromDOMNode(draggableElement);
+
+        if (node) {
+          targetNodeKey = node.getKey();
+        }
+      });
+
+      if (!targetNodeKey) {
+        return;
+      }
+
+      const insertBefore = event.altKey || event.ctrlKey;
+      const rect = menuRef.current?.getBoundingClientRect();
+
+      if (!rect) {
+        return;
+      }
+
+      setPickerPosition({
+        left: rect.right + window.scrollX + 8,
+        top: rect.top + window.scrollY,
+      });
+
+      setPickerState({
+        insertBefore,
+        targetNodeKey,
+      });
+
+      setQueryString("");
+      setHighlightedIndex(0);
+      setIsPickerOpen(true);
+    },
+    [draggableElement, editor],
+  );
+
+  if (!anchorElem) {
+    return null;
   }
-
-  if (!anchorElem) return null;
 
   return (
     <>
       {modal}
+
       {isPickerOpen && pickerPosition
         ? ReactDOM.createPortal(
             <div
@@ -222,20 +375,24 @@ export function DraggableBlockPlugin({
                   value={queryString}
                   onValueChange={setQueryString}
                 />
+
                 <CommandList>
                   <CommandEmpty>No results found.</CommandEmpty>
+
                   <CommandGroup>
-                    {options.map((option, i) => (
+                    {options.map((option, index) => (
                       <CommandItem
                         key={option.key}
                         value={option.title}
                         onSelect={() => {
-                          setHighlightedIndex(i);
+                          setHighlightedIndex(index);
                           selectOption(option);
                         }}
-                        onMouseEnter={() => setHighlightedIndex(i)}
+                        onMouseEnter={() => {
+                          setHighlightedIndex(index);
+                        }}
                         className={`flex items-center gap-2 ${
-                          highlightedIndex === i
+                          highlightedIndex === index
                             ? "bg-accent"
                             : "bg-transparent!"
                         }`}
@@ -251,6 +408,7 @@ export function DraggableBlockPlugin({
             document.body,
           )
         : null}
+
       <DraggableBlockPlugin_EXPERIMENTAL
         anchorElem={anchorElem}
         menuRef={menuRef as React.RefObject<HTMLDivElement>}
@@ -258,9 +416,10 @@ export function DraggableBlockPlugin({
         menuComponent={
           <div
             ref={menuRef}
-            className="draggable-block-menu absolute top-0 right-0 flex items-center opacity-0 will-change-transform"
+            className={`${DRAGGABLE_BLOCK_MENU_CLASSNAME} absolute top-0 right-0 flex items-center opacity-0 will-change-transform`}
           >
             <Button
+              type="button"
               variant="ghost"
               size="icon-xs"
               title="Click to add below (Alt/Ctrl: add above)"
@@ -269,9 +428,12 @@ export function DraggableBlockPlugin({
             >
               <PlusIcon />
             </Button>
+
             <Button
+              type="button"
               variant="ghost"
               size="icon-xs"
+              title="Drag to reorder block"
               className="cursor-grab rounded-sm text-muted-foreground hover:bg-accent hover:text-foreground active:cursor-grabbing"
               tabIndex={-1}
             >
@@ -282,7 +444,7 @@ export function DraggableBlockPlugin({
         targetLineComponent={
           <div
             ref={targetLineRef}
-            className="bg-primary pointer-events-none absolute top-0 left-0 h-0.5 opacity-0 will-change-transform"
+            className="pointer-events-none absolute top-0 left-0 h-0.5 bg-primary opacity-0 will-change-transform"
           />
         }
         isOnMenu={isOnMenu}

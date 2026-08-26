@@ -1,6 +1,4 @@
-﻿// src/proxy.ts
-
-import { NextResponse, type NextRequest } from "next/server";
+﻿import { NextResponse, type NextRequest } from "next/server";
 
 import {
   createIdentityToken,
@@ -19,10 +17,7 @@ export async function proxy(request: NextRequest) {
   }
 
   const response = NextResponse.next();
-
-  if (!identity.ip || !identity.userAgent) {
-    return response;
-  }
+  if (!identity.ip || !identity.userAgent) return response;
 
   const existingToken = request.cookies.get(IDENTITY_COOKIE_NAME)?.value;
 

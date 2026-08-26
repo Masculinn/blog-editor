@@ -11,37 +11,32 @@ export class SpecialTextNode extends TextNode {
     return new SpecialTextNode(node.__text, node.__key);
   }
 
+  static importJSON(serializedNode: SerializedTextNode): SpecialTextNode {
+    return $createSpecialTextNode().updateFromJSON(serializedNode);
+  }
+
   createDOM(config: EditorConfig): HTMLElement {
-    const dom = document.createElement("span");
+    const dom = super.createDOM(config);
+
     addClassNamesToElement(dom, config.theme.specialText);
-    dom.textContent = this.getTextContent();
+
     return dom;
   }
 
   updateDOM(prevNode: this, dom: HTMLElement, config: EditorConfig): boolean {
-    if (prevNode.__text.startsWith("[") && prevNode.__text.endsWith("]")) {
-      const strippedText = this.__text.substring(1, this.__text.length - 1); // Strip brackets again
-      dom.textContent = strippedText; // Update the text content
-    }
+    const didUpdate = super.updateDOM(prevNode, dom, config);
 
     addClassNamesToElement(dom, config.theme.specialText);
 
-    return false;
-  }
-
-  static importJSON(serializedNode: SerializedTextNode): SpecialTextNode {
-    return $createSpecialTextNode().updateFromJSON(serializedNode);
+    return didUpdate;
   }
 
   isTextEntity(): true {
     return true;
   }
-  canInsertTextAfter(): boolean {
-    return false; // Prevents appending text to this node
-  }
 }
 
-export function $createSpecialTextNode(text: string = ""): SpecialTextNode {
+export function $createSpecialTextNode(text = ""): SpecialTextNode {
   return $applyNodeReplacement(new SpecialTextNode(text));
 }
 

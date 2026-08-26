@@ -14,7 +14,7 @@ if (!secretKey) {
   throw new Error("Missing SUPABASE_SECRET_KEY.");
 }
 
-export const supabaseServer = createClient<Database>(url, secretKey, {
+export const db = createClient<Database>(url, secretKey, {
   db: {
     schema: "public",
   },

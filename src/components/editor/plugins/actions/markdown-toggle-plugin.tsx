@@ -17,12 +17,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-
 type MarkdownTogglePluginProps = {
+  id: string;
   shouldPreserveNewLinesInMarkdown: boolean;
   transformers: Transformer[];
 };
-
 function $isMarkdownMode(): boolean {
   const firstChild = $getRoot().getFirstChild();
 
@@ -30,6 +29,7 @@ function $isMarkdownMode(): boolean {
 }
 
 export function MarkdownTogglePlugin({
+  id,
   shouldPreserveNewLinesInMarkdown,
   transformers,
 }: MarkdownTogglePluginProps) {
@@ -132,15 +132,12 @@ export function MarkdownTogglePlugin({
       <TooltipTrigger
         render={
           <div className="flex h-8 items-center gap-2 rounded-md px-2">
-            <Label
-              htmlFor="markdown-mode"
-              className="cursor-pointer text-xs font-normal"
-            >
+            <Label htmlFor={id} className="cursor-pointer text-xs font-normal">
               Markdown
             </Label>
 
             <Switch
-              id="markdown-mode"
+              id={id}
               size="sm"
               checked={isMarkdownMode}
               onCheckedChange={handleMarkdownModeChange}

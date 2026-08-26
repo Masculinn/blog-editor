@@ -11,6 +11,7 @@ import {
   type EditorState,
   type LexicalEditor,
 } from "lexical";
+import { CornerDownLeftIcon } from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -29,7 +30,11 @@ const MIN_SEARCH_LENGTH = 4;
 type SuggestionPosition = {
   left: number;
   top: number;
-  font: string;
+  height: number;
+  fontFamily: string;
+  fontSize: string;
+  fontWeight: string;
+  fontStyle: string;
   lineHeight: string;
   letterSpacing: string;
 };
@@ -63,11 +68,7 @@ function $getSearchText(): string | null {
 
   const match = textBeforeCaret.match(/[\p{L}\p{N}'’-]+$/u);
 
-  if (!match) {
-    return null;
-  }
-
-  return match[0];
+  return match?.[0] ?? null;
 }
 
 function getSuggestion(searchText: string): string | null {
@@ -95,7 +96,8 @@ function getCaretPosition(editor: LexicalEditor): SuggestionPosition | null {
     return null;
   }
 
-  const nativeSelection = rootElement.ownerDocument.getSelection();
+  const ownerDocument = rootElement.ownerDocument;
+  const nativeSelection = ownerDocument.getSelection();
 
   if (
     !nativeSelection ||
@@ -107,30 +109,70 @@ function getCaretPosition(editor: LexicalEditor): SuggestionPosition | null {
     return null;
   }
 
-  const range = nativeSelection.getRangeAt(0).cloneRange();
-
-  const clientRects = range.getClientRects();
-
-  const rect =
-    clientRects.length > 0 ? clientRects[0] : range.getBoundingClientRect();
-
   const anchorNode = nativeSelection.anchorNode;
+  const anchorOffset = nativeSelection.anchorOffset;
 
   const anchorElement =
     anchorNode.nodeType === Node.ELEMENT_NODE
       ? (anchorNode as HTMLElement)
       : anchorNode.parentElement;
 
-  const computedStyle = anchorElement
-    ? window.getComputedStyle(anchorElement)
-    : null;
+  if (!anchorElement) {
+    return null;
+  }
+
+  const computedStyle =
+    ownerDocument.defaultView?.getComputedStyle(anchorElement);
+
+  if (!computedStyle) {
+    return null;
+  }
+
+  const range = ownerDocument.createRange();
+
+  let rect: DOMRect | null = null;
+
+  /*
+   * Instead of measuring the collapsed caret range, measure the
+   * final rendered character immediately before the caret.
+   *
+   * This gives us the actual line box used by the text, which is
+   * substantially more reliable for headings with large font sizes
+   * and custom line-heights.
+   */
+  if (anchorNode.nodeType === Node.TEXT_NODE && anchorOffset > 0) {
+    range.setStart(anchorNode, anchorOffset - 1);
+    range.setEnd(anchorNode, anchorOffset);
+
+    const rects = range.getClientRects();
+
+    rect =
+      rects.length > 0
+        ? rects[rects.length - 1]
+        : range.getBoundingClientRect();
+  } else {
+    range.setStart(nativeSelection.anchorNode, nativeSelection.anchorOffset);
+    range.collapse(true);
+
+    const rects = range.getClientRects();
+
+    rect = rects.length > 0 ? rects[0] : range.getBoundingClientRect();
+  }
+
+  if (!rect) {
+    return null;
+  }
 
   return {
     left: rect.right,
     top: rect.top,
-    font: computedStyle?.font ?? "inherit",
-    lineHeight: computedStyle?.lineHeight ?? "normal",
-    letterSpacing: computedStyle?.letterSpacing ?? "normal",
+    height: rect.height,
+    fontFamily: computedStyle.fontFamily,
+    fontSize: computedStyle.fontSize,
+    fontWeight: computedStyle.fontWeight,
+    fontStyle: computedStyle.fontStyle,
+    lineHeight: computedStyle.lineHeight,
+    letterSpacing: computedStyle.letterSpacing,
   };
 }
 
@@ -143,6 +185,7 @@ export function AutoCompletePlugin(): JSX.Element | null {
 
   const searchTextRef = useRef<string | null>(null);
   const suggestionRef = useRef<string | null>(null);
+
   const animationFrameRef = useRef<number | null>(null);
 
   const clearSuggestion = useCallback(() => {
@@ -333,9 +376,17 @@ export function AutoCompletePlugin(): JSX.Element | null {
   }
 
   const style: CSSProperties = {
+    position: "fixed",
+
     left: position.left,
-    top: position.top - 2.75,
-    font: position.font,
+    top: position.top - 2.8,
+    height: position.height,
+
+    fontFamily: position.fontFamily,
+    fontSize: position.fontSize,
+    fontWeight: position.fontWeight,
+    fontStyle: position.fontStyle,
+
     lineHeight: position.lineHeight,
     letterSpacing: position.letterSpacing,
   };
@@ -343,13 +394,19 @@ export function AutoCompletePlugin(): JSX.Element | null {
   return createPortal(
     <span
       aria-hidden="true"
-      className="pointer-events-none absolute select-none z-50 whitespace-pre text-muted-foreground/50"
+      className="pointer-events-none z-50 inline-flex select-none items-baseline whitespace-pre"
       style={style}
     >
-      <span>{suggestion}</span>
-      <Kbd className="ml-1 text-xs opacity-70">Tab ↩</Kbd>
-      <Kbd className="ml-1 text-xs opacity-70">or</Kbd>
-      <Kbd className="ml-1 text-xs opacity-70">🡒</Kbd>
+      <span className="text-muted-foreground/50">{suggestion}</span>
+      <span className="ml-1 inline-flex items-center gap-1 font-sans">
+        <Kbd className="text-xs opacity-70">
+          Tab
+          <CornerDownLeftIcon />
+        </Kbd>
+
+        <Kbd className="text-xs opacity-70">or</Kbd>
+        <Kbd className="text-xs opacity-70">🡒</Kbd>
+      </span>
     </span>,
     document.body,
   );

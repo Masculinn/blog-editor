@@ -8,9 +8,11 @@ import {
   IDENTITY_COOKIE_NAME,
   verifyIdentityToken,
 } from "@/lib/auth/index";
+import { db } from "@/lib/db/server";
 import { createSmallTalk } from "@/utils/db/create-small-talk";
 
 const MAX_CONTENT_HASH_LENGTH = 65_536;
+const MAX_POSTS_PER_USER = 3;
 
 export type CreateSmallTalkResult =
   | {
@@ -52,13 +54,6 @@ export async function createSmallTalkAction(
     };
   }
 
-  /*
-   * Normalize before crossing into the persistence layer.
-   *
-   * "   My document   "
-   * becomes:
-   * "My document"
-   */
   const normalizedTitle = title.trim();
 
   const requestHeaders = await headers();
@@ -92,6 +87,30 @@ export async function createSmallTalkAction(
   }
 
   try {
+    const { count, error: countError } = await db
+      .from("small_talks")
+      .select("id", {
+        count: "exact",
+        head: true,
+      })
+      .eq("user_id", verifiedIdentity.userId);
+
+    if (countError) {
+      console.error("Could not check small talk limit:", countError);
+
+      return {
+        success: false,
+        message: "Could not verify your posting limit.",
+      };
+    }
+
+    if ((count ?? 0) >= MAX_POSTS_PER_USER) {
+      return {
+        success: false,
+        message: `You can only publish up to ${MAX_POSTS_PER_USER} posts.`,
+      };
+    }
+
     const smallTalk = await createSmallTalk({
       contentHashed,
       title: normalizedTitle,

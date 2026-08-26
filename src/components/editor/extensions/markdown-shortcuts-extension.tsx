@@ -4,10 +4,20 @@ import { defineExtension, safeCast } from "lexical";
 
 export const MarkdownShortcutsExtension = defineExtension({
   build: (_, config) => namedSignals(config),
-  config: safeCast<{ transformers: Array<Transformer> }>({ transformers: [] }),
+
+  config: safeCast<{
+    transformers: Array<Transformer>;
+  }>({
+    transformers: [],
+  }),
+
   name: "MarkdownShortcuts",
+
   register: (editor, _, state) =>
     effect(() => {
-      registerMarkdownShortcuts(editor, state.getOutput().transformers.value);
+      return registerMarkdownShortcuts(
+        editor,
+        state.getOutput().transformers.value,
+      );
     }),
 });

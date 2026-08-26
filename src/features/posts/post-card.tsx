@@ -12,6 +12,7 @@ import {
   ItemTitle,
 } from "@/components/ui/item";
 import type { SmallTalk } from "@/types/supabase";
+import { formatTime } from "@/utils/formatTime";
 import Link from "next/link";
 
 export function PostCard({
@@ -19,11 +20,6 @@ export function PostCard({
   title,
   timestamp,
 }: Omit<SmallTalk, "content_hashed" | "user_id">) {
-  const formattedTimestamp = new Intl.DateTimeFormat(undefined, {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(timestamp));
-
   return (
     <Item
       render={
@@ -55,7 +51,7 @@ export function PostCard({
           className="shrink-0 text-[10px] font-secondary tracking-tighter"
           variant="default"
         >
-          {formattedTimestamp}
+          {formatTime(timestamp)}
         </Badge>
         <Button
           size="icon-xs"

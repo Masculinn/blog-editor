@@ -1,12 +1,12 @@
 ﻿import "server-only";
 
-import { supabaseServer } from "@/lib/db/server";
+import { db } from "@/lib/db/server";
 import type { Database } from "@/types/database.types";
 
 type SmallTalk = Database["public"]["Tables"]["small_talks"]["Row"];
 
 export async function getSmallTalk(id: string): Promise<SmallTalk | null> {
-  const { data, error } = await supabaseServer
+  const { data, error } = await db
     .from("small_talks")
     .select("*")
     .eq("id", id)

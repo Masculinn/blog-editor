@@ -5,7 +5,7 @@ import {
   serializedDocumentFromEditorState,
 } from "@lexical/file";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { DatabaseIcon, GlobeIcon } from "lucide-react";
+import { GlobeIcon } from "lucide-react";
 import {
   type FormEvent,
   startTransition,
@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import {
   Tooltip,
@@ -133,11 +134,7 @@ export function ShareContentPlugin() {
   }
 
   function handleDialogOpenChange(open: boolean): void {
-    // Prevent dismissing the dialog while the publication is in flight.
-    if (isSaving) {
-      return;
-    }
-
+    if (isSaving) return;
     setDialogOpen(open);
   }
 
@@ -154,8 +151,6 @@ export function ShareContentPlugin() {
 
     const title = titleValue.trim();
 
-    // `required` catches an empty input natively.
-    // This additionally rejects whitespace-only titles.
     if (!title) {
       toast.error("A title is required.");
       return;
@@ -206,7 +201,6 @@ export function ShareContentPlugin() {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Publish document</DialogTitle>
-
           <DialogDescription>
             Give your document a title before publishing it. The title and
             document will be publicly visible in Posts.
@@ -230,8 +224,12 @@ export function ShareContentPlugin() {
             <p className="text-xs text-muted-foreground">
               This title will identify your document in the public Posts list.
             </p>
+            <Separator orientation="horizontal" className="my-1" />
+            <p className="text-xs text-rose-400">
+              *Warning, please note that <b>you cannot</b> publish a new post if
+              you have published 3 posts before.
+            </p>
           </div>
-
           <DialogFooter>
             <Button
               type="button"
@@ -242,7 +240,7 @@ export function ShareContentPlugin() {
               Cancel
             </Button>
 
-            <Button type="submit" disabled={isSaving}>
+            <Button type="submit" disabled={isSaving} variant="success">
               {isSaving ? (
                 <>
                   <Spinner className="size-4" />
@@ -250,7 +248,7 @@ export function ShareContentPlugin() {
                 </>
               ) : (
                 <>
-                  <DatabaseIcon className="size-4" />
+                  <GlobeIcon className="size-4" />
                   Publish
                 </>
               )}
