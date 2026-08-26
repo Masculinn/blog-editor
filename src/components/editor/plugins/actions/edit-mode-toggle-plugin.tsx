@@ -51,7 +51,6 @@ export function EditModeTogglePlugin() {
           <UnlockIcon className="size-4" />
         )}
       </TooltipTrigger>
-
       <TooltipContent>
         {isEditable ? (
           <>

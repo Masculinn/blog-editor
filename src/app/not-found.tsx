@@ -37,8 +37,9 @@ export default function NotFound() {
       </div>
 
       <Button
-        render={<Link href="/" aria-label="Return to home page" />}
+        render={<Link href="/" replace aria-label="Return to home page" />}
         size="lg"
+        nativeButton={false}
         className="mt-2"
       >
         <ArrowLeftIcon className="size-4" />

@@ -27,13 +27,13 @@ export async function Posts() {
 
       <CardHeader>
         <CardTitle className="flex flex-row-reverse items-center gap-2 justify-between">
-          <NotebookPenIcon className="size-6 inline shrink-0 text-primary" />
+          <NotebookPenIcon className="size-6 inline shrink-0 " />
           <h1 className="text-3xl font-bold">Posts</h1>
         </CardTitle>
         <CardDescription>Here is what others left for you.</CardDescription>
       </CardHeader>
       <CardContent className="h-full overflow-y-scroll scrollbar-custom scroll-fade flex flex-col gap-2">
-        {posts.data.map((post) => (
+        {posts.data.map(({ content_hashed, user_id, ...post }) => (
           <PostCard {...post} key={post.id} />
         ))}
       </CardContent>

@@ -9,19 +9,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { getAnimation } from "@/lib/motion/getAnimation";
-import { MotionText } from "@/motion/components/motion-text";
 import { ArrowUpRightIcon, NotebookPenIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useId } from "react";
 
 export default function Banner() {
-  const id = useId();
   return (
     <div className="size-full relative pl-3 pb-3 overflow-hidden">
       <Card
-        className="size-full pl-4 relative bg-transparent overflow-hidden group"
+        className="size-full relative bg-transparent overflow-hidden group pl-3"
         size="sm"
       >
         <Scales
@@ -29,14 +25,14 @@ export default function Banner() {
           className="absolute -z-10 size-full inset-0 opacity-50"
           color="#292524"
         />
-        <CardHeader>
+        <CardHeader className="">
           <CardTitle className="inline-flex items-center">
-            <MotionText {...getAnimation("bannerTitle1")}>
+            <h1 className="laptop:text-3xl desktop:text-4xl text-2xl font-secondary">
               justc0de_sessions
-            </MotionText>
-            <MotionText {...getAnimation("bannerTitle2")} key={id}>
-              {"(BUT IT'S ANONYMOUS!!)"}
-            </MotionText>
+              <span className="laptop:text-3xl desktop:text-4xl text-2xl font-accent text-rose-500">
+                {"("}BUT IT'S ANONYMOUS!!{")"}
+              </span>
+            </h1>
           </CardTitle>
           <CardDescription className="text-muted-foreground max-w-3xl leading-snug font-secondary text-xs">
             I built this editor to make writing articles easier, and I’ve
@@ -56,7 +52,7 @@ export default function Banner() {
           <CardAction>
             <Button
               nativeButton={false}
-              variant={"outline"}
+              variant="outline"
               render={
                 <Link
                   href="https://github.com/Masculinn/blog-editor"

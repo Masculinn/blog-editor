@@ -18,7 +18,7 @@ export function PostCard({
   id,
   title,
   timestamp,
-}: Omit<SmallTalk, "content_hashed">) {
+}: Omit<SmallTalk, "content_hashed" | "user_id">) {
   const formattedTimestamp = new Intl.DateTimeFormat(undefined, {
     dateStyle: "medium",
     timeStyle: "short",
@@ -46,9 +46,8 @@ export function PostCard({
         <HashIcon className="size-3.5 text-muted-foreground" />
       </ItemMedia>
       <ItemContent className="min-w-0">
-        <ItemTitle className="truncate line-clamp-1 max-w-64 italic">
+        <ItemTitle className="truncate line-clamp-1 max-w-64">
           {title}
-          {/* 37 (size)*/}
         </ItemTitle>
       </ItemContent>
       <ItemActions>

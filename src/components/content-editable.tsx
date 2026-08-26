@@ -1,6 +1,4 @@
-import { getAnimation } from "@/lib/motion/getAnimation";
 import { cn } from "@/lib/utils";
-import { MotionText } from "@/motion/components/motion-text";
 import { ContentEditable as LexicalContentEditable } from "@lexical/react/LexicalContentEditable";
 import type { JSX } from "react";
 
@@ -29,9 +27,7 @@ export function ContentEditable({
             placeholderClassName,
           )}
         >
-          <MotionText {...getAnimation("contentEditablePlaceholder")}>
-            {placeholder}
-          </MotionText>
+          {placeholder}
         </div>
       }
       tabIndex={0}

@@ -29,11 +29,20 @@ export function ClearEditorActionPlugin() {
         <TooltipTrigger
           render={
             <DialogTrigger
-              render={<Button size={"sm"} variant={"ghost"} className="p-2" />}
+              render={
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  title="Publish"
+                  aria-label="Publish current editor content"
+                  className="p-2"
+                />
+              }
             />
           }
         >
           <Trash2Icon className="size-4" />
+          Clear
         </TooltipTrigger>
         <TooltipContent>Clear Editor</TooltipContent>
       </Tooltip>

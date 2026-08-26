@@ -18,7 +18,6 @@ import {
   TEXT_MATCH_TRANSFORMERS,
 } from "@lexical/markdown";
 import { OverflowNode } from "@lexical/overflow";
-import { CharacterLimitPlugin } from "@lexical/react/LexicalCharacterLimitPlugin";
 import { LexicalExtensionComposer } from "@lexical/react/LexicalExtensionComposer";
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
 import { TabIndentationPlugin } from "@lexical/react/LexicalTabIndentationPlugin";
@@ -301,6 +300,8 @@ export function Editor({
                       </div>
                       <div className="flex flex-row gap-0.5">
                         <ShareContentPlugin />
+                        <ClearEditorActionPlugin />
+
                         <BlockInsertPlugin>
                           <InsertHorizontalRule />
                           <InsertImage />
@@ -324,7 +325,7 @@ export function Editor({
               >
                 <ContentEditable
                   placeholder={PLACEHOLDER}
-                  className="p-4 size-full"
+                  className="p-4 size-full selection:bg-primary selection:text-primary-foreground"
                   placeholderClassName="top-4 left-4"
                 />
               </div>
@@ -395,16 +396,13 @@ export function Editor({
               <CodeActionMenuPlugin anchorElem={floatingAnchorElem} />
             </div>
             <div className="absolute bottom-0  w-full flex items-center justify-between border-t p-1">
-              <div className="flex flex-1 justify-start text-xs text-gray-500">
+              <CounterCharacterPlugin charset="UTF-16" />
+              {/* <div className="flex flex-1 justify-start text-xs text-gray-500">
                 <CharacterLimitPlugin maxLength={MAX_LENGTH} charset="UTF-16" />
-              </div>
-              <div>
-                <CounterCharacterPlugin charset="UTF-16" />
-              </div>
+              </div> */}
               <div className="flex flex-1 justify-end">
                 {/* <ImportExportPlugin /> */}
                 {/* <EditModeTogglePlugin /> */}
-                <ClearEditorActionPlugin />
               </div>
             </div>
           </div>
