@@ -11,7 +11,7 @@ import {
   ItemMedia,
   ItemTitle,
 } from "@/components/ui/item";
-import type { SmallTalk } from "@/types/supabase";
+import type { SmallTalk } from "@/types/db.types";
 import { formatTime } from "@/utils/formatTime";
 import Link from "next/link";
 

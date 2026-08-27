@@ -8,11 +8,11 @@ import {
   verifyIdentityToken,
 } from "@/lib/auth/index";
 
-export async function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest): Promise<NextResponse> {
   const identity = getRequestIdentity(request.headers);
   const { pathname } = request.nextUrl;
 
-  if (pathname.startsWith("/admin") && !isAdminIdentity(identity)) {
+  if (pathname.startsWith("/admin") && !isAdminIdentity(identity, request)) {
     return NextResponse.redirect(new URL("/", request.url), 307);
   }
 

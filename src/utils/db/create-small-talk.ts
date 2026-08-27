@@ -1,7 +1,7 @@
 ﻿import "server-only";
 
 import { db } from "@/lib/db/server";
-import type { SmallTalk } from "@/types/supabase";
+import type { SmallTalk } from "@/types/db.types";
 
 type CreateSmallTalkInput = {
   contentHashed: string;

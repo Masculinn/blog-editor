@@ -1,3 +1,4 @@
+import { PostsSkeleton } from "@/components/skeleton/posts-skeleton";
 import Banner from "@/features/banner";
 import { Editor } from "@/features/editor";
 import { DocumentViewer } from "@/features/editor/document-viewer";
@@ -65,8 +66,6 @@ export default async function Page({ searchParams }: Props) {
         desktop:p-12
       "
     >
-      {/* Mobile: 1st */}
-      {/* Laptop/Desktop: top-right */}
       <section
         className="
           min-w-0
@@ -82,8 +81,6 @@ export default async function Page({ searchParams }: Props) {
         <Banner />
       </section>
 
-      {/* Mobile: 2nd */}
-      {/* Laptop/Desktop: top-left */}
       <section
         className="
           relative
@@ -103,8 +100,6 @@ export default async function Page({ searchParams }: Props) {
         <Guide />
       </section>
 
-      {/* Mobile: 3rd */}
-      {/* Laptop/Desktop: bottom-left */}
       <section
         className="
           min-w-0
@@ -120,16 +115,11 @@ export default async function Page({ searchParams }: Props) {
           laptop:pb-0
         "
       >
-        <Suspense
-          fallback={<div className="size-full bg-muted" />}
-          name="posts-suspense"
-        >
+        <Suspense fallback={<PostsSkeleton />} name="posts-suspense">
           <Posts />
         </Suspense>
       </section>
 
-      {/* Mobile: 4th */}
-      {/* Laptop/Desktop: right side beneath Banner */}
       <section
         className="
           min-h-[70dvh]

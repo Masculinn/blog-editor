@@ -1,4 +1,7 @@
-﻿const encoder = new TextEncoder();
+﻿import type { NextRequest } from "next/server";
+import "server-only";
+
+const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
 const HKDF_SALT = encoder.encode("editor-app:identity:v1");
@@ -35,9 +38,7 @@ export function normalizeUserAgent(value: string): string {
 function getClientIp(headers: HeaderReader): string {
   const netlifyIp = headers.get("x-nf-client-connection-ip");
 
-  if (netlifyIp) {
-    return netlifyIp.trim();
-  }
+  if (netlifyIp) return netlifyIp.trim();
 
   if (process.env.NODE_ENV !== "production") {
     const forwardedFor = headers.get("x-forwarded-for");
@@ -59,10 +60,19 @@ export function getRequestIdentity(headers: HeaderReader): RequestIdentity {
   };
 }
 
-export function isAdminIdentity(identity: RequestIdentity): boolean {
-  if (process.env.NODE_ENV !== "production") return true;
-  const expectedIp = process.env.MY_IP?.trim() ?? "";
+export function isAdminIdentity(
+  identity: RequestIdentity,
+  request: NextRequest,
+): boolean {
+  const adminCookieHeader = request.cookies.get("x-editor-admin")?.value;
+  if (
+    Boolean(adminCookieHeader) &&
+    adminCookieHeader === process.env.ADMIN_KEY
+  ) {
+    return true;
+  }
 
+  const expectedIp = process.env.MY_IP?.trim() ?? "";
   const expectedUserAgent = normalizeUserAgent(process.env.MY_USER_AGENT ?? "");
 
   return (
@@ -197,7 +207,6 @@ export async function createIdentityToken(
     version: 1,
     ip: identity.ip,
     userAgent: identity.userAgent,
-
     userId: await createUserId(identity, userIdKey),
   };
 
