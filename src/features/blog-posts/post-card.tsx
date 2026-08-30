@@ -35,7 +35,6 @@ export function PostCard({
   return (
     <Link
       href={getSearchParamHref("id", id)}
-      scroll={false}
       onClick={close}
       className="group relative my-4 rounded-2xl transition-all duration-150 focus:scale-90 focus:outline-2 focus:outline-primary"
     >

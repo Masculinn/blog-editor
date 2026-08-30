@@ -30,7 +30,6 @@ export function PostCard({
               post: String(id),
             },
           }}
-          scroll={false}
         />
       }
       variant="outline"

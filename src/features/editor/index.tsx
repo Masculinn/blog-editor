@@ -22,7 +22,7 @@ import {
   type EditorState,
   type SerializedEditorState,
 } from "lexical";
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 import { ContentEditable } from "@/components/content-editable";
 
@@ -138,17 +138,21 @@ export function Editor({
   navChildren,
 }: EditorProps) {
   const [isLinkEditMode, setIsLinkEditMode] = useState(false);
+
   const [floatingAnchorElem, setFloatingAnchorElem] =
     useState<HTMLDivElement | null>(null);
+
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
   const initialStateRef = useRef({
     editorState,
     editorSerializedState,
   });
 
-  const onFloatingAnchorRef = (element: HTMLDivElement | null) => {
+  const onFloatingAnchorRef = useCallback((element: HTMLDivElement | null) => {
+    scrollContainerRef.current = element;
     setFloatingAnchorElem(element);
-  };
+  }, []);
 
   const editorExtension = useMemo(
     () =>
@@ -156,11 +160,13 @@ export function Editor({
         name: "burakdev-blog-editor",
         namespace: "Editor",
         theme: editorTheme,
+
         dependencies: [
           RichTextExtension,
           AutoFocusExtension,
           HistoryExtension,
           CodeExtension,
+
           configExtension(LinkExtension, {
             validateUrl,
             attributes: {
@@ -211,7 +217,6 @@ export function Editor({
             );
 
             editor.setEditorState(parsedEditorState);
-
             return;
           }
 
@@ -234,19 +239,31 @@ export function Editor({
         extension={editorExtension}
         contentEditable={null}
       >
+        <UrlClientDocumentSyncPlugin
+          initialMarkdown={initialMarkdown}
+          transformers={MARKDOWN_TRANSFORMERS}
+          shouldPreserveNewLinesInMarkdown
+          debounceMs={2_500}
+          scrollContainerRef={scrollContainerRef}
+        />
+
         <TooltipProvider>
           <div className="relative size-full">
             <ToolbarPlugin>
               {({ blockType }) => (
-                <div className="vertical-align-middle sticky top-0 z-10 flex items-between justify-between gap-2 overflow-auto border-b ">
+                <div className="vertical-align-middle sticky top-0 z-10 flex items-between justify-between gap-2 overflow-auto border-b">
                   <div className="flex md:flex-row flex-wrap gap-1 items-center">
                     <HistoryToolbarPlugin />
+
                     <Separator orientation="vertical" className="h-7!" />
+
                     <BlockFormatDropDown>
                       <FormatParagraph />
+
                       <FormatHeading
                         levels={["h1", "h2", "h3", "h4", "h5", "h6"]}
                       />
+
                       <FormatNumberedList />
                       <FormatBulletedList />
                       <FormatCheckList />
@@ -254,17 +271,23 @@ export function Editor({
                       <FormatQuote />
                     </BlockFormatDropDown>
                   </div>
+
                   {blockType === "code" ? (
                     <CodeLanguageToolbarPlugin />
                   ) : (
                     <>
                       <div className="flex flex-row gap-0.5">
                         <Separator orientation="vertical" className="h-7!" />
+
                         <FontFormatToolbarPlugin />
+
                         <Separator orientation="vertical" className="h-7!" />
+
                         <ClearFormattingToolbarPlugin />
+
                         <Separator orientation="vertical" className="h-7!" />
                       </div>
+
                       <div>
                         <ClearEditorActionPlugin />
                         {navChildren}
@@ -286,6 +309,7 @@ export function Editor({
                   placeholderClassName="top-4 left-4"
                 />
               </div>
+
               <ComponentPickerMenuPlugin
                 baseOptions={[
                   ParagraphPickerPlugin(),
@@ -295,6 +319,7 @@ export function Editor({
                   HeadingPickerPlugin({ n: 4 }),
                   HeadingPickerPlugin({ n: 5 }),
                   HeadingPickerPlugin({ n: 6 }),
+
                   TablePickerPlugin(),
                   CheckListPickerPlugin(),
                   NumberedListPickerPlugin(),
@@ -308,12 +333,7 @@ export function Editor({
                 ]}
                 dynamicOptionsFn={DynamicTablePickerPlugin}
               />
-              <UrlClientDocumentSyncPlugin
-                initialMarkdown={initialMarkdown}
-                transformers={MARKDOWN_TRANSFORMERS}
-                shouldPreserveNewLinesInMarkdown
-                debounceMs={2_500}
-              />
+
               <EmojiPickerPlugin />
               <AutoCompletePlugin />
               <ContextMenuPlugin />
@@ -322,6 +342,7 @@ export function Editor({
               <TabIndentationPlugin />
               <CodeHighlightPlugin />
               <TablePlugin />
+
               <DraggableBlockPlugin
                 anchorElem={floatingAnchorElem}
                 baseOptions={[
@@ -338,7 +359,6 @@ export function Editor({
                   CheckListPickerPlugin(),
                   NumberedListPickerPlugin(),
                   BulletedListPickerPlugin(),
-
                   QuotePickerPlugin(),
                   CodePickerPlugin(),
                   DividerPickerPlugin(),
@@ -347,19 +367,24 @@ export function Editor({
                 ]}
                 dynamicOptionsFn={DynamicTablePickerPlugin}
               />
+
               <FloatingTextFormatToolbarPlugin
                 anchorElem={floatingAnchorElem}
                 setIsLinkEditMode={setIsLinkEditMode}
               />
+
               <FloatingLinkEditorPlugin
                 anchorElem={floatingAnchorElem}
                 isLinkEditMode={isLinkEditMode}
                 setIsLinkEditMode={setIsLinkEditMode}
               />
+
               <CodeActionMenuPlugin anchorElem={floatingAnchorElem} />
             </div>
-            <div className="absolute bottom-0  w-full flex items-center justify-between border-t p-1 pl-2">
+
+            <div className="absolute bottom-0 w-full flex items-center justify-between border-t p-1 pl-2">
               <CounterCharacterPlugin charset="UTF-16" />
+
               <div className="flex-1 items-center justify-end flex text-xs">
                 {children}
 
@@ -371,6 +396,7 @@ export function Editor({
               </div>
             </div>
           </div>
+
           <OnChangePlugin
             ignoreSelectionChange
             onChange={(nextEditorState) => {

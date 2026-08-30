@@ -18,11 +18,13 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut";
+
 type MarkdownTogglePluginProps = {
   id: string;
   shouldPreserveNewLinesInMarkdown: boolean;
   transformers: Transformer[];
 };
+
 function $isMarkdownMode(): boolean {
   const firstChild = $getRoot().getFirstChild();
 
