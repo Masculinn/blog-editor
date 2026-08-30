@@ -1,18 +1,28 @@
 ﻿"use client";
 
+import { Button } from "@/components/ui/button";
 import { PostCard } from "@/features/blog-posts/post-card";
 import type { Blog } from "@/types/db.types";
+import { EyeIcon } from "lucide-react";
 import { PostCardModal } from "./modal";
 
-interface PostsModalProps {
+export function PostsModal({
+  posts,
+  className,
+}: {
   posts: Blog[];
-}
-
-export function PostsModal({ posts }: PostsModalProps) {
+  className?: string;
+}) {
   return (
     <PostCardModal
-      className="m-16 rounded-2xl border-none bg-black px-1 focus:outline-1 focus-visible:ring-0"
+      className="my-16 mx-24 rounded-2xl border-none bg-black px-1 focus:outline-1 focus:outline-muted focus-visible:ring-0"
       title="Edit Posts"
+      render={
+        <Button variant="primary" size="sm" className={className}>
+          <EyeIcon />
+          View Posts
+        </Button>
+      }
     >
       {({ close }) =>
         posts.map((post) => (

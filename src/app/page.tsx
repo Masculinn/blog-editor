@@ -1,7 +1,7 @@
 import { PostsSkeleton } from "@/components/skeleton/posts-skeleton";
 import Banner from "@/features/banner";
-import { Editor } from "@/features/editor";
-import { DocumentViewer } from "@/features/editor/document-viewer";
+import { ExperimentalDocumentViewer } from "@/features/document-viewer/experimental-viewer";
+import { ExperimentalEditor } from "@/features/editor/experimental-editor";
 import { Guide } from "@/features/guide";
 import { Posts } from "@/features/posts";
 import { db } from "@/lib/db/server";
@@ -136,13 +136,13 @@ export default async function Page({ searchParams }: Props) {
         "
       >
         {documentHash ? (
-          <DocumentViewer
+          <ExperimentalDocumentViewer
             documentHash={documentHash}
             title={title}
             timestamp={timestamp}
           />
         ) : (
-          <Editor className="z-50" documentHash={documentHash} />
+          <ExperimentalEditor className="z-50" documentHash={documentHash} />
         )}
       </section>
     </main>

@@ -1,8 +1,16 @@
-import { $isCodeNode } from "@lexical/code";
+"use client";
+
+import { useToolbarContext } from "@/components/toolbar-context";
 import {
-  getCodeLanguageOptions,
-  normalizeCodeLanguage,
-} from "@lexical/code-prism";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useUpdateToolbarHandler } from "@/components/use-update-toolbar";
+import { $isCodeNode } from "@lexical/code";
+import { normalizeCodeLanguage } from "@lexical/code-prism";
 import { $findMatchingParent } from "@lexical/utils";
 import {
   $addUpdateTag,
@@ -15,17 +23,15 @@ import {
 } from "lexical";
 import { useState } from "react";
 
-import { useToolbarContext } from "@/components/toolbar-context";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useUpdateToolbarHandler } from "@/components/use-update-toolbar";
-
-const CODE_LANGUAGE_OPTIONS = getCodeLanguageOptions();
+const CODE_LANGUAGE_OPTIONS = [
+  ["html", "HTML"],
+  ["css", "CSS"],
+  ["js", "JavaScript"],
+  ["typescript", "TypeScript"],
+  ["markdown", "Markdown"],
+  ["xml", "XML"],
+  ["sql", "SQL"],
+] as const;
 
 export function CodeLanguageToolbarPlugin() {
   const { activeEditor } = useToolbarContext();

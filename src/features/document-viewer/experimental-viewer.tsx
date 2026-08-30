@@ -54,7 +54,7 @@ const VIEWER_NODES = [
   LayoutItemNode,
 ];
 
-export function DocumentViewer({
+export function ExperimentalDocumentViewer({
   documentHash,
   className,
   title,

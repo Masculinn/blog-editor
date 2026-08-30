@@ -17,6 +17,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut";
 type MarkdownTogglePluginProps = {
   id: string;
   shouldPreserveNewLinesInMarkdown: boolean;
@@ -39,18 +40,16 @@ export function MarkdownTogglePlugin({
     editor.getEditorState().read(() => $isMarkdownMode()),
   );
 
-  /*
-   * Keep the React switch synchronized with Lexical itself.
-   *
-   * This matters because the editor can change through more than this
-   * switch:
-   *
-   * - UrlDocumentSyncPlugin
-   * - import
-   * - undo / redo
-   * - clear
-   * - external editor state replacement
-   */
+  useKeyboardShortcut(
+    ["Control", "m"],
+    () => handleMarkdownModeChange(!isMarkdownMode),
+    {
+      allowInEditable: true,
+      preventDefault: true,
+      stopPropagation: true,
+    },
+  );
+
   useEffect(() => {
     return editor.registerUpdateListener(({ editorState }) => {
       const nextIsMarkdownMode = editorState.read(() => $isMarkdownMode());
@@ -68,12 +67,6 @@ export function MarkdownTogglePlugin({
       const root = $getRoot();
       const firstChild = root.getFirstChild();
 
-      /*
-       * Markdown ON
-       *
-       * Convert the current rich-text document into Markdown and
-       * replace the root with one markdown CodeNode.
-       */
       if (checked) {
         if (
           $isCodeNode(firstChild) &&
@@ -101,13 +94,6 @@ export function MarkdownTogglePlugin({
 
         return;
       }
-
-      /*
-       * Markdown OFF
-       *
-       * Only convert back if the document is actually represented
-       * by our markdown CodeNode.
-       */
       if (!$isCodeNode(firstChild) || firstChild.getLanguage() !== "markdown") {
         return;
       }

@@ -23,8 +23,9 @@ import { Input } from "@/components/ui/input";
 
 export type InsertImagePayload = Readonly<ImagePayload>;
 
-export const INSERT_IMAGE_COMMAND: LexicalCommand<InsertImagePayload> =
-  createCommand("INSERT_IMAGE_COMMAND");
+const INSERT_IMAGE_COMMAND: LexicalCommand<InsertImagePayload> = createCommand(
+  "INSERT_IMAGE_COMMAND",
+);
 
 function InsertImageUriDialogBody({
   onClick,

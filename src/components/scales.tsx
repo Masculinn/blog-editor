@@ -76,5 +76,3 @@ export const ScalesContainer = ({
     </div>
   );
 };
-
-export default Scales;

@@ -11,7 +11,7 @@ import {
   StrikethroughIcon,
   UnderlineIcon,
 } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 
 import { useToolbarContext } from "@/components/toolbar-context";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -28,7 +28,7 @@ export function FontFormatToolbarPlugin() {
   const { activeEditor } = useToolbarContext();
   const [activeFormats, setActiveFormats] = useState<string[]>([]);
 
-  const $updateToolbar = useCallback((selection: BaseSelection) => {
+  const $updateToolbar = (selection: BaseSelection) => {
     if ($isRangeSelection(selection) || $isTableSelection(selection)) {
       const formats: string[] = [];
       FORMATS.forEach(({ format }) => {
@@ -37,7 +37,6 @@ export function FontFormatToolbarPlugin() {
         }
       });
       setActiveFormats((prev) => {
-        // Only update if formats have changed
         if (
           prev.length !== formats.length ||
           !formats.every((f) => prev.includes(f))
@@ -47,7 +46,7 @@ export function FontFormatToolbarPlugin() {
         return prev;
       });
     }
-  }, []);
+  };
 
   useUpdateToolbarHandler($updateToolbar);
 

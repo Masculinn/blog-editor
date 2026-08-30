@@ -25,6 +25,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { Skeleton } from "./ui/skeleton";
 
 type ImageStatus =
   | { error: true }
@@ -182,7 +183,6 @@ export default function ImageComponent({
   nodeKey,
   width,
   height,
-  maxWidth,
 }: {
   altText: string;
   height: "inherit" | number;
@@ -216,11 +216,7 @@ export default function ImageComponent({
 
   const $onEnter = useCallback(
     (event: KeyboardEvent | null): boolean => {
-      // KEY_ENTER_COMMAND can intentionally be dispatched with null.
-      // This handler is only interested in an actual keyboard event.
-      if (event === null) {
-        return false;
-      }
+      if (event === null) return false;
 
       const latestSelection = $getSelection();
       const buttonElem = buttonRef.current;
@@ -245,9 +241,7 @@ export default function ImageComponent({
 
   const $onEscape = useCallback(
     (event: KeyboardEvent): boolean => {
-      if (buttonRef.current !== event.target) {
-        return false;
-      }
+      if (buttonRef.current !== event.target) return false;
 
       $setSelection(null);
 
@@ -317,7 +311,6 @@ export default function ImageComponent({
             return false;
           }
 
-          // Temporary workaround for Firefox behavior.
           event.preventDefault();
 
           return true;
@@ -371,32 +364,27 @@ export default function ImageComponent({
   }, []);
 
   return (
-    <Suspense
-      fallback={
-        <div
-          className="flex items-center justify-center bg-muted animate-pulse rounded-md"
-          style={{ width, height }}
-        />
-      }
-    >
-      <div draggable={draggable}>
-        {!isLoadError && (
-          <LazyImage
-            className={
-              isFocused
-                ? `focused ${isInNodeSelection ? "draggable" : ""}`
-                : null
-            }
-            src={src}
-            altText={altText}
-            imageRef={imageRef}
-            width={width}
-            height={height}
-            maxWidth={maxWidth}
-            onError={handleImageError}
-          />
-        )}
-      </div>
+    <Suspense fallback={<Skeleton style={{ width, height }} />}>
+      <center>
+        <div draggable={draggable}>
+          {!isLoadError && (
+            <LazyImage
+              className={
+                isFocused
+                  ? `focused ${isInNodeSelection ? "draggable" : ""}`
+                  : null
+              }
+              src={src}
+              altText={altText}
+              imageRef={imageRef}
+              width={width}
+              height={height}
+              maxWidth={600}
+              onError={handleImageError}
+            />
+          )}
+        </div>
+      </center>
     </Suspense>
   );
 }

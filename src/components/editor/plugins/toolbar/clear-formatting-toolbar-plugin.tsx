@@ -1,3 +1,5 @@
+import { useToolbarContext } from "@/components/toolbar-context";
+import { Button } from "@/components/ui/button";
 import { $isDecoratorBlockNode } from "@lexical/react/LexicalDecoratorBlockNode";
 import { $isHeadingNode, $isQuoteNode } from "@lexical/rich-text";
 import { $isTableSelection } from "@lexical/table";
@@ -7,11 +9,11 @@ import {
   $getSelection,
   $isRangeSelection,
   $isTextNode,
+  COMMAND_PRIORITY_LOW,
+  KEY_DOWN_COMMAND,
 } from "lexical";
 import { EraserIcon } from "lucide-react";
-import { useCallback } from "react";
-import { useToolbarContext } from "@/components/toolbar-context";
-import { Button } from "@/components/ui/button";
+import { useCallback, useEffect } from "react";
 
 export function ClearFormattingToolbarPlugin() {
   const { activeEditor } = useToolbarContext();
@@ -19,62 +21,82 @@ export function ClearFormattingToolbarPlugin() {
   const clearFormatting = useCallback(() => {
     activeEditor.update(() => {
       const selection = $getSelection();
-      if ($isRangeSelection(selection) || $isTableSelection(selection)) {
-        const anchor = selection.anchor;
-        const focus = selection.focus;
-        const nodes = selection.getNodes();
-        const extractedNodes = selection.extract();
 
-        if (anchor.key === focus.key && anchor.offset === focus.offset) {
-          return;
-        }
-
-        nodes.forEach((node, idx) => {
-          // We split the first and last node by the selection
-          // So that we don't format unselected text inside those nodes
-          if ($isTextNode(node)) {
-            // Use a separate variable to ensure TS does not lose the refinement
-            let textNode = node;
-            if (idx === 0 && anchor.offset !== 0) {
-              textNode = textNode.splitText(anchor.offset)[1] || textNode;
-            }
-            if (idx === nodes.length - 1) {
-              textNode = textNode.splitText(focus.offset)[0] || textNode;
-            }
-            /**
-             * If the selected text has one format applied
-             * selecting a portion of the text, could
-             * clear the format to the wrong portion of the text.
-             *
-             * The cleared text is based on the length of the selected text.
-             */
-            // We need this in case the selected text only has one format
-            const extractedTextNode = extractedNodes[0];
-            if (nodes.length === 1 && $isTextNode(extractedTextNode)) {
-              textNode = extractedTextNode;
-            }
-
-            if (textNode.__style !== "") {
-              textNode.setStyle("");
-            }
-            if (textNode.__format !== 0) {
-              textNode.setFormat(0);
-              $getNearestBlockElementAncestorOrThrow(textNode).setFormat("");
-            }
-            node = textNode;
-          } else if ($isHeadingNode(node) || $isQuoteNode(node)) {
-            node.replace($createParagraphNode(), true);
-          } else if ($isDecoratorBlockNode(node)) {
-            node.setFormat("");
-          }
-        });
+      if (!$isRangeSelection(selection) && !$isTableSelection(selection)) {
+        return;
       }
+
+      const anchor = selection.anchor;
+      const focus = selection.focus;
+      const nodes = selection.getNodes();
+      const extractedNodes = selection.extract();
+
+      if (anchor.key === focus.key && anchor.offset === focus.offset) {
+        return;
+      }
+
+      nodes.forEach((node, idx) => {
+        if ($isTextNode(node)) {
+          let textNode = node;
+
+          if (idx === 0 && anchor.offset !== 0) {
+            textNode = textNode.splitText(anchor.offset)[1] || textNode;
+          }
+
+          if (idx === nodes.length - 1) {
+            textNode = textNode.splitText(focus.offset)[0] || textNode;
+          }
+
+          const extractedTextNode = extractedNodes[0];
+
+          if (nodes.length === 1 && $isTextNode(extractedTextNode)) {
+            textNode = extractedTextNode;
+          }
+
+          if (textNode.__style !== "") {
+            textNode.setStyle("");
+          }
+
+          if (textNode.__format !== 0) {
+            textNode.setFormat(0);
+            $getNearestBlockElementAncestorOrThrow(textNode).setFormat("");
+          }
+        } else if ($isHeadingNode(node) || $isQuoteNode(node)) {
+          node.replace($createParagraphNode(), true);
+        } else if ($isDecoratorBlockNode(node)) {
+          node.setFormat("");
+        }
+      });
     });
   }, [activeEditor]);
 
+  useEffect(() => {
+    return activeEditor.registerCommand(
+      KEY_DOWN_COMMAND,
+      (event) => {
+        const isModifier = event.metaKey || event.ctrlKey;
+        const isClearFormattingShortcut =
+          isModifier &&
+          !event.altKey &&
+          !event.shiftKey &&
+          event.code === "Backslash";
+
+        if (!isClearFormattingShortcut) {
+          return false;
+        }
+
+        event.preventDefault();
+        clearFormatting();
+
+        return true;
+      },
+      COMMAND_PRIORITY_LOW,
+    );
+  }, [activeEditor, clearFormatting]);
+
   return (
     <Button
-      aria-label="Clear formatting"
+      aria-label="Clear formatting (⌘/Ctrl + \\)"
       variant="ghost"
       size="icon-sm"
       onClick={clearFormatting}

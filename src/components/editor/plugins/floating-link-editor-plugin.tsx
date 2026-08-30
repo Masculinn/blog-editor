@@ -59,7 +59,7 @@ function FloatingLinkEditor({
   const lastSelectionRef = useRef<BaseSelection | null>(null);
 
   const [linkUrl, setLinkUrl] = useState("");
-  const [editedLinkUrl, setEditedLinkUrl] = useState("https://");
+  const [editedLinkUrl, setEditedLinkUrl] = useState("");
 
   const $updateLinkEditor = useEffectEvent(() => {
     const selection = $getSelection();
@@ -228,7 +228,7 @@ function FloatingLinkEditor({
       });
     }
 
-    setEditedLinkUrl("https://");
+    setEditedLinkUrl("");
     setIsLinkEditMode(false);
   }
 
@@ -420,9 +420,7 @@ function useFloatingLinkEditorToolbar(
     );
   }, [editor]);
 
-  if (!anchorElem) {
-    return null;
-  }
+  if (!anchorElem) return null;
 
   return createPortal(
     <FloatingLinkEditor

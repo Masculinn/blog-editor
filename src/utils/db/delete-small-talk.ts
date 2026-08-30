@@ -1,6 +1,4 @@
-﻿// src/utils/db/small-talks/delete-small-talk.ts
-
-import "server-only";
+﻿import "server-only";
 
 import { db } from "@/lib/db/server";
 

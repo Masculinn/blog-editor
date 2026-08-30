@@ -1,6 +1,4 @@
-﻿// components/editor/plugins/picker/details-picker-plugin.tsx
-
-import { $createParagraphNode, $createTextNode, $insertNodes } from "lexical";
+﻿import { $createParagraphNode, $createTextNode, $insertNodes } from "lexical";
 import { ListCollapseIcon } from "lucide-react";
 
 import { ComponentPickerOption } from "@/components/component-picker-option";
@@ -23,9 +21,7 @@ export function DetailsPickerPlugin() {
         const content = $createDetailsContentNode();
 
         const paragraph = $createParagraphNode();
-        paragraph.append(
-          $createTextNode("Write the expandable content here..."),
-        );
+        paragraph.append($createTextNode("Content goes here..."));
 
         content.append(paragraph);
 
