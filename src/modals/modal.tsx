@@ -43,7 +43,7 @@ export function PostCardModal({
           </SheetHeader>
         )}
         <div className="w-full h-max relative overflow-y-hidden px-4">
-          <div className="flex md:flex-row flex-col gap-4 w-full scrollbar-custom overflow-x-scroll">
+          <div className="flex md:flex-row flex-col gap-2.5 w-full scrollbar-custom overflow-x-scroll">
             {children({
               close,
             })}

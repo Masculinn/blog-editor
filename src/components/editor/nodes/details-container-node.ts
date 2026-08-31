@@ -1,6 +1,4 @@
-﻿// nodes/details-container-node.ts
-
-import {
+﻿import {
   $getDocument,
   type DOMExportOutput,
   type EditorConfig,

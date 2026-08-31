@@ -1,9 +1,17 @@
-﻿"use client";
+﻿import { ArrowUpRightIcon, HashIcon } from "lucide-react";
 
-import { ArrowUpRightIcon, HashIcon } from "lucide-react";
-
+import { NewPostButton } from "@/components/new-post-button";
+import { Scales } from "@/components/scales";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Item,
   ItemActions,
@@ -11,11 +19,46 @@ import {
   ItemMedia,
   ItemTitle,
 } from "@/components/ui/item";
+import { db } from "@/lib/db/server";
 import type { SmallTalk } from "@/types/db.types";
 import { formatTime } from "@/utils/formatTime";
 import Link from "next/link";
 
-export function PostCard({
+export async function Posts() {
+  const posts = await db
+    .from("small_talks")
+    .select("*")
+    .order("timestamp", { ascending: false });
+
+  if (posts.error) return null;
+
+  return (
+    <Card className="size-full  bg-transparent relative">
+      <Scales
+        orientation="diagonal"
+        className="absolute -z-10 size-full inset-0 opacity-50"
+        color="#292524"
+      />
+
+      <CardHeader>
+        <CardTitle>
+          <h1 className="text-3xl font-bold">Posts</h1>
+        </CardTitle>
+        <CardDescription>Here is what others left for you.</CardDescription>
+        <CardAction>
+          <NewPostButton />{" "}
+        </CardAction>
+      </CardHeader>
+      <CardContent className="h-full overflow-y-scroll scrollbar-custom scroll-fade flex flex-col gap-2">
+        {posts.data.map(({ content_hashed, user_id, ...post }) => (
+          <PostCardClient {...post} key={post.id} />
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+export function PostCardClient({
   id,
   title,
   timestamp,

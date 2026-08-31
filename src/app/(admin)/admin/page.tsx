@@ -1,13 +1,12 @@
 import { DocumentViewer } from "@/features/document-viewer";
+import { ArticleContent } from "@/features/document-viewer/article-content";
 import ArticleCover from "@/features/document-viewer/article-cover";
-import { ToggleViewer } from "@/features/document-viewer/toggle-viewer";
 import { Editor } from "@/features/editor";
-import { withPosts } from "@/hoc/withAllPosts";
+import { GuardedTools } from "@/features/tools";
+import { withMDX } from "@/hoc/withMDX";
 import { withPost } from "@/hoc/withPost";
 import { withPostContent } from "@/hoc/withPostContent";
-import { PostsModal } from "@/modals/posts-modal";
 import { connection } from "next/server";
-
 interface Props {
   searchParams: Promise<{
     id?: string;
@@ -15,8 +14,8 @@ interface Props {
   }>;
 }
 
-const GuardedPostsModal = withPosts(PostsModal);
 const GuardedArticleCover = withPost(ArticleCover);
+const GuardedArticleContent = withPost(withMDX(ArticleContent));
 const GuardedEditor = withPostContent(Editor);
 
 export default async function Page({ searchParams }: Props) {
@@ -28,18 +27,19 @@ export default async function Page({ searchParams }: Props) {
   const isViewer = params.viewer === "true";
 
   return (
-    <main className="w-full h-screen overflow-hidden items-center justify-center-safe flex flex-row gap-2 px-4 py-8">
+    <main className="w-full h-screen overflow-hidden items-center justify-center-safe flex flex-row p-16">
+      <GuardedTools
+        postId={postId}
+        className="w-1/12 h-full border-l border-y gap-1 flex flex-col p-2 items-center-safe justify-evenly rounded-l-2xl"
+      />
       <GuardedEditor
         id={postId}
-        className="w-1/2 h-full transition-all"
-        navChildren={<GuardedPostsModal />}
-      >
-        <ToggleViewer />
-      </GuardedEditor>
-
+        className="w-6/12 h-full transition-all border-y"
+      />
       {isViewer && postId && (
-        <DocumentViewer className="h-full w-162.5">
+        <DocumentViewer className="h-full w-5/12 bg-blog-background border-r border-y rounded-r-2xl">
           <GuardedArticleCover id={postId} />
+          <GuardedArticleContent id={postId} className="px-8" />
         </DocumentViewer>
       )}
     </main>

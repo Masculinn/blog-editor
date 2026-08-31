@@ -44,6 +44,8 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-blog-muted: var(--blog-muted);
+  --color-blog-background: var(--blog-background);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -89,6 +91,8 @@
   --sidebar-accent-foreground: oklch(0.985 0.001 106.423);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.553 0.013 58.071);
+  --blog-muted: oklch(0.772 0.01 285.938);
+  --blog-background: oklch(0.147 0.004 49.25);
 }
 
 @layer base {
@@ -146,4 +150,100 @@
 
 .blog-card-shape-divider .shape-fill {
   fill: var(--background);
+}
+
+.mdx-ul,
+.mdx-ol {
+  margin: 0;
+  padding: 0;
+}
+
+.mdx-ul {
+  list-style: none;
+}
+
+.mdx-ul > li {
+  position: relative;
+  padding-left: 1.25rem;
+  margin: 0.25rem 0;
+  line-height: 1.45;
+}
+
+.mdx-ul > li::before {
+  content: "—";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.7rem;
+  color: var(--color-muted-foreground);
+  pointer-events: none;
+  user-select: none;
+}
+
+.mdx-ul > li > .mdx-ul > li,
+.mdx-ul .mdx-ul > li,
+.mdx-ul ul > li {
+  padding-left: 1.85rem;
+}
+
+.mdx-ul > li > .mdx-ul > li::before,
+.mdx-ul .mdx-ul > li::before,
+.mdx-ul ul > li::before {
+  content: "–";
+  left: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.mdx-ul ul ul > li::before,
+.mdx-ul .mdx-ul .mdx-ul > li::before {
+  content: "•";
+  left: 0.95rem;
+  font-size: 0.85rem;
+}
+
+.mdx-ul li > ul,
+.mdx-ul li > .mdx-ul,
+.mdx-ul li > ol {
+  margin-top: 0.2rem;
+  margin-bottom: 0.2rem;
+  padding-left: 0;
+}
+
+.mdx-ul .task-list-item {
+  list-style: none;
+  position: relative;
+  padding-left: 1.75rem;
+}
+.mdx-ul .task-list-item::before {
+  content: none;
+}
+.mdx-ul .task-list-item input[type="checkbox"] {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  margin: 0;
+}
+
+.mdx-ol {
+  list-style: decimal;
+  padding-left: 1.6rem;
+}
+.mdx-ol > li {
+  margin: 0.35rem 0;
+  line-height: 1.45;
+}
+
+.mdx-ol li > ol,
+.mdx-ol li > ul {
+  margin-top: 0.15rem;
+  margin-bottom: 0.15rem;
+  padding-left: 1rem;
+}
+
+.mdx-ul > li:focus-within,
+.mdx-ol > li:focus-within {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-ring) 16%, transparent);
 }

@@ -23,6 +23,7 @@ type MarkdownTogglePluginProps = {
   id: string;
   shouldPreserveNewLinesInMarkdown: boolean;
   transformers: Transformer[];
+  withUI?: boolean;
 };
 
 function $isMarkdownMode(): boolean {
@@ -35,6 +36,7 @@ export function MarkdownTogglePlugin({
   id,
   shouldPreserveNewLinesInMarkdown,
   transformers,
+  withUI = false,
 }: MarkdownTogglePluginProps) {
   const [editor] = useLexicalComposerContext();
 
@@ -115,6 +117,7 @@ export function MarkdownTogglePlugin({
     });
   }
 
+  if (!withUI) return null;
   return (
     <Tooltip>
       <TooltipTrigger

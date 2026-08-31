@@ -99,6 +99,7 @@ import { MARKDOWN_TRANSFORMERS } from "@/components/editor/transformers";
 import { cn } from "@/lib/utils";
 import { validateUrl } from "@/utils/editor/validateUrl";
 import { TabIndentationPlugin } from "@lexical/react/LexicalTabIndentationPlugin";
+import { ToggleViewer } from "../document-viewer/toggle-viewer";
 
 const PLACEHOLDER = "Press / to open up the commands";
 
@@ -121,8 +122,6 @@ export type EditorProps = {
   editorSerializedState?: SerializedEditorState;
   initialMarkdown?: string | null;
   className?: string;
-  children?: React.ReactNode;
-  navChildren?: React.ReactNode;
   onChange?: (editorState: EditorState) => void;
   onSerializedChange?: (editorSerializedState: SerializedEditorState) => void;
 };
@@ -134,8 +133,6 @@ export function Editor({
   onChange,
   onSerializedChange,
   className,
-  children,
-  navChildren,
 }: EditorProps) {
   const [isLinkEditMode, setIsLinkEditMode] = useState(false);
 
@@ -231,7 +228,7 @@ export function Editor({
   return (
     <div
       className={cn(
-        "bg-background/65 size-full rounded-lg border shadow flex flex-col",
+        "bg-background/65 size-full  border-y shadow flex flex-col",
         className,
       )}
     >
@@ -239,19 +236,11 @@ export function Editor({
         extension={editorExtension}
         contentEditable={null}
       >
-        <UrlClientDocumentSyncPlugin
-          initialMarkdown={initialMarkdown}
-          transformers={MARKDOWN_TRANSFORMERS}
-          shouldPreserveNewLinesInMarkdown
-          debounceMs={2_500}
-          scrollContainerRef={scrollContainerRef}
-        />
-
         <TooltipProvider>
           <div className="relative size-full">
             <ToolbarPlugin>
               {({ blockType }) => (
-                <div className="vertical-align-middle sticky top-0 z-10 flex items-between justify-between gap-2 overflow-auto border-b">
+                <div className="vertical-align-middle sticky top-0 z-10 flex items-between justify-between gap-2 overflow-auto">
                   <div className="flex md:flex-row flex-wrap gap-1 items-center">
                     <HistoryToolbarPlugin />
 
@@ -287,11 +276,7 @@ export function Editor({
 
                         <Separator orientation="vertical" className="h-7!" />
                       </div>
-
-                      <div>
-                        <ClearEditorActionPlugin />
-                        {navChildren}
-                      </div>
+                      <ClearEditorActionPlugin />
                     </>
                   )}
                 </div>
@@ -382,16 +367,21 @@ export function Editor({
               <CodeActionMenuPlugin anchorElem={floatingAnchorElem} />
             </div>
 
-            <div className="absolute bottom-0 w-full flex items-center justify-between border-t p-1 pl-2">
+            <div className="absolute bottom-0 w-full flex items-center justify-between p-1 pl-2">
               <CounterCharacterPlugin charset="UTF-16" />
-
               <div className="flex-1 items-center justify-end flex text-xs">
-                {children}
-
+                <ToggleViewer />
                 <MarkdownTogglePlugin
                   id="markdown-mode-footer"
                   shouldPreserveNewLinesInMarkdown
                   transformers={MARKDOWN_TRANSFORMERS}
+                />
+                <UrlClientDocumentSyncPlugin
+                  initialMarkdown={initialMarkdown}
+                  transformers={MARKDOWN_TRANSFORMERS}
+                  shouldPreserveNewLinesInMarkdown
+                  debounceMs={2_500}
+                  scrollContainerRef={scrollContainerRef}
                 />
               </div>
             </div>

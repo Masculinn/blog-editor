@@ -1,9 +1,9 @@
+import Banner from "@/components/banner";
+import { Guide } from "@/components/guide";
+import { Posts } from "@/components/posts";
 import { PostsSkeleton } from "@/components/skeleton/posts-skeleton";
-import Banner from "@/features/banner";
 import { ExperimentalDocumentViewer } from "@/features/document-viewer/experimental-viewer";
 import { ExperimentalEditor } from "@/features/editor/experimental-editor";
-import { Guide } from "@/features/guide";
-import { Posts } from "@/features/posts";
 import { db } from "@/lib/db/server";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
