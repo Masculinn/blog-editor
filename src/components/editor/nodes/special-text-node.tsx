@@ -1,5 +1,5 @@
 import { addClassNamesToElement } from "@lexical/utils";
-import type { EditorConfig, LexicalNode, SerializedTextNode } from "lexical";
+import type { EditorConfig, SerializedTextNode } from "lexical";
 import { $applyNodeReplacement, TextNode } from "lexical";
 
 export class SpecialTextNode extends TextNode {
@@ -38,10 +38,4 @@ export class SpecialTextNode extends TextNode {
 
 export function $createSpecialTextNode(text = ""): SpecialTextNode {
   return $applyNodeReplacement(new SpecialTextNode(text));
-}
-
-export function $isSpecialTextNode(
-  node: LexicalNode | null | undefined,
-): node is SpecialTextNode {
-  return node instanceof SpecialTextNode;
 }

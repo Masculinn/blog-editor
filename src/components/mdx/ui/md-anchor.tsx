@@ -1,4 +1,5 @@
-﻿import Link from "next/link";
+﻿import type { Route } from "next";
+import Link from "next/link";
 import type { JSX } from "react";
 
 export type AnchorProps = JSX.IntrinsicElements["a"];
@@ -45,7 +46,7 @@ export const MdAnchor = ({ href, ...props }: AnchorProps) => {
 
   return (
     <Link
-      href={finalHref}
+      href={finalHref as Route}
       className="underline underline-offset-4 hover:text-primary transition-colors duration-200"
       {...defaultExternalAttrs}
       {...props}

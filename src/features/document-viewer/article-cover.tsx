@@ -8,7 +8,7 @@ import Image from "next/image";
 
 type CoverProps = Omit<Blog, "content" | "description" | "id">;
 
-export default function ArticleCover({
+export function ArticleCover({
   banner_image,
   level,
   published_at,
@@ -36,7 +36,7 @@ export default function ArticleCover({
         src={banner_image}
         loading="lazy"
         fill
-        className="absolute inset-0 object-cover md:object-center size-full -z-10 rounded-2xl"
+        className="absolute inset-0 object-cover md:object-center size-full -z-10 "
       />
       <PostDifficulty
         level={level}

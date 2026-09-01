@@ -34,34 +34,28 @@ import {
   DetailsSummaryNode,
 } from "@/components/editor/nodes/details-summary-node";
 
+import { CHART_TRANSFORMER } from "../chart/chart-markdown-transformer";
 import { EMOJI } from "./markdown-emoji-transformer";
 import { HR } from "./markdown-hr-transformer";
 import { IMAGE } from "./markdown-image-transformer";
 import { TABLE } from "./markdown-table-transformer";
 
-const DETAILS_START_REGEX = /^\s*<details\b([^>]*)>\s*/i;
+const DETAILS_START_REGEX = /^\s*<details\b([^>]*)>\s*/i,
+  DETAILS_END_REGEX = /\s*<\/details>\s*$/i,
+  SUMMARY_REGEX = /^\s*<summary\b[^>]*>(.*?)<\/summary>\s*(.*)$/i;
 
-const DETAILS_END_REGEX = /\s*<\/details>\s*$/i;
-
-const SUMMARY_REGEX = /^\s*<summary\b[^>]*>(.*?)<\/summary>\s*(.*)$/i;
-
-export const DETAILS: MultilineElementTransformer = {
+const DETAILS: MultilineElementTransformer = {
   type: "multiline-element",
-
   dependencies: [DetailsContainerNode, DetailsSummaryNode, DetailsContentNode],
-
   regExpStart: DETAILS_START_REGEX,
   regExpEnd: DETAILS_END_REGEX,
-
   export: (node, traverseChildren) => {
     if (!$isDetailsContainerNode(node)) {
       return null;
     }
 
     const summary = node.getChildren().find($isDetailsSummaryNode);
-
     const content = node.getChildren().find($isDetailsContentNode);
-
     const summaryMarkdown = summary
       ? traverseChildren(summary).trim()
       : "Summary";
@@ -85,7 +79,6 @@ export const DETAILS: MultilineElementTransformer = {
       : "";
 
     const openAttribute = node.getOpen() ? " open" : "";
-
     const result = [
       `<details${openAttribute}>`,
       `<summary>${summaryMarkdown}</summary>`,
@@ -252,6 +245,7 @@ export const DETAILS: MultilineElementTransformer = {
 };
 
 export const MARKDOWN_TRANSFORMERS: Transformer[] = [
+  CHART_TRANSFORMER,
   /*
    * Custom multiline/block transformers should come first.
    */

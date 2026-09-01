@@ -4,8 +4,7 @@ import { Posts } from "@/components/posts";
 import { PostsSkeleton } from "@/components/skeleton/posts-skeleton";
 import { ExperimentalDocumentViewer } from "@/features/document-viewer/experimental-viewer";
 import { ExperimentalEditor } from "@/features/editor/experimental-editor";
-import { db } from "@/lib/db/server";
-import { notFound } from "next/navigation";
+import { getSmallTalk } from "@/utils/db/get-small-talk";
 import { connection } from "next/server";
 import { Suspense } from "react";
 
@@ -27,15 +26,7 @@ export default async function Page({ searchParams }: Props) {
   let timestamp = "";
 
   if (postId) {
-    const { data, error } = await db
-      .from("small_talks")
-      .select("*")
-      .eq("id", postId)
-      .maybeSingle();
-
-    if (error) {
-      return notFound();
-    }
+    const data = await getSmallTalk(postId);
 
     documentHash = data?.content_hashed ?? null;
     title = data?.title ?? "";

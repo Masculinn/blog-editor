@@ -105,5 +105,3 @@ export const MdBlockquote = (props: BlockquoteProps) => {
     </blockquote>
   );
 };
-
-export default MdBlockquote;

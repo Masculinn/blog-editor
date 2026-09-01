@@ -70,18 +70,6 @@ function deleteListener(element: HTMLElement, cb: Listener): void {
   }
 }
 
-export function addSwipeLeftListener(
-  element: HTMLElement,
-  cb: (_force: number, e: TouchEvent) => void,
-) {
-  return addListener(element, (force, e) => {
-    const [x, y] = force;
-    if (x < 0 && -x > Math.abs(y)) {
-      cb(x, e);
-    }
-  });
-}
-
 export function addSwipeRightListener(
   element: HTMLElement,
   cb: (_force: number, e: TouchEvent) => void,
@@ -89,30 +77,6 @@ export function addSwipeRightListener(
   return addListener(element, (force, e) => {
     const [x, y] = force;
     if (x > 0 && x > Math.abs(y)) {
-      cb(x, e);
-    }
-  });
-}
-
-export function addSwipeUpListener(
-  element: HTMLElement,
-  cb: (_force: number, e: TouchEvent) => void,
-) {
-  return addListener(element, (force, e) => {
-    const [x, y] = force;
-    if (y < 0 && -y > Math.abs(x)) {
-      cb(x, e);
-    }
-  });
-}
-
-export function addSwipeDownListener(
-  element: HTMLElement,
-  cb: (_force: number, e: TouchEvent) => void,
-) {
-  return addListener(element, (force, e) => {
-    const [x, y] = force;
-    if (y > 0 && y > Math.abs(x)) {
       cb(x, e);
     }
   });

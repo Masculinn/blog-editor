@@ -31,7 +31,7 @@ function getSecret(): string {
   return secret;
 }
 
-export function normalizeUserAgent(value: string): string {
+function normalizeUserAgent(value: string): string {
   return value.split(" ").join("");
 }
 

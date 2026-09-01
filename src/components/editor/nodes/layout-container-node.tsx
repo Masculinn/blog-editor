@@ -4,7 +4,6 @@ import type {
   DOMConversionOutput,
   DOMExportOutput,
   EditorConfig,
-  LexicalNode,
   NodeKey,
   SerializedElementNode,
   Spread,
@@ -115,14 +114,8 @@ export class LayoutContainerNode extends ElementNode {
   }
 }
 
-export function $createLayoutContainerNode(
+function $createLayoutContainerNode(
   templateColumns: string,
 ): LayoutContainerNode {
   return new LayoutContainerNode(templateColumns);
-}
-
-export function $isLayoutContainerNode(
-  node: LexicalNode | null | undefined,
-): node is LayoutContainerNode {
-  return node instanceof LayoutContainerNode;
 }

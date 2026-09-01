@@ -29,6 +29,7 @@ export const MdImage: FC<MdImageProps> = ({
         loading="lazy"
         width={600}
         height={400}
+        unoptimized
         className={cn("rounded-md", className)}
         {...props}
       />
@@ -43,6 +44,7 @@ export const MdImage: FC<MdImageProps> = ({
         loading="lazy"
         width={600}
         height={400}
+        unoptimized
         className={cn("rounded-md shadow-xl", className)}
         {...props}
       />

@@ -1,10 +1,10 @@
-import { type JSX, useCallback, useMemo, useState } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { type JSX, useCallback, useMemo, useState } from "react";
 
 export function useEditorModal(): [
   JSX.Element | null,
@@ -21,12 +21,11 @@ export function useEditorModal(): [
   }, []);
 
   const modal = useMemo(() => {
-    if (modalContent === null) {
-      return null;
-    }
+    if (modalContent === null) return null;
+
     const { title, content } = modalContent;
     return (
-      <Dialog open={true} onOpenChange={onClose}>
+      <Dialog onOpenChange={onClose} modal defaultOpen>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>

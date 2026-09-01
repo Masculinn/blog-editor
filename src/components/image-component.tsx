@@ -37,8 +37,9 @@ type ImageStatus =
 
 const imageCache = new Map<string, Promise<ImageStatus> | ImageStatus>();
 
-export const RIGHT_CLICK_IMAGE_COMMAND: LexicalCommand<MouseEvent> =
-  createCommand("RIGHT_CLICK_IMAGE_COMMAND");
+const RIGHT_CLICK_IMAGE_COMMAND: LexicalCommand<MouseEvent> = createCommand(
+  "RIGHT_CLICK_IMAGE_COMMAND",
+);
 
 function useSuspenseImage(src: string): ImageStatus {
   let cached = imageCache.get(src);

@@ -2,6 +2,7 @@
 
 import { db } from "@/lib/db/server";
 import type { Database } from "@/types/database.types";
+import { notFound } from "next/navigation";
 
 type SmallTalk = Database["public"]["Tables"]["small_talks"]["Row"];
 
@@ -12,9 +13,7 @@ export async function getSmallTalk(id: string): Promise<SmallTalk | null> {
     .eq("id", id)
     .maybeSingle();
 
-  if (error) {
-    throw new Error(`Could not get small talk: ${error.message}`);
-  }
+  if (error) return notFound();
 
   return data;
 }

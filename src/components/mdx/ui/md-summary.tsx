@@ -84,5 +84,3 @@ export const MdDetails: FC<DetailsProps> = ({
     </Card>
   );
 };
-
-export default MdDetails;

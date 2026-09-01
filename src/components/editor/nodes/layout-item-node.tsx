@@ -2,7 +2,6 @@ import { addClassNamesToElement } from "@lexical/utils";
 import type {
   DOMConversionMap,
   EditorConfig,
-  LexicalNode,
   SerializedElementNode,
 } from "lexical";
 import { ElementNode } from "lexical";
@@ -51,12 +50,6 @@ export class LayoutItemNode extends ElementNode {
   }
 }
 
-export function $createLayoutItemNode(): LayoutItemNode {
+function $createLayoutItemNode(): LayoutItemNode {
   return new LayoutItemNode();
-}
-
-export function $isLayoutItemNode(
-  node: LexicalNode | null | undefined,
-): node is LayoutItemNode {
-  return node instanceof LayoutItemNode;
 }

@@ -1,19 +1,17 @@
 ﻿import { cn } from "@/lib/utils";
 import type React from "react";
 
-export interface ScalesProps {
-  orientation?: "horizontal" | "vertical" | "diagonal";
-  size?: number;
-  className?: string;
-  color?: string;
-}
-
 export const Scales = ({
   orientation = "diagonal",
   size = 10,
   className,
   color,
-}: ScalesProps) => {
+}: {
+  orientation?: "horizontal" | "vertical" | "diagonal";
+  size?: number;
+  className?: string;
+  color?: string;
+}) => {
   const getGradientAngle = () => {
     switch (orientation) {
       case "horizontal":
@@ -47,32 +45,6 @@ export const Scales = ({
           backgroundSize: `var(--scales-size) var(--scales-size)`,
         }}
       />
-    </div>
-  );
-};
-
-export interface ScalesContainerProps extends ScalesProps {
-  children?: React.ReactNode;
-  containerClassName?: string;
-}
-
-export const ScalesContainer = ({
-  children,
-  orientation = "diagonal",
-  size = 10,
-  className,
-  containerClassName,
-  color,
-}: ScalesContainerProps) => {
-  return (
-    <div className={cn("relative", containerClassName)}>
-      <Scales
-        orientation={orientation}
-        size={size}
-        className={className}
-        color={color}
-      />
-      <div className="relative z-10">{children}</div>
     </div>
   );
 };

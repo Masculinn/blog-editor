@@ -171,10 +171,4 @@ function CarouselItem({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-export {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  useCarousel,
-  type CarouselApi,
-};
+export { Carousel, CarouselContent, CarouselItem, type CarouselApi };

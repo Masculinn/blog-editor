@@ -1,6 +1,15 @@
-﻿import { withPosts } from "@/hoc/withAllPosts";
+﻿import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { withPosts } from "@/hoc/withAllPosts";
 import { cn } from "@/lib/utils";
 import { PostsModal } from "@/modals/posts-modal";
+import ToolsProvider from "@/providers/tools-provider";
 import type { Blog } from "@/types/db.types";
 
 type Tool = {
@@ -113,20 +122,30 @@ type ToolsProps = {
   postId?: number;
 };
 
-async function Tools({ posts, className }: ToolsProps) {
+export const Tools = withPosts(async ({ posts, className }: ToolsProps) => {
   return (
-    <aside aria-label="Post tools" className={className}>
-      {tools.map((tool) => (
-        <PostsModal
-          key={tool.id}
-          posts={posts}
-          title={tool.title}
-          render={<ToolButton tool={tool} />}
-        />
-      ))}
-    </aside>
+    <ToolsProvider>
+      <Command className={className} loop>
+        <CommandInput placeholder="Type a command or search..." />
+        <CommandList>
+          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandGroup heading="Suggestions">
+            {tools.map((tool) => (
+              <CommandItem key={tool.id}>
+                <PostsModal
+                  key={tool.id}
+                  posts={posts}
+                  title={tool.title}
+                  render={<ToolButton tool={tool} />}
+                />
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        </CommandList>
+      </Command>
+    </ToolsProvider>
   );
-}
+});
 
 function ToolButton({ tool }: { tool: (typeof tools)[number] }) {
   return (
@@ -231,5 +250,3 @@ function ToolButton({ tool }: { tool: (typeof tools)[number] }) {
     </button>
   );
 }
-
-export const GuardedTools = withPosts(Tools);

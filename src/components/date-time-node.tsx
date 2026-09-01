@@ -2,7 +2,6 @@ import {
   applyFormatFromStyle,
   applyFormatToDom,
   DecoratorTextNode,
-  type SerializedDecoratorTextNode,
 } from "@lexical/extension";
 import {
   $getState,
@@ -13,7 +12,6 @@ import {
   type DOMConversionOutput,
   type DOMExportOutput,
   type LexicalNode,
-  type Spread,
   type StateConfigValue,
   type StateValueOrUpdater,
 } from "lexical";
@@ -47,13 +45,6 @@ const getDateTimeText = (dateTime: Date) => {
           .padStart(2, "0")}`)
   );
 };
-
-export type SerializedDateTimeNode = Spread<
-  {
-    dateTime?: string;
-  },
-  SerializedDecoratorTextNode
->;
 
 function $convertDateTimeElement(
   domNode: HTMLElement,

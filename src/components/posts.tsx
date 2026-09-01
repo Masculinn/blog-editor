@@ -58,7 +58,7 @@ export async function Posts() {
   );
 }
 
-export function PostCardClient({
+function PostCardClient({
   id,
   title,
   timestamp,

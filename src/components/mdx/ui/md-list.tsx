@@ -16,5 +16,3 @@ export const MdUl: FC<MdULProps> = ({ className, ...props }) => (
 export const MdOl: FC<MdOLProps> = ({ className, ...props }) => (
   <ol className={cn("mdx-ol marker:text-blog-muted", className)} {...props} />
 );
-
-export default MdList;

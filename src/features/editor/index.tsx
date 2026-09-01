@@ -89,11 +89,14 @@ import { editorTheme } from "@/components/editor/themes/editor-theme";
 import { Separator } from "@/components/ui/separator";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
+import { ChartsExtension } from "@/components/editor/chart/charts-extension";
 import { DetailsContainerNode } from "@/components/editor/nodes/details-container-node";
 import { DetailsContentNode } from "@/components/editor/nodes/details-content-node";
 import { DetailsSummaryNode } from "@/components/editor/nodes/details-summary-node";
 import { AutoCompletePlugin } from "@/components/editor/plugins/auto-complete-plugin";
+import { DetailsEscapePlugin } from "@/components/editor/plugins/details-escape-plugin";
 import { DetailsPickerPlugin } from "@/components/editor/plugins/details-picker-plugin";
+import { ChartPickerPlugin } from "@/components/editor/plugins/picker/chart-picker-plugin";
 import { UrlClientDocumentSyncPlugin } from "@/components/editor/plugins/url-client-document-sync-plugin";
 import { MARKDOWN_TRANSFORMERS } from "@/components/editor/transformers";
 import { cn } from "@/lib/utils";
@@ -154,7 +157,7 @@ export function Editor({
   const editorExtension = useMemo(
     () =>
       defineExtension({
-        name: "burakdev-blog-editor",
+        name: "justcode-sessions-blog-editor",
         namespace: "Editor",
         theme: editorTheme,
 
@@ -198,6 +201,7 @@ export function Editor({
 
           ImagesExtension,
           DateTimeExtension,
+          ChartsExtension,
         ],
 
         nodes: EDITOR_NODES,
@@ -226,12 +230,7 @@ export function Editor({
   );
 
   return (
-    <div
-      className={cn(
-        "bg-background/65 size-full  border-y shadow flex flex-col",
-        className,
-      )}
-    >
+    <div className={cn("bg-background/65 flex flex-col", className)}>
       <LexicalExtensionComposer
         extension={editorExtension}
         contentEditable={null}
@@ -313,6 +312,7 @@ export function Editor({
                   CodePickerPlugin(),
                   DividerPickerPlugin(),
                   ImagePickerPlugin(),
+                  ChartPickerPlugin(),
                   DateTimePickerPlugin(),
                   DetailsPickerPlugin(),
                 ]}
@@ -326,6 +326,7 @@ export function Editor({
               <TabFocusPlugin />
               <TabIndentationPlugin />
               <CodeHighlightPlugin />
+              <DetailsEscapePlugin />
               <TablePlugin />
 
               <DraggableBlockPlugin
@@ -348,6 +349,7 @@ export function Editor({
                   CodePickerPlugin(),
                   DividerPickerPlugin(),
                   ImagePickerPlugin(),
+                  ChartPickerPlugin(),
                   DateTimePickerPlugin(),
                 ]}
                 dynamicOptionsFn={DynamicTablePickerPlugin}

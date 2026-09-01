@@ -38,6 +38,7 @@ export class ComponentPickerOption extends MenuOption {
     },
   ) {
     super(title);
+
     this.title = title;
     this.keywords = options.keywords || [];
     this.icon = options.icon;

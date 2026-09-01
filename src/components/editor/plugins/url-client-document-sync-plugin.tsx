@@ -3,7 +3,7 @@
 import { docFromHash, docToHash } from "@/components/doc-serialization";
 import { Badge, type badgeVariants } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
-import { useDebounce } from "@/components/use-debounce";
+import { useDebounce } from "@/hooks/use-debounce";
 import {
   editorStateFromSerializedDocument,
   serializedDocumentFromEditorState,
