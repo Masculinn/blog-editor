@@ -5,7 +5,7 @@ import { CommandItem } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { useTools } from "@/providers/tools-provider";
 import type { ComponentProps } from "react";
-import type { Tool } from "./types";
+import type { Tool } from "../../types/tools.types";
 
 type Props = Omit<Tool, "Component"> & {
   onSelect?: ComponentProps<typeof CommandItem>["onSelect"];

@@ -47,6 +47,39 @@ export type Database = {
         };
         Relationships: [];
       };
+      drafts: {
+        Row: {
+          banner_image: string | null;
+          content: string | null;
+          description: string | null;
+          id: number;
+          level: number;
+          published_at: string | null;
+          tags: string[] | null;
+          title: string;
+        };
+        Insert: {
+          banner_image?: string | null;
+          content?: string | null;
+          description?: string | null;
+          id?: number;
+          level?: number;
+          published_at?: string | null;
+          tags?: string[] | null;
+          title?: string;
+        };
+        Update: {
+          banner_image?: string | null;
+          content?: string | null;
+          description?: string | null;
+          id?: number;
+          level?: number;
+          published_at?: string | null;
+          tags?: string[] | null;
+          title?: string;
+        };
+        Relationships: [];
+      };
       small_talks: {
         Row: {
           content_hashed: string;

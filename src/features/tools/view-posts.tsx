@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { Blog } from "@/types/db.types";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import type { ToolComponentProps } from "./types";
+import type { ToolComponentProps } from "../../types/tools.types";
 
 export function ViewPosts({ render, title }: ToolComponentProps) {
   const [posts, setPosts] = useState<Blog[]>([]);
@@ -63,7 +63,7 @@ export function ViewPosts({ render, title }: ToolComponentProps) {
           posts.map((post) => (
             <PostCard
               key={post.id}
-              clasName="w-fit max-w-100"
+              className="w-fit max-w-100"
               close={close}
               {...post}
             />

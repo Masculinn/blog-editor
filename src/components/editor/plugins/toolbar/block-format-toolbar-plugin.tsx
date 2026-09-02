@@ -9,7 +9,6 @@ import {
 
 import { ChevronDownIcon } from "lucide-react";
 
-import { blockTypeToBlockName } from "@/components/block-format-data";
 import { useToolbarContext } from "@/components/toolbar-context";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useUpdateToolbarHandler } from "@/components/use-update-toolbar";
+import { blockTypeToBlockName } from "@/constants/blocks.data";
 
 export function BlockFormatDropDown({
   children,

@@ -1,8 +1,8 @@
 ﻿"use client";
 
 import { CommandDialog } from "@/components/ui/command";
-import type { ToolsContext as ToolsContextType } from "@/features/tools/types";
 import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut";
+import type { ToolsContext as ToolsContextType } from "@/types/tools.types";
 import { createContext, useContext, useState } from "react";
 
 const ToolsContext = createContext<ToolsContextType | undefined>(undefined);

@@ -37,7 +37,7 @@ export function useModalTrigger() {
   return context;
 }
 
-type ModalProps = {
+export type ModalProps = {
   children: ({ close }: { close: () => void }) => ReactNode;
 
   className?: string;

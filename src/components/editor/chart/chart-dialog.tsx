@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { LexicalEditor, NodeKey } from "lexical";
-import { PlusIcon, Trash2Icon } from "lucide-react";
+import { ArrowUpRight, PlusIcon, Trash2Icon } from "lucide-react";
 import { useId, useState, type JSX } from "react";
 import { INSERT_CHART_COMMAND, UPDATE_CHART_COMMAND } from "./chart-commands";
 import { ChartRenderer } from "./chart-renderer";
@@ -213,7 +213,7 @@ function ChartDialogBody({
   return (
     <div className="flex min-h-0 gap-6 w-min relative">
       <Tabs defaultValue="data" className="min-w-0 max-h-60 relative">
-        <ScrollArea className="size-96 pr-3 ">
+        <ScrollArea className="w-96 h-80 pr-3">
           <TabsList
             className="grid w-full grid-cols-3 sticky top-0 z-20 "
             variant="default"
@@ -605,7 +605,7 @@ function ChartDialogBody({
         type="button"
         size={"sm"}
         disabled={isDisabled}
-        className="bottom-0 right-0 absolute"
+        className="bottom-0 left-0 absolute"
         onClick={() => {
           if (!isDisabled) {
             onSubmit(cloneChartPayload(chart));
@@ -613,6 +613,7 @@ function ChartDialogBody({
         }}
       >
         {submitLabel}
+        <ArrowUpRight className="size-4" />
       </Button>
     </div>
   );

@@ -1,3 +1,6 @@
+import { useToolbarContext } from "@/components/toolbar-context";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { blockTypeToBlockName } from "@/constants/blocks.data";
 import { INSERT_UNORDERED_LIST_COMMAND } from "@lexical/list";
 import { $setBlocksType } from "@lexical/selection";
 import {
@@ -5,9 +8,6 @@ import {
   $getSelection,
   $isRangeSelection,
 } from "lexical";
-import { blockTypeToBlockName } from "@/components/block-format-data";
-import { useToolbarContext } from "@/components/toolbar-context";
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 
 const BLOCK_FORMAT_VALUE = "bullet";
 

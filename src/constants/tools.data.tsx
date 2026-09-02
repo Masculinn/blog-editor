@@ -1,5 +1,5 @@
-﻿import type { Tool } from "./types";
-import { ViewPosts } from "./view-posts";
+﻿import { ViewPosts } from "../features/tools/view-posts";
+import type { Tool } from "../types/tools.types";
 
 export default [
   {

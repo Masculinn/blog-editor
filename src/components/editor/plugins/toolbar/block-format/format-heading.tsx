@@ -1,3 +1,6 @@
+import { useToolbarContext } from "@/components/toolbar-context";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { blockTypeToBlockName } from "@/constants/blocks.data";
 import { $createHeadingNode, type HeadingTagType } from "@lexical/rich-text";
 import { $setBlocksType } from "@lexical/selection";
 import {
@@ -6,9 +9,6 @@ import {
   $isElementNode,
   $isRangeSelection,
 } from "lexical";
-import { blockTypeToBlockName } from "@/components/block-format-data";
-import { useToolbarContext } from "@/components/toolbar-context";
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 
 export function FormatHeading({ levels = [] }: { levels: HeadingTagType[] }) {
   const { activeEditor, blockType } = useToolbarContext();

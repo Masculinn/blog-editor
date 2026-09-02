@@ -26,3 +26,8 @@ export type ToolsContext = {
   open: boolean;
   setOpen: Dispatch<SetStateAction<boolean>>;
 };
+
+export type ToolItem = {
+  className?: string;
+  close: () => void;
+};

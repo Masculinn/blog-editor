@@ -12,6 +12,7 @@ import {
 import { useSearchParam } from "@/hooks/use-search-param";
 import { cn } from "@/lib/utils";
 import type { Blog } from "@/types/db.types";
+import type { ToolItem } from "@/types/tools.types";
 import { formatTime } from "@/utils/formatTime";
 import Image from "next/image";
 import Link from "next/link";
@@ -25,13 +26,10 @@ export function PostCard({
   tags,
   title,
   level,
-  clasName,
+  className,
   id,
   close,
-}: Blog & {
-  clasName?: string;
-  close: () => void;
-}) {
+}: Blog & ToolItem) {
   const router = useRouter();
   const { getSearchParamHref } = useSearchParam();
 
@@ -94,7 +92,7 @@ export function PostCard({
           "group-hover:bg-primary/5",
           "group-focus-visible:bg-primary/10",
 
-          clasName,
+          className,
         )}
       >
         <PostDifficulty

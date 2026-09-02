@@ -5,8 +5,8 @@
   CommandInput,
   CommandList,
 } from "@/components/ui/command";
+import data from "@/constants/tools.data";
 import ToolsProvider from "@/providers/tools-provider";
-import data from "./data";
 import { ToolItem } from "./tool-item";
 
 export function Tools({ className }: { className?: string }) {
