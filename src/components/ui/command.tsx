@@ -28,34 +28,41 @@ function Command({
     />
   );
 }
+type CommandDialogProps = React.ComponentProps<typeof Dialog> & {
+  className?: string;
+  keepMounted?: boolean;
+
+  finalFocus?: React.ComponentProps<typeof DialogContent>["finalFocus"];
+
+  children: React.ReactNode;
+};
 
 function CommandDialog({
-  title = "Command Palette",
-  description = "Search for a command to run...",
-  children,
   className,
-  showCloseButton = false,
+  children,
+  keepMounted = false,
+  finalFocus,
   ...props
-}: Omit<React.ComponentProps<typeof Dialog>, "children"> & {
-  title?: string;
-  description?: string;
-  className?: string;
-  showCloseButton?: boolean;
-  children: React.ReactNode;
-}) {
+}: CommandDialogProps) {
   return (
     <Dialog {...props}>
-      <DialogHeader className="sr-only">
-        <DialogTitle>{title}</DialogTitle>
-        <DialogDescription>{description}</DialogDescription>
-      </DialogHeader>
       <DialogContent
+        portalProps={{
+          keepMounted,
+        }}
+        finalFocus={finalFocus}
         className={cn(
-          "top-1/3 translate-y-0 overflow-hidden rounded-xl! p-0",
+          "top-1/4 translate-y-0 overflow-hidden rounded-xl! p-0",
           className,
         )}
-        showCloseButton={showCloseButton}
+        showCloseButton={false}
       >
+        <DialogHeader className="sr-only">
+          <DialogTitle>Command Center</DialogTitle>
+
+          <DialogDescription>Search for a tool to run.</DialogDescription>
+        </DialogHeader>
+
         {children}
       </DialogContent>
     </Dialog>
@@ -157,6 +164,7 @@ function CommandItem({
       )}
       {...props}
     >
+      {props["aria-selected"] ? "lalala" : null}
       {children}
       <CheckIcon className="ml-auto opacity-0 group-has-data-[slot=command-shortcut]/command-item:hidden group-data-[checked=true]/command-item:opacity-100" />
     </CommandPrimitive.Item>

@@ -15,6 +15,8 @@ import type { Blog } from "@/types/db.types";
 import { formatTime } from "@/utils/formatTime";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import type { KeyboardEvent, MouseEvent } from "react";
 
 export function PostCard({
   banner_image,
@@ -30,17 +32,68 @@ export function PostCard({
   clasName?: string;
   close: () => void;
 }) {
+  const router = useRouter();
   const { getSearchParamHref } = useSearchParam();
+
+  const href = getSearchParamHref("id", id);
+
+  const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    )
+      return;
+
+    close();
+  };
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLAnchorElement>) => {
+    if (event.key !== "Enter") return;
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
+      return;
+
+    event.preventDefault();
+
+    close();
+    router.push(href);
+  };
 
   return (
     <Link
-      href={getSearchParamHref("id", id)}
-      onClick={close}
-      className="group relative my-4 rounded-2xl transition-all duration-150 focus:scale-100 scale-98 focus:outline-2 focus:outline-primary first:ml-2"
+      href={href}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      className={cn(
+        "group relative my-4 scale-98 rounded-2xl",
+        "transition-all duration-150",
+
+        "focus-visible:scale-100",
+        "focus-visible:outline-2",
+        "focus-visible:outline-primary",
+        "focus-visible:outline-offset-2",
+
+        "first:ml-2",
+
+        "motion-reduce:transform-none",
+        "motion-reduce:transition-none",
+      )}
     >
       <Card
         className={cn(
-          "relative h-auto shrink-0 cursor-pointer overflow-hidden bg-bg py-0 fade-in md:max-h-100 group-focus:bg-primary/10",
+          "relative h-auto shrink-0 cursor-pointer",
+          "overflow-hidden bg-bg py-0 fade-in",
+
+          "md:max-h-100",
+
+          "transition-colors",
+
+          "group-hover:bg-primary/5",
+          "group-focus-visible:bg-primary/10",
+
           clasName,
         )}
       >
@@ -60,7 +113,16 @@ export function PostCard({
           />
         </CardHeader>
 
-        <CardContent className="px-4 py-0 decoration-muted-foreground underline-offset-2 group-hover:underline">
+        <CardContent
+          className={cn(
+            "px-4 py-0",
+            "decoration-muted-foreground",
+            "underline-offset-2",
+
+            "group-hover:underline",
+            "group-focus-visible:underline",
+          )}
+        >
           <CardTitle className="text-lg font-semibold tracking-tighter">
             {title}
           </CardTitle>

@@ -1,26 +1,16 @@
 ﻿"use client";
 
 import { CommandDialog } from "@/components/ui/command";
+import type { ToolsContext as ToolsContextType } from "@/features/tools/types";
 import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut";
-import {
-  createContext,
-  useContext,
-  useState,
-  type Dispatch,
-  type SetStateAction,
-} from "react";
+import { createContext, useContext, useState } from "react";
 
-type ToolsContext = {
-  open: boolean;
-  setOpen: Dispatch<SetStateAction<boolean>>;
-};
-
-const ToolsContext = createContext<ToolsContext | undefined>(undefined);
+const ToolsContext = createContext<ToolsContextType | undefined>(undefined);
 
 const useTools = () => {
   const context = useContext(ToolsContext);
 
-  if (typeof context === "undefined") {
+  if (context === undefined) {
     throw new Error("useTools must be used within a ToolsProvider");
   }
 
@@ -30,16 +20,35 @@ const useTools = () => {
 function ToolsProvider({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
 
-  useKeyboardShortcut(["Control", "k"], () => setOpen(!open), {
-    allowInEditable: true,
-    preventDefault: true,
-    stopPropagation: true,
-  });
+  useKeyboardShortcut(
+    ["Control", "k"],
+    () => {
+      setOpen((curr) => !curr);
+    },
+    {
+      allowInEditable: true,
+      preventDefault: true,
+      stopPropagation: true,
+    },
+  );
 
   return (
-    <CommandDialog open={open} onOpenChange={setOpen}>
-      <ToolsContext value={{ open, setOpen }}>{children}</ToolsContext>
-    </CommandDialog>
+    <ToolsContext
+      value={{
+        open,
+        setOpen,
+      }}
+    >
+      <CommandDialog
+        open={open}
+        onOpenChange={setOpen}
+        modal
+        keepMounted
+        finalFocus={false}
+      >
+        {children}
+      </CommandDialog>
+    </ToolsContext>
   );
 }
 

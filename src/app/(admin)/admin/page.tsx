@@ -6,6 +6,7 @@ import { Tools } from "@/features/tools";
 import { withMDX } from "@/hoc/withMDX";
 import { withPost } from "@/hoc/withPost";
 import { withPostContent } from "@/hoc/withPostContent";
+import { cn } from "@/lib/utils";
 import { connection } from "next/server";
 
 interface Props {
@@ -29,10 +30,13 @@ export default async function Page({ searchParams }: Props) {
 
   return (
     <main className="w-full h-screen overflow-hidden items-center justify-center-safe p-16 flex flex-row">
-      <Tools postId={postId} />
+      <Tools className="w-xl bg-accent/20" />
       <Editor
         id={postId}
-        className="h-full w-7/12 border-y border-l rounded-l-md p-4"
+        className={cn(
+          "h-full w-7/12 p-4",
+          isViewer ? "border-y border-l rounded-l-md" : "rounded-md border",
+        )}
       />
       {isViewer && postId && (
         <DocumentViewer className="w-5/12 h-full border-r border-y rounded-r-md">

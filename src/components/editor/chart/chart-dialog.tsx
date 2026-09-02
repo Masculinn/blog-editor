@@ -215,8 +215,8 @@ function ChartDialogBody({
       <Tabs defaultValue="data" className="min-w-0 max-h-60 relative">
         <ScrollArea className="size-96 pr-3 ">
           <TabsList
-            className="grid w-full grid-cols-3 sticky top-0 bg-black"
-            variant="line"
+            className="grid w-full grid-cols-3 sticky top-0 z-20 "
+            variant="default"
           >
             <TabsTrigger value="data">Data</TabsTrigger>
             <TabsTrigger value="series">Series</TabsTrigger>
