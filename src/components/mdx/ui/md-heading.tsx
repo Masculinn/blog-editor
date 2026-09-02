@@ -48,7 +48,6 @@ export const MdHeading = ({
   className,
   ...props
 }: HeadingProps) => {
-  console.debug("MdHeading", props);
   const Wrapper = typeof props.id === "string" ? Link : Fragment;
   return (
     <Wrapper

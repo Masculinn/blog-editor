@@ -29,12 +29,12 @@ export default async function Page({ searchParams }: Props) {
   const isViewer = params.viewer === "true";
 
   return (
-    <main className="w-full h-screen overflow-hidden items-center justify-center-safe p-16 flex flex-row">
+    <main className="w-full h-screen overflow-hidden items-center justify-center-safe py-16 px-36 flex flex-row">
       <Tools className="w-xl bg-accent/20" />
       <Editor
         id={postId}
         className={cn(
-          "h-full w-7/12 p-4",
+          "h-full w-7/12 p-2",
           isViewer ? "border-y border-l rounded-l-md" : "rounded-md border",
         )}
       />

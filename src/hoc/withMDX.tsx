@@ -2,8 +2,8 @@
 import remarkUnwrapImageParagraphs from "@/components/mdx/plugins/remark-unwrap-image-paragraphs-plugin";
 import type { Blog } from "@/types/db.types";
 import {
-  serialize,
-  type SerializeResult,
+    serialize,
+    type SerializeResult,
 } from "next-mdx-remote-client/serialize";
 import type { ComponentType } from "react";
 import rehypeSlug from "rehype-slug";
@@ -16,7 +16,7 @@ export type SerializedMDXSource = SerializeResult<MDXRecord, MDXRecord>;
 export function withMDX<P extends Blog>(
   Component: ComponentType<P & SerializedMDXSource>,
 ) {
-  return async function WithMDX(props: P) {
+  return async (props: P) => {
     const { content, ...scopeValues } = props;
 
     const scope = Object.fromEntries(

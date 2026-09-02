@@ -60,20 +60,6 @@ const DETAILS: MultilineElementTransformer = {
       ? traverseChildren(summary).trim()
       : "Summary";
 
-    /*
-     * Don't use traverseChildren(content) here.
-     *
-     * DetailsContentNode contains block-level nodes such as:
-     *
-     * - ParagraphNode
-     * - ListNode
-     * - QuoteNode
-     * - CodeNode
-     * - another DetailsContainerNode
-     *
-     * $convertToMarkdownString() makes those nodes go through the
-     * complete transformer pipeline again.
-     */
     const contentMarkdown = content
       ? $convertToMarkdownString(MARKDOWN_TRANSFORMERS, content, true).trim()
       : "";
@@ -106,8 +92,6 @@ const DETAILS: MultilineElementTransformer = {
     }
 
     /*
-     * startMatch[1] contains the attributes from:
-     *
      * <details>
      * <details open>
      * <details open="">
@@ -125,12 +109,7 @@ const DETAILS: MultilineElementTransformer = {
     let summaryMarkdown = "Summary";
 
     /*
-     * Find:
-     *
-     * <summary>Shopping list</summary>
-     *
-     * Also supports content immediately following it:
-     *
+     * <summary></summary>
      * <summary>Shopping list</summary> Some text
      */
     const summaryIndex = lines.findIndex((line) => SUMMARY_REGEX.test(line));
@@ -143,24 +122,13 @@ const DETAILS: MultilineElementTransformer = {
 
         const remainder = summaryMatch[2].trim();
 
-        /*
-         * Remove everything up through the summary line.
-         */
         lines.splice(0, summaryIndex + 1);
 
-        /*
-         * If body content exists on the same line as </summary>,
-         * preserve it.
-         */
         if (remainder) {
           lines.unshift(remainder);
         }
       }
     }
-
-    /*
-     * Remove blank lines surrounding the body.
-     */
     while (lines.length > 0 && lines[0].trim() === "") {
       lines.shift();
     }
@@ -175,15 +143,6 @@ const DETAILS: MultilineElementTransformer = {
 
     const content = $createDetailsContentNode();
 
-    /*
-     * Parse Markdown inside <summary>.
-     *
-     * Example:
-     *
-     * <summary>**Shopping** list</summary>
-     *
-     * produces formatted Lexical text rather than literal **.
-     */
     if (summaryMarkdown) {
       const summaryNodes = $generateNodesFromMarkdownString(
         summaryMarkdown,
@@ -196,29 +155,12 @@ const DETAILS: MultilineElementTransformer = {
       if (summaryNodes.length === 1 && $isParagraphNode(firstSummaryNode)) {
         summary.append(...firstSummaryNode.getChildren());
       } else {
-        /*
-         * A <summary> should contain inline content, not arbitrary
-         * block structures, so fall back to plain text if the parsed
-         * Markdown isn't a simple paragraph.
-         */
         summary.append($createTextNode(summaryMarkdown));
       }
     } else {
       summary.append($createTextNode("Summary"));
     }
 
-    /*
-     * Everything following </summary> and preceding </details>
-     * gets parsed again using the complete Markdown transformer list.
-     *
-     * Therefore:
-     *
-     * * Vegetables
-     * * Fruits
-     * * Fish
-     *
-     * becomes an actual ListNode.
-     */
     const bodyMarkdown = lines.join("\n").trim();
 
     if (bodyMarkdown) {
@@ -231,9 +173,6 @@ const DETAILS: MultilineElementTransformer = {
       content.append(...bodyNodes);
     }
 
-    /*
-     * Keep DetailsContentNode editable even when it has no content.
-     */
     if (content.getChildrenSize() === 0) {
       content.append($createParagraphNode());
     }
@@ -246,28 +185,13 @@ const DETAILS: MultilineElementTransformer = {
 
 export const MARKDOWN_TRANSFORMERS: Transformer[] = [
   CHART_TRANSFORMER,
-  /*
-   * Custom multiline/block transformers should come first.
-   */
   DETAILS,
   TABLE,
-
-  /*
-   * Your existing custom transformers.
-   */
   HR,
   IMAGE,
   EMOJI,
-
-  /*
-   * Lexical doesn't include CHECK_LIST inside
-   * ELEMENT_TRANSFORMERS, so keep this explicitly.
-   */
   CHECK_LIST,
 
-  /*
-   * Built-in Markdown transformers.
-   */
   ...ELEMENT_TRANSFORMERS,
   ...MULTILINE_ELEMENT_TRANSFORMERS,
   ...TEXT_FORMAT_TRANSFORMERS,

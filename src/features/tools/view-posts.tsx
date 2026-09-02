@@ -5,7 +5,7 @@ import { PostCard } from "@/components/blog/post-card";
 import { Modal } from "@/components/modal";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Blog } from "@/types/db.types";
-import { useCallback, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import type { ToolComponentProps } from "./types";
 
@@ -16,7 +16,7 @@ export function ViewPosts({ render, title }: ToolComponentProps) {
   const loadedRef = useRef(false);
   const loadingRef = useRef(false);
 
-  const loadPosts = useCallback(async () => {
+  async function loadPosts() {
     if (loadedRef.current || loadingRef.current) {
       return;
     }
@@ -35,7 +35,7 @@ export function ViewPosts({ render, title }: ToolComponentProps) {
       loadingRef.current = false;
       setIsLoading(false);
     }
-  }, []);
+  }
 
   return (
     <Modal
