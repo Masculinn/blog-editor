@@ -7,7 +7,7 @@ type InjectedBlogProps<T> = Omit<T, keyof Blog>;
 type WrappedProps<T> = InjectedBlogProps<T> & WithPostProps;
 
 export function withPost<T extends object>(Component: ComponentType<T>) {
-  return async function WithPost({ id, ...props }: WrappedProps<T>) {
+  return async ({ id, ...props }: WrappedProps<T>) => {
     const { data: post, error } = await db
       .from("blog_posts")
       .select("*")

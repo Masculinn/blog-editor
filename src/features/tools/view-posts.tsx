@@ -17,9 +17,7 @@ export function ViewPosts({ render, title }: ToolComponentProps) {
   const loadingRef = useRef(false);
 
   async function loadPosts() {
-    if (loadedRef.current || loadingRef.current) {
-      return;
-    }
+    if (loadedRef.current || loadingRef.current) return;
 
     loadingRef.current = true;
     setIsLoading(true);
