@@ -4,12 +4,14 @@ import { docFromHash, docToHash } from "@/components/doc-serialization";
 import { Badge, type badgeVariants } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { useDebounce } from "@/hooks/use-debounce";
+import { publishDocumentSnapshot } from "@/store/document.store";
 import {
   editorStateFromSerializedDocument,
   serializedDocumentFromEditorState,
 } from "@lexical/file";
 import {
   $convertFromMarkdownString,
+  $convertToMarkdownString,
   type Transformer,
 } from "@lexical/markdown";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
@@ -39,6 +41,11 @@ type UrlClientDocumentSyncPluginProps = {
 
 type SyncStatus = "loading" | "syncing" | "synced" | "error";
 
+type EditorDocumentSnapshot = {
+  hash: string;
+  source: string;
+};
+
 const STATUS_CONFIG = {
   loading: {
     Component: <Spinner className="size-3" />,
@@ -64,41 +71,99 @@ const STATUS_CONFIG = {
 };
 
 const URL_DOCUMENT_SYNC_TAG = "url-document-sync";
+
 const DEFAULT_DEBOUNCE_MS = 5_000;
+
 const CODE_LANGUAGE_ALIASES: Record<string, string> = {
   ts: "typescript",
   js: "javascript",
   tsx: "ts",
   jsx: "js",
 };
+
 function normalizeExternalMarkdown(markdown: string): string {
   const normalizedLineEndings = markdown
     .replace(/^\uFEFF/, "")
     .replace(/\r\n?/g, "\n")
     .replace(/\u2028|\u2029/g, "\n");
+
   const lines = normalizedLineEndings.split("\n");
+
   let activeFenceLength: number | null = null;
+
   return lines
     .map((line) => {
       if (activeFenceLength !== null) {
         const closingMatch = line.match(/^([ \t]*)(`{3,})[ \t]*$/);
+
         if (closingMatch && closingMatch[2].length >= activeFenceLength) {
           activeFenceLength = null;
+
           return `${closingMatch[1]}${closingMatch[2]}`;
         }
+
         return line;
       }
+
       const openingMatch = line.match(/^([ \t]*)(`{3,})[ \t]*([\w-]+)?[ \t]*$/);
-      if (!openingMatch) return line;
+
+      if (!openingMatch) {
+        return line;
+      }
+
       const [, indentation, fence, rawLanguage] = openingMatch;
+
       activeFenceLength = fence.length;
-      if (!rawLanguage) return `${indentation}${fence}`;
+
+      if (!rawLanguage) {
+        return `${indentation}${fence}`;
+      }
+
       const normalizedLanguage =
         CODE_LANGUAGE_ALIASES[rawLanguage.toLowerCase()] ?? rawLanguage;
+
       return `${indentation}${fence}${normalizedLanguage}`;
     })
     .join("\n");
 }
+
+function editorStateToMarkdown(
+  editorState: EditorState,
+  transformers: Transformer[],
+  shouldPreserveNewLinesInMarkdown: boolean,
+): string {
+  return editorState.read(() =>
+    $convertToMarkdownString(
+      transformers,
+      undefined,
+      shouldPreserveNewLinesInMarkdown,
+    ),
+  );
+}
+
+async function createDocumentSnapshot(
+  editorState: EditorState,
+  transformers: Transformer[],
+  shouldPreserveNewLinesInMarkdown: boolean,
+): Promise<EditorDocumentSnapshot> {
+  const document = serializedDocumentFromEditorState(editorState, {
+    source: "editor",
+  });
+
+  const source = editorStateToMarkdown(
+    editorState,
+    transformers,
+    shouldPreserveNewLinesInMarkdown,
+  );
+
+  const hash = await docToHash(document);
+
+  return {
+    hash,
+    source,
+  };
+}
+
 export function UrlClientDocumentSyncPlugin({
   initialMarkdown,
   transformers,
@@ -106,19 +171,25 @@ export function UrlClientDocumentSyncPlugin({
   debounceMs = DEFAULT_DEBOUNCE_MS,
   scrollContainerRef,
 }: UrlClientDocumentSyncPluginProps) {
-  const [editor] = useLexicalComposerContext();
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("loading");
+
   const initializedRef = useRef(false);
   const hashBootstrappedRef = useRef(false);
   const hydrationIdRef = useRef(0);
   const writeIdRef = useRef(0);
+
   const scrollFrameRef = useRef<number | null>(null);
+
+  const [editor] = useLexicalComposerContext();
+
   const resetScrollToTop = useCallback(() => {
     if (scrollFrameRef.current !== null) {
       cancelAnimationFrame(scrollFrameRef.current);
     }
+
     scrollFrameRef.current = requestAnimationFrame(() => {
       scrollFrameRef.current = null;
+
       scrollContainerRef?.current?.scrollTo({
         top: 0,
         left: 0,
@@ -126,48 +197,88 @@ export function UrlClientDocumentSyncPlugin({
       });
     });
   }, [scrollContainerRef]);
-  const writeHash = useDebounce((editorState: EditorState) => {
-    const writeId = ++writeIdRef.current;
-    void (async () => {
+
+  const commitEditorState = useCallback(
+    async (editorState: EditorState) => {
+      const writeId = ++writeIdRef.current;
+
       try {
-        const document = serializedDocumentFromEditorState(editorState, {
-          source: "editor",
-        });
-        const hash = await docToHash(document);
-        if (writeId !== writeIdRef.current) return;
-        const url = window.location.pathname + window.location.search + hash;
+        const snapshot = await createDocumentSnapshot(
+          editorState,
+          transformers,
+          shouldPreserveNewLinesInMarkdown,
+        );
+
+        if (writeId !== writeIdRef.current) {
+          return;
+        }
+
+        const url =
+          window.location.pathname + window.location.search + snapshot.hash;
+
         window.history.replaceState(window.history.state, "", url);
+
+        publishDocumentSnapshot(snapshot);
+
         setSyncStatus("synced");
       } catch {
-        if (writeId !== writeIdRef.current) return;
+        if (writeId !== writeIdRef.current) {
+          return;
+        }
+
         setSyncStatus("error");
       }
-    })();
+    },
+    [transformers, shouldPreserveNewLinesInMarkdown],
+  );
+
+  const writeSnapshot = useDebounce((editorState: EditorState) => {
+    void commitEditorState(editorState);
   }, debounceMs);
+
   useEffect(() => {
     let disposed = false;
+
     const hydrationId = ++hydrationIdRef.current;
+
     initializedRef.current = false;
+
     setSyncStatus("loading");
-    writeHash.cancel();
+
+    writeSnapshot.cancel();
+
     ++writeIdRef.current;
+
     if (scrollFrameRef.current !== null) {
       cancelAnimationFrame(scrollFrameRef.current);
       scrollFrameRef.current = null;
     }
+
     const unregister = editor.registerUpdateListener(
       ({ editorState, dirtyElements, dirtyLeaves, tags }) => {
-        if (!initializedRef.current) return;
-        if (tags.has(URL_DOCUMENT_SYNC_TAG)) return;
-        if (dirtyElements.size === 0 && dirtyLeaves.size === 0) return;
+        if (!initializedRef.current) {
+          return;
+        }
+
+        if (tags.has(URL_DOCUMENT_SYNC_TAG)) {
+          return;
+        }
+
+        if (dirtyElements.size === 0 && dirtyLeaves.size === 0) {
+          return;
+        }
+
         setSyncStatus("syncing");
-        writeHash(editorState);
+
+        writeSnapshot(editorState);
       },
     );
+
     async function initializeDocument() {
       try {
         if (typeof initialMarkdown === "string") {
           const normalizedMarkdown = normalizeExternalMarkdown(initialMarkdown);
+
           editor.update(
             () => {
               $convertFromMarkdownString(
@@ -184,25 +295,40 @@ export function UrlClientDocumentSyncPlugin({
                 SKIP_SELECTION_FOCUS_TAG,
               ],
               discrete: true,
+
               onUpdate: () => {
-                if (disposed || hydrationId !== hydrationIdRef.current) return;
+                if (disposed || hydrationId !== hydrationIdRef.current) {
+                  return;
+                }
+
                 editor.dispatchCommand(CLEAR_HISTORY_COMMAND, undefined);
+
                 initializedRef.current = true;
+
                 resetScrollToTop();
+
                 setSyncStatus("syncing");
-                writeHash(editor.getEditorState());
-                writeHash.flush();
+
+                void commitEditorState(editor.getEditorState());
               },
             },
           );
+
           return;
         }
+
         if (!hashBootstrappedRef.current) {
           hashBootstrappedRef.current = true;
+
           const hash = window.location.hash;
+
           if (hash.startsWith("#doc=")) {
             const document = await docFromHash(hash);
-            if (disposed || hydrationId !== hydrationIdRef.current) return;
+
+            if (disposed || hydrationId !== hydrationIdRef.current) {
+              return;
+            }
+
             if (document?.source === "editor") {
               const nextEditorState = editorStateFromSerializedDocument(
                 editor,
@@ -216,27 +342,53 @@ export function UrlClientDocumentSyncPlugin({
               editor.dispatchCommand(CLEAR_HISTORY_COMMAND, undefined);
 
               initializedRef.current = true;
+
               resetScrollToTop();
+
+              const source = editorStateToMarkdown(
+                nextEditorState,
+                transformers,
+                shouldPreserveNewLinesInMarkdown,
+              );
+
+              publishDocumentSnapshot({
+                hash,
+                source,
+              });
+
               setSyncStatus("synced");
+
               return;
             }
           }
         }
+
         initializedRef.current = true;
+
         resetScrollToTop();
+
         setSyncStatus("synced");
       } catch {
-        if (disposed || hydrationId !== hydrationIdRef.current) return;
+        if (disposed || hydrationId !== hydrationIdRef.current) {
+          return;
+        }
+
         initializedRef.current = true;
+
         setSyncStatus("error");
       }
     }
+
     void initializeDocument();
+
     return () => {
       disposed = true;
+
       unregister();
-      writeHash.cancel();
+
+      writeSnapshot.cancel();
       ++writeIdRef.current;
+
       if (scrollFrameRef.current !== null) {
         cancelAnimationFrame(scrollFrameRef.current);
         scrollFrameRef.current = null;
@@ -247,10 +399,13 @@ export function UrlClientDocumentSyncPlugin({
     initialMarkdown,
     transformers,
     shouldPreserveNewLinesInMarkdown,
-    writeHash,
+    writeSnapshot,
+    commitEditorState,
     resetScrollToTop,
   ]);
+
   const { Component, variant } = STATUS_CONFIG[syncStatus];
+
   return (
     <Badge variant={variant} className="pointer-events-none">
       {Component}

@@ -1,4 +1,6 @@
-﻿import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+﻿import { ChartRenderer } from "@/components/editor/chart/chart-renderer";
+import type { ChartPayload } from "@/components/editor/chart/chart-types";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import themeSchema from "@/constants/prism.data";
 import { useElementSize } from "@/hooks/use-element-size";
 import { Highlight, type Language } from "prism-react-renderer";
@@ -28,6 +30,7 @@ function getLanguage(child: unknown): Language | "text" {
 
   return (lang as Language) ?? "text";
 }
+
 export const MdPre: FC<MdPreProps> = ({ lang, ...props }) => {
   const { ref: preRef, size } = useElementSize<HTMLPreElement>();
 
@@ -41,6 +44,9 @@ export const MdPre: FC<MdPreProps> = ({ lang, ...props }) => {
 
   const language = getLanguage(child);
 
+  if (language === "chart") {
+    return <ChartRenderer chart={JSON.parse(code) as ChartPayload} />;
+  }
   return (
     <div className="w-full my-4 flex justify-center relative overflow-y-hidden">
       <CopyCode

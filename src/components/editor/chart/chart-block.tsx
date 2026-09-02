@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -59,7 +58,7 @@ export function ChartBlock({
       >
         {/** biome-ignore lint/a11y/noStaticElementInteractions: false positive */}
         <div className="relative" onDoubleClick={() => setIsEditOpen(true)}>
-          <div className="absolute right-0 top-0 z-10 flex translate-y-[-50%] gap-1 rounded-lg border bg-background/95 p-1 opacity-0 shadow-sm backdrop-blur transition-opacity group-hover/chart:opacity-100">
+          <div className="absolute right-0 top-0 z-10 flex translate-y-[-50%] gap-1 rounded-lg border bg-background/95 p-1 opacity-0 shadow-sm  transition-opacity group-hover/chart:opacity-100">
             <Tooltip>
               <TooltipTrigger
                 render={
@@ -111,15 +110,10 @@ export function ChartBlock({
       </BlockWithAlignableContents>
 
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="max-h-[92vh] sm:max-w-6xl">
+        <DialogContent className="max-h-[92vh] sm:max-w-6xl ">
           <DialogHeader>
             <DialogTitle>Edit chart</DialogTitle>
-
-            <DialogDescription>
-              Update the dataset, series and chart appearance.
-            </DialogDescription>
           </DialogHeader>
-
           {isEditOpen && (
             <EditChartDialog
               activeEditor={editor}
