@@ -6,7 +6,7 @@ import {
   IDENTITY_COOKIE_NAME,
   isAdminIdentity,
   verifyIdentityToken,
-} from "@/lib/auth/index";
+} from "@/lib/auth";
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const identity = getRequestIdentity(request.headers);

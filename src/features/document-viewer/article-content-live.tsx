@@ -8,27 +8,15 @@ import { useEffect, useRef, useState } from "react";
 
 import { MDXComponents } from "@/components/mdx/mdx-components";
 import { isSerializedMDXWithError } from "@/lib/mdx/isSerializedMDXWithError";
-import { cn } from "@/lib/utils";
 import { MDXClient } from "next-mdx-remote-client";
 import { toast } from "sonner";
 import { ArticleErrorModal } from "./article-error-modal";
 
-type Props = Blog &
-  SerializedMDXSource & {
-    className?: string;
-  };
+type Props = Blog & SerializedMDXSource;
 
 export function ArticleContent(props: Props) {
-  const {
-    className,
-    banner_image,
-    description,
-    id,
-    level,
-    published_at,
-    tags,
-    title,
-  } = props;
+  const { banner_image, description, id, level, published_at, tags, title } =
+    props;
   const [mdxSource, setMdxSource] = useState<SerializedMDXSource>(() => {
     if (isSerializedMDXWithError(props)) {
       return {
@@ -106,9 +94,7 @@ export function ArticleContent(props: Props) {
     return <ArticleErrorModal {...mdxSource.error} />;
 
   return (
-    <article
-      className={cn("leading-snug text-blog-muted tracking-tight", className)}
-    >
+    <article className="leading-snug text-blog-muted tracking-tight px-8">
       <MDXClient
         compiledSource={mdxSource.compiledSource}
         frontmatter={mdxSource.frontmatter}

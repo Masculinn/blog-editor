@@ -242,16 +242,12 @@ export function Editor({
                 <div className="vertical-align-middle sticky top-0 z-10 flex items-between justify-between gap-2 overflow-auto">
                   <div className="flex md:flex-row flex-wrap gap-1 items-center">
                     <HistoryToolbarPlugin />
-
                     <Separator orientation="vertical" className="h-7!" />
-
                     <BlockFormatDropDown>
                       <FormatParagraph />
-
                       <FormatHeading
                         levels={["h1", "h2", "h3", "h4", "h5", "h6"]}
                       />
-
                       <FormatNumberedList />
                       <FormatBulletedList />
                       <FormatCheckList />
@@ -266,13 +262,9 @@ export function Editor({
                     <>
                       <div className="flex flex-row gap-0.5">
                         <Separator orientation="vertical" className="h-7!" />
-
                         <FontFormatToolbarPlugin />
-
                         <Separator orientation="vertical" className="h-7!" />
-
                         <ClearFormattingToolbarPlugin />
-
                         <Separator orientation="vertical" className="h-7!" />
                       </div>
                       <ClearEditorActionPlugin />

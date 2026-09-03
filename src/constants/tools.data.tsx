@@ -1,4 +1,5 @@
-﻿import { ViewDrafts } from "@/features/tools/view-drafts";
+﻿import { CreateDraft } from "@/features/tools/create-draft";
+import { ViewDrafts } from "@/features/tools/view-drafts";
 import { ViewPosts } from "../features/tools/view-posts";
 import type { Tool } from "../types/tools.types";
 
@@ -41,7 +42,7 @@ export default [
     img: "/app/create-draft.webp",
     title: "Create Draft",
     id: "create-draft",
-    Component: ViewPosts,
+    Component: CreateDraft,
     accent: {
       selected:
         "data-[selected=true]:bg-orange-500/10 data-[selected=true]:ring-2 data-[selected=true]:ring-orange-500",

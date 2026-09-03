@@ -7,7 +7,7 @@ import {
   getRequestIdentity,
   IDENTITY_COOKIE_NAME,
   verifyIdentityToken,
-} from "@/lib/auth/index";
+} from "@/lib/auth";
 import { db } from "@/lib/db/server";
 import { createSmallTalk } from "@/utils/db/create-small-talk";
 

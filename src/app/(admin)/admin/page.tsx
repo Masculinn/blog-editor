@@ -12,7 +12,7 @@ import { connection } from "next/server";
 export type SearchParamsRecords = {
   id: string;
   viewer: string;
-  isDraft: string;
+  draft: string;
 };
 
 interface Props {
@@ -30,14 +30,14 @@ export default async function Page({ searchParams }: Props) {
 
   const postId = typeof params.id === "string" ? Number(params.id) : undefined;
   const isViewer = params.viewer === "true";
-  const isDraft = params.isDraft === "true";
+  const draft = params.draft === "true";
 
   return (
     <main className="w-full h-screen overflow-hidden items-center justify-center-safe py-16 px-36 flex flex-row">
       <Tools className="w-xl bg-accent/20" />
       <Editor
         id={postId}
-        isDraft={isDraft}
+        draft={draft}
         className={cn(
           "h-full w-7/12 p-2",
           isViewer ? "border-y border-l rounded-l-md" : "rounded-md border",
@@ -45,8 +45,8 @@ export default async function Page({ searchParams }: Props) {
       />
       {isViewer && postId && (
         <DocumentViewer className="w-5/12 h-full border-r border-y rounded-r-md">
-          <ArticleCover id={postId} isDraft={isDraft} />
-          <ArticleContent id={postId} isDraft={isDraft} className="px-8" />
+          <ArticleCover id={postId} draft={draft} />
+          <ArticleContent id={postId} draft={draft} />
         </DocumentViewer>
       )}
     </main>

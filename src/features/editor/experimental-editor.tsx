@@ -103,14 +103,37 @@ import { DetailsSummaryNode } from "@/components/editor/nodes/details-summary-no
 import { AutoCompletePlugin } from "@/components/editor/plugins/auto-complete-plugin";
 import { DetailsPickerPlugin } from "@/components/editor/plugins/details-picker-plugin";
 import { UrlDocumentSyncPlugin } from "@/components/editor/plugins/url-document-sync-plugin";
-import { MARKDOWN_TRANSFORMERS } from "@/components/editor/transformers";
+import { EMOJI } from "@/components/editor/transformers/markdown-emoji-transformer";
+import { HR } from "@/components/editor/transformers/markdown-hr-transformer";
+import { IMAGE } from "@/components/editor/transformers/markdown-image-transformer";
+import { TABLE } from "@/components/editor/transformers/markdown-table-transformer";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { validateUrl } from "@/utils/editor/validateUrl";
+import {
+  CHECK_LIST,
+  ELEMENT_TRANSFORMERS,
+  MULTILINE_ELEMENT_TRANSFORMERS,
+  TEXT_FORMAT_TRANSFORMERS,
+  TEXT_MATCH_TRANSFORMERS,
+} from "@lexical/markdown";
 import { CharacterLimitPlugin } from "@lexical/react/LexicalCharacterLimitPlugin";
 
 const PLACEHOLDER = "Press / to open up the commands";
-const MAX_LENGTH = Infinity;
+const MAX_LENGTH = 300;
+
+const MARKDOWN_TRANSFORMERS = [
+  TABLE,
+  HR,
+  IMAGE,
+  EMOJI,
+  CHECK_LIST,
+
+  ...ELEMENT_TRANSFORMERS,
+  ...MULTILINE_ELEMENT_TRANSFORMERS,
+  ...TEXT_FORMAT_TRANSFORMERS,
+  ...TEXT_MATCH_TRANSFORMERS,
+];
 
 const EDITOR_NODES = [
   OverflowNode,

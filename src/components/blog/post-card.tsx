@@ -19,7 +19,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { KeyboardEvent, MouseEvent } from "react";
 
-type Props = (({ isDraft: true } & Draft) | ({ isDraft?: false } & Blog)) &
+type Props = (({ draft: true } & Draft) | ({ draft?: false } & Blog)) &
   ToolItem;
 
 export function PostCard({
@@ -32,13 +32,14 @@ export function PostCard({
   className,
   id,
   close,
-  isDraft,
+  draft,
 }: Omit<Props, "content">) {
-  const { getSearchParamsHref } = useSearchParam();
   const router = useRouter();
+  const { getSearchParamsHref } = useSearchParam();
+
   const href = getSearchParamsHref({
     id,
-    isDraft,
+    draft,
   });
 
   const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {

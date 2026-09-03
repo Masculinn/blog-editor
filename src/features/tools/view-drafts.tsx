@@ -62,7 +62,7 @@ export function ViewDrafts({ render, title }: ToolComponentProps) {
           posts.map((post) => (
             <PostCard
               key={post.id}
-              isDraft
+              draft
               className="w-fit max-w-100"
               close={close}
               {...post}
