@@ -11,7 +11,7 @@ if (!url) {
 }
 
 if (!secretKey) {
-  throw new Error("Missing SUPABASE_SECRET_KEY.");
+  throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY.");
 }
 
 export const db = createClient<Database>(url, secretKey, {

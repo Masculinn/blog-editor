@@ -32,7 +32,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full h-screen w-full ">
         {children}
-        <Toaster />
+        <Toaster richColors />
       </body>
     </html>
   );

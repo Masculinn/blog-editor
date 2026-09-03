@@ -14,9 +14,6 @@ export function withMDX<P extends Blog>(
       Object.entries(scopeValues).filter(([, value]) => value !== undefined),
     ) as MDXRecord;
 
-    console.debug(scope, "scope");
-    console.debug(scopeValues, "scopeValues");
-
     const mdxSource = await serializeMDX(content, scope);
 
     return <Component {...props} {...mdxSource} />;

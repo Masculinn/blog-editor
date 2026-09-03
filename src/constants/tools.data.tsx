@@ -1,4 +1,5 @@
 ﻿import { CreateDraft } from "@/features/tools/create-draft";
+import { MediaLibrary } from "@/features/tools/media-library";
 import { ViewDrafts } from "@/features/tools/view-drafts";
 import { ViewPosts } from "../features/tools/view-posts";
 import type { Tool } from "../types/tools.types";
@@ -58,9 +59,9 @@ export default [
   },
   {
     img: "/app/image-collection.webp",
-    title: "Image Collection",
-    id: "image-collection",
-    Component: ViewPosts,
+    title: "Media Library",
+    id: "media-library",
+    Component: MediaLibrary,
     accent: {
       selected:
         "data-[selected=true]:bg-violet-500/10 data-[selected=true]:ring-2 data-[selected=true]:ring-violet-500",

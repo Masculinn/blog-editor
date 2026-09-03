@@ -63,9 +63,7 @@ export function ArticleContent(props: Props) {
           setMdxSource(result);
         } catch (error) {
           if (requestId !== requestIdRef.current) return;
-          toast.error("Failed to serialize live MDX", {
-            richColors: true,
-          });
+          toast.error("Failed to serialize live MDX");
 
           console.error("Failed to serialize live MDX:", error);
         }

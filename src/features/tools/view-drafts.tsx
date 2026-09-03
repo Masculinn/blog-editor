@@ -28,9 +28,7 @@ export function ViewDrafts({ render, title }: ToolComponentProps) {
       setPosts(data);
       loadedRef.current = true;
     } catch {
-      toast.error("Failed to fetch drafts.", {
-        richColors: true,
-      });
+      toast.error("Failed to fetch drafts.");
     } finally {
       loadingRef.current = false;
       setIsLoading(false);
