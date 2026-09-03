@@ -3,7 +3,7 @@
 import viewPostsAction from "@/app/actions/view/posts.action";
 import { PostCard } from "@/components/blog/post-card";
 import { Modal } from "@/components/modal";
-import { Skeleton } from "@/components/ui/skeleton";
+import { PostLoader } from "@/components/skeleton/post-card-skeleton";
 import type { Blog } from "@/types/db.types";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
@@ -69,16 +69,4 @@ export function ViewPosts({ render, title }: ToolComponentProps) {
       }
     </Modal>
   );
-}
-
-function PostLoader() {
-  return Array.from({
-    length: 4,
-  }).map((_, index) => (
-    <Skeleton
-      // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
-      key={index}
-      className="h-100 w-full"
-    />
-  ));
 }

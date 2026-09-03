@@ -1,7 +1,8 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { ArrowLeftIcon, FileQuestion } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "404 — Page Not Found",
@@ -9,6 +10,10 @@ export const metadata: Metadata = {
 };
 
 export default function NotFound() {
+  const handleClick = () => {
+    window.location.assign("/admin");
+  };
+
   return (
     <main
       aria-labelledby="not-found-heading"
@@ -36,12 +41,7 @@ export default function NotFound() {
         </p>
       </div>
 
-      <Button
-        render={<Link href={"/admin"} aria-label="Return to editor page" />}
-        size="lg"
-        nativeButton={false}
-        className="mt-2"
-      >
+      <Button size="lg" className="mt-2" onClick={handleClick}>
         <ArrowLeftIcon className="size-4" />
         Back to Editor
       </Button>

@@ -4,18 +4,21 @@ import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import type { VariantProps } from "class-variance-authority";
 import { Check, Copy } from "lucide-react";
 import { type FC, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { Button, type buttonVariants } from "../ui/button";
 
-interface CopyCodeButtonProps {
+interface Props {
   className?: string;
   variant?: VariantProps<typeof buttonVariants>["variant"];
   data: string;
+  withToast?: boolean;
 }
 
-export const CopyCode: FC<CopyCodeButtonProps> = ({
+export const CopyCode: FC<Props> = ({
   className,
   variant,
   data,
+  withToast,
 }) => {
   const [, copyToClipboard] = useCopyToClipboard();
   const [copied, setCopied] = useState(false);
@@ -27,6 +30,10 @@ export const CopyCode: FC<CopyCodeButtonProps> = ({
 
     copyToClipboard(data);
     setCopied(true);
+
+    if (withToast) {
+      toast.success("Copied to clipboard.");
+    }
 
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);

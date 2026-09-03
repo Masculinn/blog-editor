@@ -9,8 +9,9 @@ import { db } from "@/lib/db/server";
 const WEBP_QUALITY = 80;
 const MAX_FILE_SIZE = 12 * 1024 * 1024;
 const PAGE_SIZE = 100;
+const CACHE_CONTROL = "31536000";
 
-const SUPPORTED_INPUT_FORMATS = new Set(["jpeg", "png", "webp"]);
+const SUPPORTED_INPUT_FORMATS = new Set(["jpeg", "png", "webp", "gif"]);
 
 function getBucketName() {
   const bucket = process.env.BUCKET_NAME;
@@ -39,6 +40,13 @@ function sanitizeFileName(fileName: string) {
   return sanitized || "image";
 }
 
+function createStoragePath(fileName: string, extension: string) {
+  const baseName = sanitizeFileName(fileName);
+  const identifier = randomUUID().slice(0, 8);
+
+  return `${baseName}-${identifier}.${extension}`;
+}
+
 function isSafeStoragePath(path: string) {
   return (
     path.length > 0 &&
@@ -63,11 +71,31 @@ function isImageObject(file: {
       ? file.metadata.mimetype
       : undefined;
 
-  if (mimeType?.startsWith("image/")) {
-    return true;
-  }
+  if (mimeType?.startsWith("image/")) return true;
 
-  return /\.(?:webp|png|jpe?g)$/i.test(file.name);
+  return /\.(?:webp|png|jpe?g|gif)$/i.test(file.name);
+}
+
+async function uploadStorageObject({
+  path,
+  buffer,
+  contentType,
+}: {
+  path: string;
+  buffer: Buffer;
+  contentType: string;
+}) {
+  const bucket = getBucketName();
+
+  const { error } = await db.storage.from(bucket).upload(path, buffer, {
+    contentType,
+    cacheControl: CACHE_CONTROL,
+    upsert: false,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
 }
 
 export async function getMediaAction() {
@@ -103,9 +131,7 @@ export async function getMediaAction() {
 
       objects.push(...data);
 
-      if (data.length < PAGE_SIZE) {
-        break;
-      }
+      if (data.length < PAGE_SIZE) break;
 
       offset += PAGE_SIZE;
     }
@@ -175,45 +201,51 @@ export async function uploadMediaAction(formData: FormData) {
 
     const inputBuffer = Buffer.from(await file.arrayBuffer());
 
-    const metadata = await sharp(inputBuffer).metadata();
+    const metadata = await sharp(inputBuffer, {
+      animated: true,
+    }).metadata();
 
-    if (
-      !metadata.format ||
-      !SUPPORTED_INPUT_FORMATS.has(metadata.format.toLowerCase())
-    ) {
+    const format = metadata.format?.toLowerCase();
+
+    if (!format || !SUPPORTED_INPUT_FORMATS.has(format)) {
       return {
         success: false,
-        error: `${file.name} must be a JPEG, PNG, or WebP image.`,
+        error: `${file.name} must be a JPEG, PNG, WebP, or GIF image.`,
       } as const;
     }
 
-    const webpBuffer = await sharp(inputBuffer)
+    const outputBuffer = await sharp(inputBuffer, {
+      animated: true,
+    })
       .rotate()
       .webp({
         quality: WEBP_QUALITY,
         effort: 4,
         smartSubsample: true,
+
+        ...(metadata.loop !== undefined
+          ? {
+              loop: metadata.loop,
+            }
+          : {}),
+
+        ...(metadata.delay !== undefined
+          ? {
+              delay: metadata.delay,
+            }
+          : {}),
       })
       .toBuffer();
 
-    const baseName = sanitizeFileName(file.name);
-    const identifier = randomUUID().slice(0, 8);
-    const path = `${baseName}-${identifier}.webp`;
+    const path = createStoragePath(file.name, "webp");
 
-    const bucket = getBucketName();
-
-    const { error } = await db.storage.from(bucket).upload(path, webpBuffer, {
+    await uploadStorageObject({
+      path,
+      buffer: outputBuffer,
       contentType: "image/webp",
-      cacheControl: "31536000",
-      upsert: false,
     });
 
-    if (error) {
-      return {
-        success: false,
-        error: error.message,
-      } as const;
-    }
+    const timestamp = new Date().toISOString();
 
     return {
       success: true,
@@ -222,9 +254,9 @@ export async function uploadMediaAction(formData: FormData) {
         name: path,
         path,
         publicUrl: getPublicUrl(path),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        size: webpBuffer.byteLength,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+        size: outputBuffer.byteLength,
         mimeType: "image/webp",
       },
     } as const;

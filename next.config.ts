@@ -13,6 +13,9 @@ const nextConfig: NextConfig = {
     ],
   },
   experimental: {
+    serverActions: {
+      bodySizeLimit: "10mb",
+    },
     useTypeScriptCli: true,
     turbopackRustReactCompiler: true,
   },

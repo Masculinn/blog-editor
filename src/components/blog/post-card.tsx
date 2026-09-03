@@ -178,8 +178,7 @@ export function PostCard(props: Props) {
     event.preventDefault();
 
     toast.info(`Now viewing ${props.draft ? "draft" : "post"}...`, {
-      description: title,
-      position: "top-right",
+      description: `Title: ${title}`,
     });
 
     props.close();

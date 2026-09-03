@@ -1,5 +1,6 @@
 ﻿import { CreateDraft } from "@/features/tools/create-draft";
 import { MediaLibrary } from "@/features/tools/media-library";
+import { PublishDraft } from "@/features/tools/publish-draft";
 import { ViewDrafts } from "@/features/tools/view-drafts";
 import { ViewPosts } from "../features/tools/view-posts";
 import type { Tool } from "../types/tools.types";
@@ -76,28 +77,10 @@ export default [
     },
   },
   {
-    img: "/app/notes.webp",
-    title: "View Notes",
-    id: "notes",
-    Component: ViewPosts,
-    accent: {
-      selected:
-        "data-[selected=true]:bg-yellow-500/10 data-[selected=true]:ring-2 data-[selected=true]:ring-yellow-500",
-      focus: "focus-visible:ring-yellow-500",
-      surface:
-        "group-hover:bg-yellow-500/8 group-focus-visible:bg-yellow-500/10",
-      border:
-        "group-hover:border-yellow-400/50 group-focus-visible:border-yellow-400/70",
-      shadow:
-        "group-hover:shadow-yellow-500/15 group-focus-visible:shadow-yellow-500/20",
-      text: "group-hover:text-yellow-400 group-focus-visible:text-yellow-400",
-    },
-  },
-  {
     img: "/app/publish-post.webp",
-    title: "Publish Post",
-    id: "publish-post",
-    Component: ViewPosts,
+    title: "Publish Draft",
+    id: "publish-draft",
+    Component: PublishDraft,
     accent: {
       selected:
         "data-[selected=true]:bg-emerald-500/10 data-[selected=true]:ring-2 data-[selected=true]:ring-emerald-500",
