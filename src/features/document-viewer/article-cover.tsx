@@ -2,18 +2,20 @@
 
 import { PostDifficulty } from "@/components/blog/post-difficulty";
 import { cn } from "@/lib/utils";
-import type { Blog } from "@/types/db.types";
+import type { Blog, Draft } from "@/types/db.types";
 import { formatTime } from "@/utils/formatTime";
 import Image from "next/image";
 
-type CoverProps = Omit<Blog, "content" | "description" | "id">;
+type Props =
+  | Omit<Blog, "content" | "description" | "id">
+  | Omit<Draft, "id" | "content" | "description">;
 
 export function ArticleCover({
   banner_image,
   level,
   published_at,
   title,
-}: CoverProps) {
+}: Props) {
   return (
     <header
       className={cn(
@@ -31,13 +33,15 @@ export function ArticleCover({
           {formatTime(published_at)}
         </time>
       )}
-      <Image
-        alt={title}
-        src={banner_image}
-        loading="lazy"
-        fill
-        className="absolute inset-0 object-cover md:object-center size-full -z-10 "
-      />
+      {banner_image && (
+        <Image
+          alt={title}
+          src={banner_image}
+          loading="lazy"
+          fill
+          className="absolute inset-0 object-cover md:object-center size-full -z-10 "
+        />
+      )}
       <PostDifficulty
         level={level}
         clasName="z-50 text-xs top-4 right-4 absolute"
