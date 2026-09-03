@@ -37,7 +37,6 @@ export function ViewPosts({ render, title }: ToolComponentProps) {
 
   return (
     <Modal
-      className="m-16 rounded-2xl border-none bg-black/50 backdrop-blur-3xl focus:outline-1 focus:outline-muted focus-visible:ring-0"
       title={title}
       render={render}
       finalFocus={false}
