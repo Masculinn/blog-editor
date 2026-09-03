@@ -2,14 +2,14 @@
 import type { Blog } from "@/types/db.types";
 import type { ComponentType } from "react";
 
-type WithPostProps = Pick<Blog, "id">;
+type WithPostProps = Pick<Blog, "id"> & { isDraft?: boolean };
 type InjectedBlogProps<T> = Omit<T, keyof Blog>;
 type WrappedProps<T> = InjectedBlogProps<T> & WithPostProps;
 
 export function withPost<T extends object>(Component: ComponentType<T>) {
-  return async ({ id, ...props }: WrappedProps<T>) => {
+  return async ({ id, isDraft, ...props }: WrappedProps<T>) => {
     const { data: post, error } = await db
-      .from("blog_posts")
+      .from(isDraft ? "drafts" : "blog_posts")
       .select("*")
       .eq("id", id)
       .single();

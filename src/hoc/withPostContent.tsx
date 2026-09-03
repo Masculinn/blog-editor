@@ -10,19 +10,17 @@ export type WithPostContentProps = Omit<
   keyof InjectedPostContentProps
 > & {
   id?: Blog["id"];
+  isDraft?: boolean;
 };
 
 export function withPostContent(Component: ComponentType<EditorProps>) {
-  return async function WithPostContent({
-    id,
-    ...props
-  }: WithPostContentProps) {
+  return async ({ id, isDraft, ...props }: WithPostContentProps) => {
     if (typeof id === "undefined") {
       return <Component {...props} />;
     }
 
     const { data, error } = await db
-      .from("blog_posts")
+      .from(isDraft ? "drafts" : "blog_posts")
       .select("content")
       .eq("id", id)
       .single();

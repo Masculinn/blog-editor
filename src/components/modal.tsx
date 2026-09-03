@@ -8,6 +8,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 import {
   createContext,
   Fragment,
@@ -104,7 +105,10 @@ export function Modal({
 
       <SheetContent
         side="top"
-        className={className}
+        className={cn(
+          "m-16 rounded-2xl border-none bg-black/50 backdrop-blur-3xl focus:outline-1 focus:outline-muted focus-visible:ring-0",
+          className,
+        )}
         showCloseButton={false}
         finalFocus={finalFocus}
       >

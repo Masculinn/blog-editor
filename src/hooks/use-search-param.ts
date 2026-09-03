@@ -5,6 +5,8 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 type SearchParamValue = string | number | boolean | null | undefined;
 
+type SearchParamUpdates = Readonly<Record<string, SearchParamValue>>;
+
 type NavigationOptions = {
   replace?: boolean;
   scroll?: boolean;
@@ -19,12 +21,15 @@ export function useSearchParam() {
     return searchParams.get(key);
   }
 
-  function getSearchParamHref(key: string, value: SearchParamValue): Route {
+  function getSearchParamsHref(updates: SearchParamUpdates): Route {
     const params = new URLSearchParams(searchParams.toString());
 
-    if (value === null || value === undefined || value === false) {
-      params.delete(key);
-    } else {
+    for (const [key, value] of Object.entries(updates)) {
+      if (value === null || value === undefined || value === false) {
+        params.delete(key);
+        continue;
+      }
+
       params.set(key, String(value));
     }
 
@@ -33,29 +38,43 @@ export function useSearchParam() {
     return (query ? `${pathname}?${query}` : pathname) as Route;
   }
 
+  function getSearchParamHref(key: string, value: SearchParamValue): Route {
+    return getSearchParamsHref({
+      [key]: value,
+    });
+  }
+
+  function setSearchParams(
+    updates: SearchParamUpdates,
+    options?: NavigationOptions,
+  ) {
+    const href = getSearchParamsHref(updates);
+
+    const navigate = options?.replace === false ? router.push : router.replace;
+
+    navigate(href, {
+      scroll: options?.scroll ?? false,
+    });
+  }
+
   function setSearchParam(
     key: string,
     value: SearchParamValue,
     options?: NavigationOptions,
   ) {
-    const href = getSearchParamHref(key, value);
-
-    if (options?.replace === false) {
-      router.push(href, {
-        scroll: options.scroll ?? false,
-      });
-
-      return;
-    }
-
-    router.replace(href, {
-      scroll: options?.scroll ?? false,
-    });
+    setSearchParams(
+      {
+        [key]: value,
+      },
+      options,
+    );
   }
 
   return {
     getSearchParam,
     getSearchParamHref,
+    getSearchParamsHref,
     setSearchParam,
+    setSearchParams,
   };
 }

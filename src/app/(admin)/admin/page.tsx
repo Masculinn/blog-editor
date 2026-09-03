@@ -1,5 +1,5 @@
 import { DocumentViewer } from "@/features/document-viewer";
-import { LiveArticleContent as _ArticleContent } from "@/features/document-viewer/article-content-live";
+import { ArticleContent as _ArticleContent } from "@/features/document-viewer/article-content-live";
 import { ArticleCover as _ArticleCover } from "@/features/document-viewer/article-cover";
 import { Editor as _Editor } from "@/features/editor";
 import { Tools } from "@/features/tools";
@@ -9,11 +9,14 @@ import { withPostContent } from "@/hoc/withPostContent";
 import { cn } from "@/lib/utils";
 import { connection } from "next/server";
 
+export type SearchParamsRecords = {
+  id: string;
+  viewer: string;
+  isDraft: string;
+};
+
 interface Props {
-  searchParams: Promise<{
-    id?: string;
-    viewer?: string;
-  }>;
+  searchParams: Promise<Partial<SearchParamsRecords>>;
 }
 
 const ArticleCover = withPost(_ArticleCover);
@@ -27,12 +30,14 @@ export default async function Page({ searchParams }: Props) {
 
   const postId = typeof params.id === "string" ? Number(params.id) : undefined;
   const isViewer = params.viewer === "true";
+  const isDraft = params.isDraft === "true";
 
   return (
     <main className="w-full h-screen overflow-hidden items-center justify-center-safe py-16 px-36 flex flex-row">
       <Tools className="w-xl bg-accent/20" />
       <Editor
         id={postId}
+        isDraft={isDraft}
         className={cn(
           "h-full w-7/12 p-2",
           isViewer ? "border-y border-l rounded-l-md" : "rounded-md border",
@@ -40,8 +45,8 @@ export default async function Page({ searchParams }: Props) {
       />
       {isViewer && postId && (
         <DocumentViewer className="w-5/12 h-full border-r border-y rounded-r-md">
-          <ArticleCover id={postId} />
-          <ArticleContent id={postId} className="px-8" />
+          <ArticleCover id={postId} isDraft={isDraft} />
+          <ArticleContent id={postId} isDraft={isDraft} className="px-8" />
         </DocumentViewer>
       )}
     </main>

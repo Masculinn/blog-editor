@@ -11,13 +11,16 @@ import {
 } from "@/components/ui/card";
 import { useSearchParam } from "@/hooks/use-search-param";
 import { cn } from "@/lib/utils";
-import type { Blog } from "@/types/db.types";
+import type { Blog, Draft } from "@/types/db.types";
 import type { ToolItem } from "@/types/tools.types";
 import { formatTime } from "@/utils/formatTime";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { KeyboardEvent, MouseEvent } from "react";
+
+type Props = (({ isDraft: true } & Draft) | ({ isDraft?: false } & Blog)) &
+  ToolItem;
 
 export function PostCard({
   banner_image,
@@ -29,11 +32,14 @@ export function PostCard({
   className,
   id,
   close,
-}: Blog & ToolItem) {
+  isDraft,
+}: Omit<Props, "content">) {
+  const { getSearchParamsHref } = useSearchParam();
   const router = useRouter();
-  const { getSearchParamHref } = useSearchParam();
-
-  const href = getSearchParamHref("id", id);
+  const href = getSearchParamsHref({
+    id,
+    isDraft,
+  });
 
   const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
     if (
@@ -43,20 +49,20 @@ export function PostCard({
       event.ctrlKey ||
       event.shiftKey ||
       event.altKey
-    )
+    ) {
       return;
+    }
 
     close();
   };
 
-  const handleKeyDown = (event: KeyboardEvent<HTMLAnchorElement>) => {
-    if (event.key !== "Enter") return;
-    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
-      return;
-
-    event.preventDefault();
+  const handleKeyDown = (e: KeyboardEvent<HTMLAnchorElement>) => {
+    if (e.key !== "Enter") return;
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
 
     close();
+
     router.push(href);
   };
 
@@ -101,14 +107,16 @@ export function PostCard({
         />
 
         <CardHeader className="relative m-0 h-60 w-full p-0">
-          <Image
-            fill
-            loading="lazy"
-            fetchPriority="auto"
-            src={banner_image}
-            alt={title}
-            className="absolute inset-0 z-0 size-full object-cover object-center"
-          />
+          {banner_image && (
+            <Image
+              fill
+              loading="lazy"
+              fetchPriority="auto"
+              src={banner_image}
+              alt={title ?? "Post banner"}
+              className="absolute inset-0 z-0 size-full object-cover object-center"
+            />
+          )}
         </CardHeader>
 
         <CardContent

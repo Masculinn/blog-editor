@@ -1,4 +1,5 @@
-﻿import { ViewPosts } from "../features/tools/view-posts";
+﻿import { ViewDrafts } from "@/features/tools/view-drafts";
+import { ViewPosts } from "../features/tools/view-posts";
 import type { Tool } from "../types/tools.types";
 
 export default [
@@ -23,7 +24,7 @@ export default [
     img: "/app/view-draft.webp",
     title: "View Drafts",
     id: "view-draft",
-    Component: ViewPosts,
+    Component: ViewDrafts,
     accent: {
       selected:
         "data-[selected=true]:bg-amber-500/10 data-[selected=true]:ring-2 data-[selected=true]:ring-amber-500",
