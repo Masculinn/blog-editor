@@ -1,5 +1,5 @@
 import { DocumentViewer } from "@/features/document-viewer";
-import { ArticleContent as _ArticleContent } from "@/features/document-viewer/article-content-live";
+import { ArticleContent as _ArticleContent } from "@/features/document-viewer/article-content";
 import { ArticleCover as _ArticleCover } from "@/features/document-viewer/article-cover";
 import { Editor as _Editor } from "@/features/editor";
 import { Tools } from "@/features/tools";

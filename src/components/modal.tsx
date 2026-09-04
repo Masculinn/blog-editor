@@ -102,7 +102,7 @@ export function Modal({
       <SheetContent
         side="top"
         className={cn(
-          "m-16 rounded-2xl bg-black/50 backdrop-blur-3xl focus:outline-1 focus:outline-muted focus-visible:ring-0",
+          "m-16 rounded-2xl bg-accent/20 backdrop-blur-3xl outline-1 outline-muted focus-visible:ring-1 focus-visible:ring-muted",
           className,
         )}
         showCloseButton={false}

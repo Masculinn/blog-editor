@@ -1,5 +1,6 @@
 ﻿import { CreateDraft } from "@/features/tools/create-draft";
 import { ManageDraft } from "@/features/tools/manage-draft";
+import { ManagePosts } from "@/features/tools/manage-posts";
 import { MediaLibrary } from "@/features/tools/media-library";
 import { ViewDrafts } from "@/features/tools/view-drafts";
 import { ViewPosts } from "../features/tools/view-posts";
@@ -30,14 +31,14 @@ export default [
     Component: ViewDrafts,
     accent: {
       selected:
-        "data-[selected=true]:bg-amber-500/10 data-[selected=true]:ring-2 data-[selected=true]:ring-amber-500",
-      focus: "focus-visible:ring-amber-500",
-      surface: "group-hover:bg-amber-500/8 group-focus-visible:bg-amber-500/10",
+        "data-[selected=true]:bg-sky-500/10 data-[selected=true]:ring-2 data-[selected=true]:ring-sky-500",
+      focus: "focus-visible:ring-sky-500",
+      surface: "group-hover:bg-sky-500/8 group-focus-visible:bg-sky-500/10",
       border:
-        "group-hover:border-amber-400/50 group-focus-visible:border-amber-400/70",
+        "group-hover:border-sky-400/50 group-focus-visible:border-sky-400/70",
       shadow:
-        "group-hover:shadow-amber-500/15 group-focus-visible:shadow-amber-500/20",
-      text: "group-hover:text-amber-400 group-focus-visible:text-amber-400",
+        "group-hover:shadow-sky-500/15 group-focus-visible:shadow-sky-500/20",
+      text: "group-hover:text-sky-400 group-focus-visible:text-sky-400",
     },
   },
   {
@@ -47,15 +48,15 @@ export default [
     Component: CreateDraft,
     accent: {
       selected:
-        "data-[selected=true]:bg-orange-500/10 data-[selected=true]:ring-2 data-[selected=true]:ring-orange-500",
-      focus: "focus-visible:ring-orange-500",
+        "data-[selected=true]:bg-emerald-500/10 data-[selected=true]:ring-2 data-[selected=true]:ring-emerald-500",
+      focus: "focus-visible:ring-emerald-500",
       surface:
-        "group-hover:bg-orange-500/8 group-focus-visible:bg-orange-500/10",
+        "group-hover:bg-emerald-500/8 group-focus-visible:bg-emerald-500/10",
       border:
-        "group-hover:border-orange-400/50 group-focus-visible:border-orange-400/70",
+        "group-hover:border-emerald-400/50 group-focus-visible:border-emerald-400/70",
       shadow:
-        "group-hover:shadow-orange-500/15 group-focus-visible:shadow-orange-500/20",
-      text: "group-hover:text-orange-400 group-focus-visible:text-orange-400",
+        "group-hover:shadow-emerald-500/15 group-focus-visible:shadow-emerald-500/20",
+      text: "group-hover:text-emerald-400 group-focus-visible:text-emerald-400",
     },
   },
   {
@@ -83,15 +84,33 @@ export default [
     Component: ManageDraft,
     accent: {
       selected:
-        "data-[selected=true]:bg-emerald-500/10 data-[selected=true]:ring-2 data-[selected=true]:ring-emerald-500",
-      focus: "focus-visible:ring-emerald-500",
+        "data-[selected=true]:bg-orange-500/10 data-[selected=true]:ring-2 data-[selected=true]:ring-orange-500",
+      focus: "focus-visible:ring-orange-500",
       surface:
-        "group-hover:bg-emerald-500/8 group-focus-visible:bg-emerald-500/10",
+        "group-hover:bg-orange-500/8 group-focus-visible:bg-orange-500/10",
       border:
-        "group-hover:border-emerald-400/50 group-focus-visible:border-emerald-400/70",
+        "group-hover:border-orange-400/50 group-focus-visible:border-orange-400/70",
       shadow:
-        "group-hover:shadow-emerald-500/15 group-focus-visible:shadow-emerald-500/20",
-      text: "group-hover:text-emerald-400 group-focus-visible:text-emerald-400",
+        "group-hover:shadow-orange-500/15 group-focus-visible:shadow-orange-500/20",
+      text: "group-hover:text-orange-400 group-focus-visible:text-orange-400",
+    },
+  },
+  {
+    img: "/app/manage-posts.webp",
+    title: "Manage Posts",
+    id: "manage-posts",
+    Component: ManagePosts,
+    accent: {
+      selected:
+        "data-[selected=true]:bg-orange-500/10 data-[selected=true]:ring-2 data-[selected=true]:ring-orange-500",
+      focus: "focus-visible:ring-orange-500",
+      surface:
+        "group-hover:bg-orange-500/8 group-focus-visible:bg-orange-500/10",
+      border:
+        "group-hover:border-orange-400/50 group-focus-visible:border-orange-400/70",
+      shadow:
+        "group-hover:shadow-orange-500/15 group-focus-visible:shadow-orange-500/20",
+      text: "group-hover:text-orange-400 group-focus-visible:text-orange-400",
     },
   },
 ] as const satisfies readonly Tool[];

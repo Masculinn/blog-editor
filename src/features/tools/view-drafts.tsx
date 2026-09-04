@@ -6,6 +6,7 @@ import viewDraftsAction, {
 import { PostCard } from "@/components/blog/post-card";
 import { Modal } from "@/components/modal";
 import { PostLoader } from "@/components/skeleton/post-card-skeleton";
+import { ViewEmpty } from "@/components/view-empty";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { ToolComponentProps } from "../../types/tools.types";
@@ -48,7 +49,7 @@ export function ViewDrafts({ render, title }: ToolComponentProps) {
       {({ close }) =>
         isLoading && !drafts.length ? (
           <PostLoader />
-        ) : (
+        ) : drafts.length ? (
           drafts.map((post) => (
             <PostCard
               key={post.id}
@@ -58,6 +59,12 @@ export function ViewDrafts({ render, title }: ToolComponentProps) {
               {...post}
             />
           ))
+        ) : (
+          <ViewEmpty
+            onRefresh={loadDrafts}
+            title="No drafts found"
+            desc="Your draft workspace is clear. Any unfinished posts you save will appear here, ready for you to continue editing."
+          />
         )
       }
     </Modal>

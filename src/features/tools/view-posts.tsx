@@ -1,16 +1,19 @@
 ﻿"use client";
 
-import viewPostsAction from "@/app/actions/posts.action";
+import {
+  type BlogWithoutContent,
+  viewPostsAction,
+} from "@/app/actions/posts.action";
 import { PostCard } from "@/components/blog/post-card";
 import { Modal } from "@/components/modal";
 import { PostLoader } from "@/components/skeleton/post-card-skeleton";
-import type { Blog } from "@/types/db.types";
+import { ViewEmpty } from "@/components/view-empty";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { ToolComponentProps } from "../../types/tools.types";
 
 export function ViewPosts({ render, title }: ToolComponentProps) {
-  const [posts, setPosts] = useState<Blog[]>([]);
+  const [posts, setPosts] = useState<BlogWithoutContent[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   async function loadPosts() {
@@ -47,7 +50,7 @@ export function ViewPosts({ render, title }: ToolComponentProps) {
       {({ close }) =>
         isLoading && !posts.length ? (
           <PostLoader />
-        ) : (
+        ) : posts.length ? (
           posts.map((post) => (
             <PostCard
               key={post.id}
@@ -56,6 +59,12 @@ export function ViewPosts({ render, title }: ToolComponentProps) {
               {...post}
             />
           ))
+        ) : (
+          <ViewEmpty
+            onRefresh={loadPosts}
+            title="No posts found"
+            desc="You haven't publish any post yet. Create a draft and publish, it will appear here."
+          />
         )
       }
     </Modal>

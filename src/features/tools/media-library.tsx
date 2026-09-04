@@ -329,10 +329,16 @@ export function MediaLibrary({ render, title }: ToolComponentProps) {
                   onDrop={handleDrop}
                   className={cn(
                     "group flex min-h-72 flex-1 cursor-pointer items-center justify-center rounded-2xl border border-dashed p-8 text-center transition-colors",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                    isDragging && "border-foreground/50 bg-muted/60",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ",
+                    "m-2 group overflow-hidden relative",
                   )}
                 >
+                  <div
+                    className={cn(
+                      "absolute top-0 left-0 size-full bg-linear-to-b from-transparent to-primary/10 opacity-0 group-focus-visible:opacity-100 group-focus-visible:transition-opacity duration-200",
+                      isDragging && "opacity-100",
+                    )}
+                  />
                   <div className="flex max-w-xs flex-col items-center">
                     <div className="mb-4 flex size-12 items-center justify-center rounded-xl bg-muted">
                       {uploadingCount > 0 ? (
