@@ -5,7 +5,7 @@ import { PostCard } from "@/components/blog/post-card";
 import { Modal } from "@/components/modal";
 import { PostLoader } from "@/components/skeleton/post-card-skeleton";
 import type { Blog } from "@/types/db.types";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import type { ToolComponentProps } from "../../types/tools.types";
 
@@ -13,24 +13,15 @@ export function ViewPosts({ render, title }: ToolComponentProps) {
   const [posts, setPosts] = useState<Blog[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const loadedRef = useRef(false);
-  const loadingRef = useRef(false);
-
   async function loadPosts() {
-    if (loadedRef.current || loadingRef.current) return;
-
-    loadingRef.current = true;
     setIsLoading(true);
 
     try {
       const data = await viewPostsAction();
-
       setPosts(data);
-      loadedRef.current = true;
     } catch {
       toast.error("Failed to fetch posts.");
     } finally {
-      loadingRef.current = false;
       setIsLoading(false);
     }
   }

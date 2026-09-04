@@ -3,6 +3,7 @@
 export type ToolComponentProps = {
   render: ReactElement | undefined;
   title: string;
+  [key: string]: unknown;
 };
 
 export type Tool = {

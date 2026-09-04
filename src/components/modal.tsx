@@ -40,19 +40,15 @@ export function useModalTrigger() {
 
 export type ModalProps = {
   children: ({ close }: { close: () => void }) => ReactNode;
-
   className?: string;
   render?: ReactElement;
   isModal?: boolean;
   title?: string;
-
+  onOpenChange?: (open: boolean) => void;
+  finalFocus?: React.ComponentProps<typeof SheetContent>["finalFocus"];
   wrapper?: ComponentType<{
     children: ReactNode;
   }>;
-
-  onOpenChange?: (open: boolean) => void;
-
-  finalFocus?: React.ComponentProps<typeof SheetContent>["finalFocus"];
 };
 
 export function Modal({
@@ -106,7 +102,7 @@ export function Modal({
       <SheetContent
         side="top"
         className={cn(
-          "m-16 rounded-2xl border-none bg-black/50 backdrop-blur-3xl focus:outline-1 focus:outline-muted focus-visible:ring-0",
+          "m-16 rounded-2xl bg-black/50 backdrop-blur-3xl focus:outline-1 focus:outline-muted focus-visible:ring-0",
           className,
         )}
         showCloseButton={false}

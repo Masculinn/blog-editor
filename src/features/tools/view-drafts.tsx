@@ -1,36 +1,28 @@
 ﻿"use client";
 
-import viewDraftsAction from "@/app/actions/drafts.action";
+import viewDraftsAction, {
+  type DraftWithoutContent,
+} from "@/app/actions/drafts.action";
 import { PostCard } from "@/components/blog/post-card";
 import { Modal } from "@/components/modal";
 import { PostLoader } from "@/components/skeleton/post-card-skeleton";
-import type { Draft } from "@/types/db.types";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import type { ToolComponentProps } from "../../types/tools.types";
 
 export function ViewDrafts({ render, title }: ToolComponentProps) {
-  const [drafts, setDrafts] = useState<Draft[]>([]);
+  const [drafts, setDrafts] = useState<DraftWithoutContent[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const loadedRef = useRef(false);
-  const loadingRef = useRef(false);
-
   async function loadDrafts() {
-    if (loadedRef.current || loadingRef.current) return;
-
-    loadingRef.current = true;
     setIsLoading(true);
 
     try {
       const data = await viewDraftsAction();
-
       setDrafts(data);
-      loadedRef.current = true;
     } catch {
       toast.error("Failed to fetch drafts.");
     } finally {
-      loadingRef.current = false;
       setIsLoading(false);
     }
   }

@@ -10,4 +10,14 @@ export const DraftSchema = z.compile(
   }),
 );
 
+export const PublishableDraftSchema = z.object({
+  banner_image: z.string().trim().min(1),
+  content: z.string().trim().min(1),
+  description: z.string().trim().min(1),
+  level: z.number().int(),
+  tags: z.array(z.string().trim().min(1)).min(1),
+  title: z.string().trim().min(1),
+});
+
+export type PublishableDraftInput = z.infer<typeof PublishableDraftSchema>;
 export type DraftInput = z.infer<typeof DraftSchema>;

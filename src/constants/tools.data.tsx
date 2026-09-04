@@ -1,6 +1,6 @@
 ﻿import { CreateDraft } from "@/features/tools/create-draft";
+import { ManageDraft } from "@/features/tools/manage-draft";
 import { MediaLibrary } from "@/features/tools/media-library";
-import { PublishDraft } from "@/features/tools/publish-draft";
 import { ViewDrafts } from "@/features/tools/view-drafts";
 import { ViewPosts } from "../features/tools/view-posts";
 import type { Tool } from "../types/tools.types";
@@ -78,9 +78,9 @@ export default [
   },
   {
     img: "/app/publish-post.webp",
-    title: "Publish Draft",
-    id: "publish-draft",
-    Component: PublishDraft,
+    title: "Manage Drafts",
+    id: "manage-drafts",
+    Component: ManageDraft,
     accent: {
       selected:
         "data-[selected=true]:bg-emerald-500/10 data-[selected=true]:ring-2 data-[selected=true]:ring-emerald-500",
