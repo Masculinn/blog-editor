@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import createDraftAction from "@/app/actions/create/draft.action";
+import { createDraftAction } from "@/app/actions/drafts.action";
 import { PostCard } from "@/components/blog/post-card";
 import { Modal } from "@/components/modal";
 import { Button } from "@/components/ui/button";

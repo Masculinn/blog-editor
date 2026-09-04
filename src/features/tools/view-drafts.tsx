@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import viewDraftsAction from "@/app/actions/view/drafts.action";
+import viewDraftsAction from "@/app/actions/drafts.action";
 import { PostCard } from "@/components/blog/post-card";
 import { Modal } from "@/components/modal";
 import { PostLoader } from "@/components/skeleton/post-card-skeleton";
