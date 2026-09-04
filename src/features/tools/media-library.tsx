@@ -11,11 +11,20 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { ImageIcon, Loader2, Trash2, UploadCloud, ZoomIn } from "lucide-react";
+import {
+  ImageIcon,
+  ImageOff,
+  Loader2,
+  RefreshCw,
+  Trash2,
+  UploadCloud,
+  ZoomIn,
+} from "lucide-react";
 import {
   type ChangeEvent,
   type DragEvent,
   type KeyboardEvent,
+  type SetStateAction,
   useEffect,
   useRef,
   useState,
@@ -71,7 +80,7 @@ function getBentoClass(index: number) {
       return "col-span-2";
 
     default:
-      return "";
+      return "col-span-auto";
   }
 }
 
@@ -333,7 +342,6 @@ export function MediaLibrary({ render, title }: ToolComponentProps) {
                         <UploadCloud className="size-5" />
                       )}
                     </div>
-
                     <p className="text-sm font-medium">
                       {uploadingCount > 0
                         ? `Uploading ${uploadingCount} ${
@@ -341,11 +349,9 @@ export function MediaLibrary({ render, title }: ToolComponentProps) {
                           }…`
                         : "Drop images here"}
                     </p>
-
                     <p className="mt-1 text-xs text-muted-foreground">
                       or click to browse
                     </p>
-
                     <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
                       JPEG, PNG, WebP, and GIF files are converted to WebP at
                       quality 80 before upload. Animated GIF and WebP files
@@ -373,99 +379,21 @@ export function MediaLibrary({ render, title }: ToolComponentProps) {
                   </div>
                 ) : (
                   <div className="grid auto-rows-40 grid-cols-2 gap-3 xl:grid-cols-3">
-                    {media.map((item, index) => {
-                      const isDeleting = deleting.has(item.path);
-
-                      return (
-                        <article
-                          key={item.id}
-                          className={cn(
-                            "group relative isolate overflow-hidden rounded-2xl border bg-muted",
-                            getBentoClass(index),
-                          )}
-                        >
-                          <button
-                            type="button"
-                            disabled={isDeleting}
-                            onClick={() => setPreviewItem(item)}
-                            className={cn(
-                              "absolute inset-0 z-0 size-full cursor-zoom-in overflow-hidden text-left",
-                              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/80",
-                              "disabled:cursor-default",
-                            )}
-                            aria-label={`Preview ${item.name}`}
-                          >
-                            {/*biome-ignore lint/performance/noImgElement: dynamic animated media*/}
-                            <img
-                              src={item.publicUrl}
-                              alt={item.name}
-                              loading="lazy"
-                              className={cn(
-                                "size-full object-cover transition duration-300",
-                                "group-hover:scale-[1.025]",
-                                isDeleting && "opacity-40",
-                              )}
-                            />
-
-                            <div
-                              className={cn(
-                                "pointer-events-none absolute inset-0 flex items-center justify-center",
-                                "bg-black/0 opacity-0 transition duration-200",
-                                "group-hover:bg-black/10 group-hover:opacity-100",
-                                "group-focus-within:bg-black/10 group-focus-within:opacity-100",
-                              )}
-                            >
-                              <div className="flex size-10 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-md">
-                                <ZoomIn className="size-4" />
-                              </div>
-                            </div>
-                          </button>
-
-                          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-linear-to-t from-black/80 via-black/35 to-transparent px-3 pt-12 pb-3">
-                            <p className="truncate text-xs font-medium text-white">
-                              {item.name}
-                            </p>
-
-                            {item.size !== null && (
-                              <p className="mt-0.5 text-[11px] text-white/65">
-                                {formatBytes(item.size)}
-                              </p>
-                            )}
-                          </div>
-
-                          <div className="absolute top-2 right-2 z-20 flex translate-y-1 items-center gap-1 opacity-0 transition group-hover:translate-y-0 group-hover:opacity-100 focus-within:translate-y-0 focus-within:opacity-100">
-                            <CopyCode
-                              data={item.publicUrl}
-                              variant="ghost"
-                              className="size-9 bg-black/55 text-white backdrop-blur-md hover:bg-black/70 hover:text-white"
-                              withToast
-                            />
-
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              disabled={isDeleting}
-                              onClick={() => void handleDelete(item)}
-                              className="size-9 bg-black/55 text-white backdrop-blur-md hover:bg-destructive hover:text-destructive-foreground"
-                              aria-label={`Delete ${item.name}`}
-                            >
-                              {isDeleting ? (
-                                <Loader2 className="size-4 animate-spin" />
-                              ) : (
-                                <Trash2 className="size-4" />
-                              )}
-                            </Button>
-                          </div>
-                        </article>
-                      );
-                    })}
+                    {media.map((item, index) => (
+                      <ImageItem
+                        item={item}
+                        setPreviewItem={setPreviewItem}
+                        isDeleting={deleting.has(item.path)}
+                        handleDelete={handleDelete}
+                        className={getBentoClass(index)}
+                        key={item.id}
+                      />
+                    ))}
                   </div>
                 )}
               </div>
             </div>
           </div>
-
           <Dialog
             open={previewItem !== null}
             onOpenChange={(open) => {
@@ -481,30 +409,7 @@ export function MediaLibrary({ render, title }: ToolComponentProps) {
                 "[&>button]:z-30 [&>button]:text-white/70 [&>button]:hover:text-white",
               )}
             >
-              {previewItem && (
-                <div className="relative flex max-h-[90vh] min-h-0 w-full items-center justify-center overflow-hidden">
-                  {/**
-                   * biome-ignore lint/performance/noImgElement: dynamic animated media
-                   */}
-                  <img
-                    src={previewItem.publicUrl}
-                    alt={previewItem.name}
-                    className="max-h-[90vh] max-w-full object-contain"
-                  />
-
-                  <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-t from-black/75 via-black/20 to-transparent px-5 pt-16 pb-5">
-                    <p className="truncate pr-8 text-sm font-medium text-white">
-                      {previewItem.name}
-                    </p>
-
-                    {previewItem.size !== null && (
-                      <p className="mt-1 text-xs text-white/60">
-                        {formatBytes(previewItem.size)}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
+              {previewItem && <ImageItemPreview {...previewItem} />}
             </DialogContent>
           </Dialog>
         </>
@@ -523,6 +428,282 @@ function MediaSkeleton() {
           className={cn("h-full w-full rounded-2xl", getBentoClass(index))}
         />
       ))}
+    </div>
+  );
+}
+
+function ImageItem({
+  item,
+  handleDelete,
+  isDeleting = false,
+  setPreviewItem,
+  className,
+}: {
+  item: MediaItem;
+  isDeleting: boolean;
+  setPreviewItem: React.Dispatch<SetStateAction<MediaItem | null>>;
+  handleDelete: (v: MediaItem) => void;
+  className?: string;
+}) {
+  const [error, setError] = useState(false);
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
+
+  const name = item.name || "Untitled image";
+
+  const itemSize = item.size ? (
+    <p className="mt-0.5 text-[11px] text-white/65">{formatBytes(item.size)}</p>
+  ) : null;
+
+  const actions = (
+    <div
+      className={cn(
+        "absolute top-2 right-2 z-40 flex items-center gap-1",
+        "translate-y-1 opacity-0 transition-[opacity,transform] duration-200",
+        "group-hover:translate-y-0 group-hover:opacity-100",
+        "focus-within:translate-y-0 focus-within:opacity-100",
+        isDeleting && "pointer-events-none translate-y-0 opacity-0",
+      )}
+    >
+      <CopyCode
+        data={item.publicUrl}
+        variant="ghost"
+        className={cn(
+          "size-9 bg-black/55 text-white backdrop-blur-md",
+          "hover:bg-black/70 hover:text-white",
+        )}
+        withToast
+      />
+
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        disabled={isDeleting}
+        onClick={() => void handleDelete(item)}
+        className={cn(
+          "size-9 bg-black/55 text-white backdrop-blur-md",
+          "hover:bg-destructive hover:text-destructive-foreground",
+          "focus-visible:ring-destructive",
+        )}
+        aria-label={`Delete ${name}`}
+      >
+        <Trash2 className="size-4" />
+      </Button>
+    </div>
+  );
+
+  const deletingOverlay = isDeleting ? (
+    <div
+      className={cn(
+        "absolute inset-0 z-30 grid place-items-center",
+        "cursor-wait bg-black/35 backdrop-blur-[2px]",
+        "animate-in fade-in duration-200",
+      )}
+      aria-hidden="true"
+    >
+      <div
+        className={cn(
+          "flex items-center gap-2 rounded-full",
+          "border border-white/15 bg-black/60 px-3 py-2",
+          "text-xs font-medium text-white shadow-lg backdrop-blur-md",
+        )}
+      >
+        <Loader2 className="size-3.5 animate-spin" />
+        Deleting
+      </div>
+    </div>
+  ) : null;
+
+  if (error) {
+    return (
+      <div
+        className={cn(
+          "group relative isolate flex min-h-40 overflow-hidden rounded-2xl",
+          "border border-destructive/20 bg-muted",
+          "transition duration-200",
+          isDeleting && "cursor-wait",
+          className,
+        )}
+        aria-busy={isDeleting}
+      >
+        <div
+          className={cn(
+            "absolute inset-0",
+            "bg-[radial-gradient(circle_at_top_right,var(--destructive),transparent_55%)]",
+            "opacity-[0.06]",
+          )}
+          aria-hidden="true"
+        />
+
+        <div className="relative z-10 flex size-full min-h-40 flex-col items-center justify-center gap-3 p-5 text-center">
+          <div
+            className={cn(
+              "flex size-11 items-center justify-center rounded-2xl",
+              "border border-destructive/15 bg-destructive/10",
+              "text-destructive shadow-sm",
+            )}
+          >
+            <ImageOff className="size-5" />
+          </div>
+
+          <div className="max-w-48 space-y-1">
+            <p className="truncate text-sm font-medium text-foreground">
+              {name}
+            </p>
+
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              The image source could not be loaded.
+            </p>
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={isDeleting}
+            onClick={() => {
+              setIsImageLoaded(false);
+              setError(false);
+            }}
+            className="mt-1 gap-1.5"
+          >
+            <RefreshCw className="size-3.5" />
+            Retry
+          </Button>
+        </div>
+
+        {actions}
+        {deletingOverlay}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={cn(
+        "group relative isolate overflow-hidden rounded-2xl border bg-muted",
+        "transition-[border-color,box-shadow] duration-200",
+        isDeleting && "cursor-wait border-border/50",
+        className,
+      )}
+      aria-busy={isDeleting}
+    >
+      {!isImageLoaded && (
+        <Skeleton className="absolute inset-0 z-10 size-full rounded-none">
+          <div className="absolute inset-0 grid place-items-center">
+            <div
+              className={cn(
+                "flex size-10 items-center justify-center rounded-full",
+                "border bg-background/75 text-muted-foreground shadow-sm",
+                "backdrop-blur-sm",
+              )}
+            >
+              <Loader2 className="size-4 animate-spin" />
+            </div>
+          </div>
+        </Skeleton>
+      )}
+
+      <button
+        type="button"
+        disabled={isDeleting || !isImageLoaded}
+        onClick={() => setPreviewItem(item)}
+        className={cn(
+          "absolute inset-0 z-0 size-full overflow-hidden text-left",
+          "cursor-zoom-in",
+          "focus-visible:outline-none",
+          "focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/80",
+          "disabled:cursor-default",
+          isDeleting && "disabled:cursor-wait",
+        )}
+        aria-label={`Preview ${name}`}
+      >
+        {/* biome-ignore lint/performance/noImgElement: dynamic animated media */}
+        <img
+          src={item.publicUrl}
+          alt={item.id}
+          loading="lazy"
+          decoding="async"
+          fetchPriority="low"
+          onLoad={() => {
+            setError(false);
+            setIsImageLoaded(true);
+          }}
+          onError={() => {
+            setIsImageLoaded(false);
+            setError(true);
+          }}
+          className={cn(
+            "size-full object-cover",
+            "transition-[opacity,transform,filter] duration-300 ease-out",
+            !isImageLoaded && "opacity-0",
+            isImageLoaded && "opacity-100",
+            !isDeleting && "group-hover:scale-[1.025]",
+            isDeleting && "scale-[1.02] opacity-40 blur-[1px] grayscale",
+          )}
+        />
+
+        <div
+          className={cn(
+            "pointer-events-none absolute inset-0 flex items-center justify-center",
+            "bg-black/0 opacity-0 transition-[background-color,opacity] duration-200",
+            !isDeleting && [
+              "group-hover:bg-black/10 group-hover:opacity-100",
+              "group-focus-within:bg-black/10 group-focus-within:opacity-100",
+            ],
+          )}
+        >
+          <div
+            className={cn(
+              "flex size-10 items-center justify-center rounded-full",
+              "border border-white/10 bg-black/50 text-white",
+              "shadow-lg backdrop-blur-md",
+            )}
+          >
+            <ZoomIn className="size-4" />
+          </div>
+        </div>
+      </button>
+
+      <div
+        className={cn(
+          "pointer-events-none absolute inset-x-0 bottom-0 z-20",
+          "bg-linear-to-t from-black/80 via-black/35 to-transparent",
+          "px-3 pt-12 pb-3",
+          "transition-opacity duration-200",
+          isDeleting && "opacity-50",
+        )}
+      >
+        <p className="truncate text-xs font-medium text-white">{name}</p>
+
+        {itemSize}
+      </div>
+
+      {actions}
+      {deletingOverlay}
+    </div>
+  );
+}
+
+function ImageItemPreview({ publicUrl, name, size }: MediaItem) {
+  return (
+    <div className="relative flex max-h-[90vh] min-h-0 w-full items-center justify-center overflow-hidden">
+      {/**
+       * biome-ignore lint/performance/noImgElement: dynamic animated media
+       */}
+      <img
+        src={publicUrl}
+        alt={name}
+        className="max-h-[90vh] max-w-full object-contain"
+      />
+
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-t from-black/75 via-black/20 to-transparent px-5 pt-16 pb-5">
+        <p className="truncate pr-8 text-sm font-medium text-white">{name}</p>
+
+        {size !== null && (
+          <p className="mt-1 text-xs text-white/60">{formatBytes(size)}</p>
+        )}
+      </div>
     </div>
   );
 }
