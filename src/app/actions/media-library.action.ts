@@ -1,17 +1,23 @@
 ﻿"use server";
 
+import { db } from "@/lib/db/server";
 import { Buffer } from "node:buffer";
 import { randomUUID } from "node:crypto";
 import sharp from "sharp";
-
-import { db } from "@/lib/db/server";
 
 const WEBP_QUALITY = 80;
 const MAX_FILE_SIZE = 12 * 1024 * 1024;
 const PAGE_SIZE = 100;
 const CACHE_CONTROL = "31536000";
-
 const SUPPORTED_INPUT_FORMATS = new Set(["jpeg", "png", "webp", "gif"]);
+
+const SUPPORTED_MEDIA_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "image/avif",
+]);
 
 function getBucketName() {
   const bucket = process.env.BUCKET_NAME;
@@ -71,9 +77,56 @@ function isImageObject(file: {
       ? file.metadata.mimetype
       : undefined;
 
-  if (mimeType?.startsWith("image/")) return true;
+  if (mimeType?.startsWith("image/")) {
+    return true;
+  }
 
-  return /\.(?:webp|png|jpe?g|gif)$/i.test(file.name);
+  return /\.(?:webp|png|jpe?g|gif|avif)$/i.test(file.name);
+}
+
+function isAvifMetadata(metadata: {
+  format?: string;
+  mediaType?: string;
+  compression?: string;
+}) {
+  const format = metadata.format?.toLowerCase();
+  const mediaType = metadata.mediaType?.toLowerCase();
+  const compression = metadata.compression?.toLowerCase();
+
+  return (
+    format === "avif" ||
+    mediaType === "image/avif" ||
+    (format === "heif" && compression === "av1")
+  );
+}
+
+function isSupportedImageMetadata(metadata: {
+  format?: string;
+  mediaType?: string;
+  compression?: string;
+}) {
+  const format = metadata.format?.toLowerCase();
+  const mediaType = metadata.mediaType?.toLowerCase();
+
+  if (isAvifMetadata(metadata)) {
+    return true;
+  }
+
+  if (format && SUPPORTED_INPUT_FORMATS.has(format)) {
+    return true;
+  }
+
+  return Boolean(mediaType && SUPPORTED_MEDIA_TYPES.has(mediaType));
+}
+
+function shouldReadAnimated(metadata: { format?: string; pages?: number }) {
+  const format = metadata.format?.toLowerCase();
+
+  if (format !== "gif" && format !== "webp") {
+    return false;
+  }
+
+  return (metadata.pages ?? 1) > 1;
 }
 
 async function uploadStorageObject({
@@ -131,7 +184,9 @@ export async function getMediaAction() {
 
       objects.push(...data);
 
-      if (data.length < PAGE_SIZE) break;
+      if (data.length < PAGE_SIZE) {
+        break;
+      }
 
       offset += PAGE_SIZE;
     }
@@ -201,35 +256,34 @@ export async function uploadMediaAction(formData: FormData) {
 
     const inputBuffer = Buffer.from(await file.arrayBuffer());
 
-    const metadata = await sharp(inputBuffer, {
-      animated: true,
-    }).metadata();
+    const metadata = await sharp(inputBuffer).metadata();
 
-    const format = metadata.format?.toLowerCase();
-
-    if (!format || !SUPPORTED_INPUT_FORMATS.has(format)) {
+    if (!isSupportedImageMetadata(metadata)) {
       return {
         success: false,
-        error: `${file.name} must be a JPEG, PNG, WebP, or GIF image.`,
+        error: `${file.name} must be a JPEG, PNG, WebP, GIF, or AVIF image.`,
       } as const;
     }
 
-    const outputBuffer = await sharp(inputBuffer, {
-      animated: true,
-    })
-      .rotate()
+    const animated = shouldReadAnimated(metadata);
+
+    const image = sharp(inputBuffer, {
+      animated,
+    }).rotate();
+
+    const outputBuffer = await image
       .webp({
         quality: WEBP_QUALITY,
         effort: 4,
         smartSubsample: true,
 
-        ...(metadata.loop !== undefined
+        ...(animated && metadata.loop !== undefined
           ? {
               loop: metadata.loop,
             }
           : {}),
 
-        ...(metadata.delay !== undefined
+        ...(animated && metadata.delay !== undefined
           ? {
               delay: metadata.delay,
             }

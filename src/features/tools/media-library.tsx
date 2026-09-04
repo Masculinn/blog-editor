@@ -23,7 +23,9 @@ import {
 import {
   type ChangeEvent,
   type DragEvent,
+  type FC,
   type KeyboardEvent,
+  type PropsWithChildren,
   type SetStateAction,
   useEffect,
   useRef,
@@ -52,6 +54,7 @@ const ACCEPTED_TYPES = new Set([
   "image/png",
   "image/webp",
   "image/gif",
+  "image/avif",
 ]);
 
 function formatBytes(bytes: number | null) {
@@ -75,13 +78,15 @@ function getBentoClass(index: number) {
 
     case 3:
       return "row-span-2";
-
     case 5:
       return "col-span-2";
-
     default:
       return "col-span-auto";
   }
+}
+
+function MediaLibraryWrapper({ children }: PropsWithChildren<unknown>) {
+  return <div className="relative h-max w-full px-4">{children}</div>;
 }
 
 export function MediaLibrary({ render, title }: ToolComponentProps) {
@@ -104,9 +109,7 @@ export function MediaLibrary({ render, title }: ToolComponentProps) {
 
       const result = await getMediaAction();
 
-      if (cancelled) {
-        return;
-      }
+      if (cancelled) return;
 
       if (!result.success) {
         toast.error(result.error);
@@ -131,7 +134,7 @@ export function MediaLibrary({ render, title }: ToolComponentProps) {
 
     for (const file of files) {
       if (!ACCEPTED_TYPES.has(file.type)) {
-        toast.error(`${file.name} must be JPEG, PNG, WebP, or GIF.`);
+        toast.error(`${file.name} must be JPEG, PNG, WebP, AVIF or GIF.`);
         continue;
       }
 
@@ -148,9 +151,7 @@ export function MediaLibrary({ render, title }: ToolComponentProps) {
       acceptedFiles.push(file);
     }
 
-    if (acceptedFiles.length === 0) {
-      return;
-    }
+    if (acceptedFiles.length === 0) return;
 
     setUploadingCount((current) => current + acceptedFiles.length);
 
@@ -300,9 +301,7 @@ export function MediaLibrary({ render, title }: ToolComponentProps) {
       render={render}
       finalFocus={false}
       className="m-8"
-      wrapper={({ children }) => (
-        <div className="relative h-max w-full px-4">{children}</div>
-      )}
+      wrapper={MediaLibraryWrapper}
     >
       {({ close: _ }) => (
         <>
@@ -432,19 +431,21 @@ function MediaSkeleton() {
   );
 }
 
-function ImageItem({
-  item,
-  handleDelete,
-  isDeleting = false,
-  setPreviewItem,
-  className,
-}: {
+type ImageItemProps = {
   item: MediaItem;
   isDeleting: boolean;
   setPreviewItem: React.Dispatch<SetStateAction<MediaItem | null>>;
   handleDelete: (v: MediaItem) => void;
   className?: string;
-}) {
+};
+
+const ImageItem: FC<ImageItemProps> = ({
+  item,
+  handleDelete,
+  isDeleting = false,
+  setPreviewItem,
+  className,
+}) => {
   const [error, setError] = useState(false);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
 
@@ -683,7 +684,7 @@ function ImageItem({
       {deletingOverlay}
     </div>
   );
-}
+};
 
 function ImageItemPreview({ publicUrl, name, size }: MediaItem) {
   return (
