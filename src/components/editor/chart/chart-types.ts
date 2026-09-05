@@ -38,11 +38,8 @@ export const CHART_COLORS = [
 
 export const DEFAULT_CHART_PAYLOAD: ChartPayload = {
   type: "bar",
-
   title: "Monthly visitors",
-
   xKey: "month",
-
   data: [
     {
       month: "January",
@@ -69,9 +66,7 @@ export const DEFAULT_CHART_PAYLOAD: ChartPayload = {
       color: CHART_COLORS[0],
     },
   ],
-
   height: 320,
-
   showGrid: true,
   showLegend: true,
   showTooltip: true,

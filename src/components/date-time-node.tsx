@@ -31,11 +31,10 @@ const tagToFormat = {
 } as const;
 
 const getDateTimeText = (dateTime: Date) => {
-  if (dateTime === undefined) {
-    return "";
-  }
+  if (dateTime === undefined) return "";
   const hours = dateTime?.getHours();
   const minutes = dateTime?.getMinutes();
+
   return (
     dateTime.toDateString() +
     (hours === 0 && minutes === 0

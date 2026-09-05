@@ -63,9 +63,7 @@ export function Guide() {
       if (!api) return;
 
       const index = api.selectedScrollSnap();
-
       const duration = slides[index]?.timeoutMs ?? DEFAULT_SLIDE_DURATION_MS;
-
       const timeUntilNext = autoplay.timeUntilNext();
 
       if (timeUntilNext === null) return;
@@ -131,7 +129,6 @@ export function Guide() {
                 />
 
                 <div className="absolute inset-0 bg-linear-to-t from-black via-black/25 to-black/10" />
-
                 <div
                   className="
                     absolute
@@ -146,7 +143,6 @@ export function Guide() {
                   <span className="text-xs tracking-widest text-muted-foreground uppercase">
                     {slide.title}
                   </span>
-
                   <p
                     className="
                       mt-2

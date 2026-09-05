@@ -73,12 +73,8 @@ export function MarkdownTogglePlugin({
       const firstChild = root.getFirstChild();
 
       if (checked) {
-        if (
-          $isCodeNode(firstChild) &&
-          firstChild.getLanguage() === "markdown"
-        ) {
+        if ($isCodeNode(firstChild) && firstChild.getLanguage() === "markdown")
           return;
-        }
 
         const markdown = $convertToMarkdownString(
           transformers,
@@ -99,9 +95,8 @@ export function MarkdownTogglePlugin({
 
         return;
       }
-      if (!$isCodeNode(firstChild) || firstChild.getLanguage() !== "markdown") {
+      if (!$isCodeNode(firstChild) || firstChild.getLanguage() !== "markdown")
         return;
-      }
 
       const markdown = firstChild.getTextContent();
 
@@ -127,7 +122,6 @@ export function MarkdownTogglePlugin({
             <Label htmlFor={id} className="cursor-pointer text-xs font-normal">
               Markdown
             </Label>
-
             <Switch
               id={id}
               size="sm"

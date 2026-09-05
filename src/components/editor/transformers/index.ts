@@ -35,20 +35,24 @@ import {
 } from "@/components/editor/nodes/details-summary-node";
 
 import { CHART_TRANSFORMER } from "../chart/chart-markdown-transformer";
+import { CONTENTS_TRANSFORMER } from "../contents/contents-markdown-transformer";
 import { EMOJI } from "./markdown-emoji-transformer";
 import { HR } from "./markdown-hr-transformer";
 import { IMAGE } from "./markdown-image-transformer";
 import { TABLE } from "./markdown-table-transformer";
 
-const DETAILS_START_REGEX = /^\s*<details\b([^>]*)>\s*/i,
-  DETAILS_END_REGEX = /\s*<\/details>\s*$/i,
-  SUMMARY_REGEX = /^\s*<summary\b[^>]*>(.*?)<\/summary>\s*(.*)$/i;
+const DETAILS_START_REGEX = /^\s*<details\b([^>]*)>\s*/i;
+const DETAILS_END_REGEX = /\s*<\/details>\s*$/i;
+const SUMMARY_REGEX = /^\s*<summary\b[^>]*>(.*?)<\/summary>\s*(.*)$/i;
 
 const DETAILS: MultilineElementTransformer = {
   type: "multiline-element",
+
   dependencies: [DetailsContainerNode, DetailsSummaryNode, DetailsContentNode],
+
   regExpStart: DETAILS_START_REGEX,
   regExpEnd: DETAILS_END_REGEX,
+
   export: (node, traverseChildren) => {
     if (!$isDetailsContainerNode(node)) {
       return null;
@@ -56,6 +60,7 @@ const DETAILS: MultilineElementTransformer = {
 
     const summary = node.getChildren().find($isDetailsSummaryNode);
     const content = node.getChildren().find($isDetailsContentNode);
+
     const summaryMarkdown = summary
       ? traverseChildren(summary).trim()
       : "Summary";
@@ -65,6 +70,7 @@ const DETAILS: MultilineElementTransformer = {
       : "";
 
     const openAttribute = node.getOpen() ? " open" : "";
+
     const result = [
       `<details${openAttribute}>`,
       `<summary>${summaryMarkdown}</summary>`,
@@ -91,12 +97,6 @@ const DETAILS: MultilineElementTransformer = {
       return false;
     }
 
-    /*
-     * <details>
-     * <details open>
-     * <details open="">
-     * <details open="open">
-     */
     const attributes = startMatch[1] ?? "";
 
     const isOpen =
@@ -108,10 +108,6 @@ const DETAILS: MultilineElementTransformer = {
 
     let summaryMarkdown = "Summary";
 
-    /*
-     * <summary></summary>
-     * <summary>Shopping list</summary> Some text
-     */
     const summaryIndex = lines.findIndex((line) => SUMMARY_REGEX.test(line));
 
     if (summaryIndex >= 0) {
@@ -129,6 +125,7 @@ const DETAILS: MultilineElementTransformer = {
         }
       }
     }
+
     while (lines.length > 0 && lines[0].trim() === "") {
       lines.shift();
     }
@@ -138,9 +135,7 @@ const DETAILS: MultilineElementTransformer = {
     }
 
     const details = $createDetailsContainerNode(isOpen);
-
     const summary = $createDetailsSummaryNode();
-
     const content = $createDetailsContentNode();
 
     if (summaryMarkdown) {
@@ -178,12 +173,12 @@ const DETAILS: MultilineElementTransformer = {
     }
 
     details.append(summary, content);
-
     rootNode.append(details);
   },
 };
 
 export const MARKDOWN_TRANSFORMERS: Transformer[] = [
+  CONTENTS_TRANSFORMER,
   CHART_TRANSFORMER,
   DETAILS,
   TABLE,

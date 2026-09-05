@@ -30,7 +30,6 @@ import { ContentEditable } from "@/components/content-editable";
 import { AutoLinkExtension } from "@/components/editor/extensions/auto-link-extension";
 import { DateTimeExtension } from "@/components/editor/extensions/date-time-extension";
 import { EmojisExtension } from "@/components/editor/extensions/emojis-extension";
-import { ImagesExtension } from "@/components/editor/extensions/images-extension";
 import { MarkdownShortcutsExtension } from "@/components/editor/extensions/markdown-shortcuts-extension";
 import { MaxLengthExtension } from "@/components/editor/extensions/max-length-extension";
 
@@ -59,7 +58,6 @@ import { CodePickerPlugin } from "@/components/editor/plugins/picker/code-picker
 import { DateTimePickerPlugin } from "@/components/editor/plugins/picker/date-time-picker-plugin";
 import { DividerPickerPlugin } from "@/components/editor/plugins/picker/divider-picker-plugin";
 import { HeadingPickerPlugin } from "@/components/editor/plugins/picker/heading-picker-plugin";
-import { ImagePickerPlugin } from "@/components/editor/plugins/picker/image-picker-plugin";
 import { NumberedListPickerPlugin } from "@/components/editor/plugins/picker/numbered-list-picker-plugin";
 import { ParagraphPickerPlugin } from "@/components/editor/plugins/picker/paragraph-picker-plugin";
 import { QuotePickerPlugin } from "@/components/editor/plugins/picker/quote-picker-plugin";
@@ -80,11 +78,6 @@ import { FormatNumberedList } from "@/components/editor/plugins/toolbar/block-fo
 import { FormatParagraph } from "@/components/editor/plugins/toolbar/block-format/format-paragraph";
 import { FormatQuote } from "@/components/editor/plugins/toolbar/block-format/format-quote";
 
-import { BlockInsertPlugin } from "@/components/editor/plugins/toolbar/block-insert-plugin";
-import { InsertHorizontalRule } from "@/components/editor/plugins/toolbar/block-insert/insert-horizontal-rule";
-import { InsertImage } from "@/components/editor/plugins/toolbar/block-insert/insert-image";
-import { InsertTable } from "@/components/editor/plugins/toolbar/block-insert/insert-table";
-
 import { ClearFormattingToolbarPlugin } from "@/components/editor/plugins/toolbar/clear-formatting-toolbar-plugin";
 import { CodeLanguageToolbarPlugin } from "@/components/editor/plugins/toolbar/code-language-toolbar-plugin";
 import { FontFormatToolbarPlugin } from "@/components/editor/plugins/toolbar/font-format-toolbar-plugin";
@@ -97,15 +90,10 @@ import { editorTheme } from "@/components/editor/themes/editor-theme";
 import { Separator } from "@/components/ui/separator";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-import { DetailsContainerNode } from "@/components/editor/nodes/details-container-node";
-import { DetailsContentNode } from "@/components/editor/nodes/details-content-node";
-import { DetailsSummaryNode } from "@/components/editor/nodes/details-summary-node";
 import { AutoCompletePlugin } from "@/components/editor/plugins/auto-complete-plugin";
-import { DetailsPickerPlugin } from "@/components/editor/plugins/details-picker-plugin";
 import { UrlDocumentSyncPlugin } from "@/components/editor/plugins/url-document-sync-plugin";
 import { EMOJI } from "@/components/editor/transformers/markdown-emoji-transformer";
 import { HR } from "@/components/editor/transformers/markdown-hr-transformer";
-import { IMAGE } from "@/components/editor/transformers/markdown-image-transformer";
 import { TABLE } from "@/components/editor/transformers/markdown-table-transformer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -138,12 +126,11 @@ import {
 import Link from "next/link";
 
 const PLACEHOLDER = "Press / to open up the commands";
-const MAX_LENGTH = 300;
+const MAX_LENGTH = 200;
 
 const MARKDOWN_TRANSFORMERS = [
   TABLE,
   HR,
-  IMAGE,
   EMOJI,
   CHECK_LIST,
 
@@ -162,10 +149,6 @@ const EDITOR_NODES = [
   TableRowNode,
   LayoutContainerNode,
   LayoutItemNode,
-
-  DetailsContainerNode,
-  DetailsSummaryNode,
-  DetailsContentNode,
 ];
 
 type EditorProps = {
@@ -242,7 +225,6 @@ export function ExperimentalEditor({
           CheckListExtension,
           HorizontalRuleExtension,
 
-          ImagesExtension,
           DateTimeExtension,
         ],
 
@@ -322,11 +304,6 @@ export function ExperimentalEditor({
                       <div className="flex flex-row gap-0.5 items-center">
                         <ShareContentPlugin />
                         <ClearEditorActionPlugin />
-                        <BlockInsertPlugin>
-                          <InsertHorizontalRule />
-                          <InsertImage />
-                          <InsertTable />
-                        </BlockInsertPlugin>
                       </div>
                     </>
                   )}
@@ -361,9 +338,7 @@ export function ExperimentalEditor({
                   QuotePickerPlugin(),
                   CodePickerPlugin(),
                   DividerPickerPlugin(),
-                  ImagePickerPlugin(),
                   DateTimePickerPlugin(),
-                  DetailsPickerPlugin(),
                 ]}
                 dynamicOptionsFn={DynamicTablePickerPlugin}
               />
@@ -388,7 +363,6 @@ export function ExperimentalEditor({
                   HeadingPickerPlugin({ n: 6 }),
 
                   TablePickerPlugin(),
-                  DetailsPickerPlugin(),
                   CheckListPickerPlugin(),
                   NumberedListPickerPlugin(),
                   BulletedListPickerPlugin(),
@@ -396,7 +370,6 @@ export function ExperimentalEditor({
                   QuotePickerPlugin(),
                   CodePickerPlugin(),
                   DividerPickerPlugin(),
-                  ImagePickerPlugin(),
                   DateTimePickerPlugin(),
                 ]}
                 dynamicOptionsFn={DynamicTablePickerPlugin}
@@ -443,7 +416,7 @@ export function ExperimentalEditor({
   );
 }
 
-const unavailableCommands = [
+const data = [
   {
     command: "Chart",
     icon: BarChart3Icon,
@@ -454,6 +427,10 @@ const unavailableCommands = [
   },
   {
     command: "Details",
+    icon: ListTreeIcon,
+  },
+  {
+    command: "TOC",
     icon: ListTreeIcon,
   },
 ];
@@ -547,8 +524,8 @@ export function EditorWarningModal() {
           </div>
         </CardHeader>
         <CardContent className="space-y-3 p-6 -mt-8">
-          <div className="grid grid-cols-3 gap-2">
-            {unavailableCommands.map(({ command, icon: Icon }) => (
+          <div className="grid grid-cols-4 gap-2">
+            {data.map(({ command, icon: Icon }) => (
               <Card
                 key={command}
                 className="gap-3 rounded-xl bg-muted/30 py-2 shadow-none"

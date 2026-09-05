@@ -104,6 +104,10 @@ import { validateUrl } from "@/utils/editor/validateUrl";
 import { TabIndentationPlugin } from "@lexical/react/LexicalTabIndentationPlugin";
 import { ToggleViewer } from "../document-viewer/toggle-viewer";
 
+import { ContentsDialogPlugin } from "@/components/editor/contents/contents-dialog-plugin";
+import { ContentsExtension } from "@/components/editor/contents/contents-extension";
+import { ContentsPickerPlugin } from "@/components/editor/contents/contents-picker-plugin";
+
 const PLACEHOLDER = "Press / to open up the commands";
 
 const EDITOR_NODES = [
@@ -202,6 +206,7 @@ export function Editor({
           ImagesExtension,
           DateTimeExtension,
           ChartsExtension,
+          ContentsExtension,
         ],
 
         nodes: EDITOR_NODES,
@@ -307,6 +312,7 @@ export function Editor({
                   ChartPickerPlugin(),
                   DateTimePickerPlugin(),
                   DetailsPickerPlugin(),
+                  ContentsPickerPlugin(),
                 ]}
                 dynamicOptionsFn={DynamicTablePickerPlugin}
               />
@@ -319,6 +325,7 @@ export function Editor({
               <TabIndentationPlugin />
               <CodeHighlightPlugin />
               <DetailsEscapePlugin />
+              <ContentsDialogPlugin />
               <TablePlugin />
 
               <DraggableBlockPlugin

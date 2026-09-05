@@ -99,9 +99,7 @@ export function InsertImageDialog({
 
 export const ImagesExtension = defineExtension({
   name: "Images",
-
   nodes: [ImageNode],
-
   register: (editor) =>
     editor.registerCommand<InsertImagePayload>(
       INSERT_IMAGE_COMMAND,

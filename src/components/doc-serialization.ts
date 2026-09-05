@@ -47,9 +47,7 @@ export async function docFromHash(
   hash: string,
 ): Promise<SerializedDocument | null> {
   const m = /^#doc=(.*)$/.exec(hash);
-  if (!m) {
-    return null;
-  }
+  if (!m) return null;
 
   let compressed: Uint8Array<ArrayBuffer>;
   try {
