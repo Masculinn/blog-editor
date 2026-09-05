@@ -1,7 +1,13 @@
 ﻿"use server";
 
 import { db } from "@/lib/db/server";
-import type { Blog } from "@/types/db.types";
+import {
+  DraftSchema,
+  PublishableDraftSchema,
+  type DraftInput,
+} from "@/schema/draft.schema";
+import type { Blog, BlogInsert } from "@/types/db.types";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 const POST_SELECT_WITHOUT_CONTENT =
@@ -11,23 +17,28 @@ const POST_SELECT_WITH_CONTENT =
   "banner_image,content,description,id,level,published_at,tags,title" as const;
 
 const PostIdSchema = z.number().int().positive();
+const PostMetadataSchema = PublishableDraftSchema.omit({ content: true });
 
 export type BlogWithoutContent = Omit<Blog, "content">;
 
-type DeletePostResult =
+type ActionError = {
+  success: false;
+  error: string;
+};
+
+type ActionResult<T> =
   | {
       success: true;
+      data: T;
     }
-  | {
-      success: false;
-      error: string;
-    };
+  | ActionError;
+
+type DeletePostResult = { success: true } | ActionError;
 
 export async function viewPostsAction(includeContent: true): Promise<Blog[]>;
 export async function viewPostsAction(
   includeContent?: false,
 ): Promise<BlogWithoutContent[]>;
-
 export async function viewPostsAction(
   includeContent = false,
 ): Promise<Blog[] | BlogWithoutContent[]> {
@@ -37,10 +48,7 @@ export async function viewPostsAction(
       .select(POST_SELECT_WITH_CONTENT)
       .order("published_at", { ascending: false });
 
-    if (error) {
-      throw new Error(error.message);
-    }
-
+    if (error) throw new Error(error.message);
     return data;
   }
 
@@ -49,11 +57,92 @@ export async function viewPostsAction(
     .select(POST_SELECT_WITHOUT_CONTENT)
     .order("published_at", { ascending: false });
 
-  if (error) {
-    throw new Error(error.message);
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function getPostAction(
+  id: Blog["id"],
+): Promise<ActionResult<BlogWithoutContent>> {
+  const parsedId = PostIdSchema.safeParse(id);
+
+  if (!parsedId.success) {
+    return { success: false, error: "Invalid post ID." };
   }
 
-  return data;
+  const { data, error } = await db
+    .from("blog_posts")
+    .select(POST_SELECT_WITHOUT_CONTENT)
+    .eq("id", parsedId.data)
+    .maybeSingle();
+
+  if (error) return { success: false, error: error.message };
+  if (!data) return { success: false, error: "Post not found." };
+
+  return { success: true, data };
+}
+
+export async function upsertPostAction(
+  id: Blog["id"],
+  input: DraftInput,
+): Promise<ActionResult<BlogWithoutContent>> {
+  const parsedId = PostIdSchema.safeParse(id);
+
+  if (!parsedId.success) {
+    return { success: false, error: "Invalid post ID." };
+  }
+
+  const parsedInput = DraftSchema.safeParse(input);
+
+  if (!parsedInput.success) {
+    return {
+      success: false,
+      error: parsedInput.error.issues[0]?.message ?? "Invalid post data.",
+    };
+  }
+
+  const validation = PostMetadataSchema.safeParse(parsedInput.data);
+
+  if (!validation.success) {
+    return {
+      success: false,
+      error:
+        "Published posts require a title, description, banner image, at least one tag, and a whole-number difficulty from 1 to 3.",
+    };
+  }
+
+  const { data: existing, error: readError } = await db
+    .from("blog_posts")
+    .select(POST_SELECT_WITH_CONTENT)
+    .eq("id", parsedId.data)
+    .maybeSingle();
+
+  if (readError) return { success: false, error: readError.message };
+  if (!existing) return { success: false, error: "Post not found." };
+
+  const post = {
+    id: existing.id,
+    banner_image: validation.data.banner_image,
+    content: existing.content,
+    description: validation.data.description,
+    level: validation.data.level,
+    published_at: existing.published_at,
+    tags: validation.data.tags,
+    title: validation.data.title,
+  } satisfies BlogInsert;
+
+  const { data, error } = await db
+    .from("blog_posts")
+    .upsert(post, { onConflict: "id" })
+    .select(POST_SELECT_WITHOUT_CONTENT)
+    .single();
+
+  if (error) return { success: false, error: error.message };
+
+  revalidatePath("/admin");
+  revalidatePath("/", "layout");
+
+  return { success: true, data };
 }
 
 export async function deletePostAction(
@@ -62,10 +151,7 @@ export async function deletePostAction(
   const parsedId = PostIdSchema.safeParse(id);
 
   if (!parsedId.success) {
-    return {
-      success: false,
-      error: "Invalid post ID.",
-    };
+    return { success: false, error: "Invalid post ID." };
   }
 
   const { data, error } = await db
@@ -75,21 +161,11 @@ export async function deletePostAction(
     .select("id")
     .maybeSingle();
 
-  if (error) {
-    return {
-      success: false,
-      error: error.message,
-    };
-  }
+  if (error) return { success: false, error: error.message };
+  if (!data) return { success: false, error: "Post not found." };
 
-  if (!data) {
-    return {
-      success: false,
-      error: "Post not found.",
-    };
-  }
+  revalidatePath("/admin");
+  revalidatePath("/", "layout");
 
-  return {
-    success: true,
-  };
+  return { success: true };
 }
