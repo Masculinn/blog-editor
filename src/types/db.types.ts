@@ -7,8 +7,6 @@ export type BlogInsert = Tables["blog_posts"]["Insert"];
 export type BlogUpdate = Tables["blog_posts"]["Update"];
 
 export type SmallTalk = Tables["small_talks"]["Row"];
-export type SmallTalkInsert = Tables["small_talks"]["Insert"];
-export type SmallTalkUpdate = Tables["small_talks"]["Update"];
 
 export type Draft = Tables["drafts"]["Row"];
 export type DraftInsert = Tables["drafts"]["Insert"];

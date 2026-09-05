@@ -353,27 +353,3 @@ export async function deleteMediaAction(path: string) {
     } as const;
   }
 }
-
-export async function getMediaPublicUrlAction(path: string) {
-  try {
-    if (!isSafeStoragePath(path)) {
-      return {
-        success: false,
-        error: "Invalid media path.",
-      } as const;
-    }
-
-    return {
-      success: true,
-      data: getPublicUrl(path),
-    } as const;
-  } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to retrieve public URL.",
-    } as const;
-  }
-}

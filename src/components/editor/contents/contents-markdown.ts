@@ -19,7 +19,7 @@ function serializeLink(link: ContentsLink): string {
   return `[${escapeMarkdownLabel(link.label)}](${href})`;
 }
 
-export function serializeContentsBody(data: ContentsData): string {
+function serializeContentsBody(data: ContentsData): string {
   const lines: string[] = [];
 
   data.sections.forEach((section, index) => {

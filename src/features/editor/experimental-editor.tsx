@@ -435,7 +435,7 @@ const data = [
   },
 ];
 
-export function EditorWarningModal() {
+function EditorWarningModal() {
   const [open, setOpen] = useState(true);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 

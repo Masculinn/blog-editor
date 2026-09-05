@@ -7,7 +7,13 @@ import {
   PublishableDraftSchema,
   type DraftInput,
 } from "@/schema/draft.schema";
-import type { Blog, BlogInsert, Draft, DraftInsert } from "@/types/db.types";
+import type {
+  Blog,
+  BlogInsert,
+  Draft,
+  DraftInsert,
+  DraftUpdate,
+} from "@/types/db.types";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -245,7 +251,7 @@ export async function updateDraftContent(
   const { data, error } = await db
     .from("drafts")
     .update({
-      content: validation.data.content,
+      content: validation.data.content satisfies DraftUpdate["content"],
     })
     .eq("id", validation.data.id)
     .select("id,content")

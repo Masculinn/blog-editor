@@ -149,7 +149,7 @@ async function deriveUserIdKey(rootKey: CryptoKey): Promise<CryptoKey> {
   );
 }
 
-export function toBase64Url(bytes: Uint8Array<ArrayBuffer>): string {
+function toBase64Url(bytes: Uint8Array<ArrayBuffer>): string {
   let binary = "";
 
   for (let index = 0; index < bytes.length; index += 1) {
@@ -162,7 +162,7 @@ export function toBase64Url(bytes: Uint8Array<ArrayBuffer>): string {
     .replace(/=+$/g, "");
 }
 
-export function fromBase64Url(input: string): Uint8Array<ArrayBuffer> {
+function fromBase64Url(input: string): Uint8Array<ArrayBuffer> {
   const base64 = input.replace(/-/g, "+").replace(/_/g, "/");
   const padded = base64 + "=".repeat((4 - (base64.length % 4)) % 4);
   const binary = atob(padded);

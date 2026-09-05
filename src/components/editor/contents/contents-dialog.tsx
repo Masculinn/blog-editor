@@ -68,13 +68,6 @@ type InsertContentsDialogProps = {
   onClose: () => void;
 };
 
-type EditContentsDialogProps = {
-  activeEditor: LexicalEditor;
-  nodeKey: NodeKey;
-  data: ContentsData;
-  onClose: () => void;
-};
-
 type LinkRowProps = {
   item: ContentsLink;
   name: string;
@@ -487,31 +480,6 @@ export function InsertContentsDialog({
             insertionKey,
           },
           data,
-        )
-      }
-    />
-  );
-}
-
-export function EditContentsDialog({
-  activeEditor,
-  nodeKey,
-  data,
-  onClose,
-}: EditContentsDialogProps) {
-  return (
-    <ContentsDialogBody
-      initialData={data}
-      submitLabel="Save changes"
-      onClose={onClose}
-      onSave={(nextData) =>
-        saveContents(
-          activeEditor,
-          {
-            type: "update",
-            nodeKey,
-          },
-          nextData,
         )
       }
     />

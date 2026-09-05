@@ -37,13 +37,13 @@ const hrefSchema = z
     }
   }, "Use a #heading-anchor, /relative-path, or HTTP(S) URL.");
 
-export const contentsLinkSchema = z.object({
+const contentsLinkSchema = z.object({
   id: z.string().min(1),
   label: labelSchema,
   href: hrefSchema,
 });
 
-export const contentsSectionSchema = contentsLinkSchema.extend({
+const contentsSectionSchema = contentsLinkSchema.extend({
   children: z.array(contentsLinkSchema).max(100),
 });
 
