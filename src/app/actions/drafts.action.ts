@@ -25,6 +25,11 @@ const BLOG_SELECT_WITH_CONTENT =
 
 const DraftIdSchema = z.number().int().positive();
 
+const DraftContentUpdateSchema = z.object({
+  id: DraftIdSchema,
+  content: z.string(),
+});
+
 export type DraftWithoutContent = Omit<Draft, "content">;
 export type BlogWithoutContent = Omit<Blog, "content">;
 
@@ -64,9 +69,11 @@ function toDraftMetadata(input: DraftInput) {
 }
 
 async function viewDraftsAction(includeContent: true): Promise<Draft[]>;
+
 async function viewDraftsAction(
   includeContent?: false,
 ): Promise<DraftWithoutContent[]>;
+
 async function viewDraftsAction(
   includeContent = false,
 ): Promise<Draft[] | DraftWithoutContent[]> {
@@ -77,6 +84,7 @@ async function viewDraftsAction(
       .order("published_at", { ascending: false });
 
     if (error) throw new Error(error.message);
+
     return data;
   }
 
@@ -86,6 +94,7 @@ async function viewDraftsAction(
     .order("published_at", { ascending: false });
 
   if (error) throw new Error(error.message);
+
   return data;
 }
 
@@ -116,10 +125,12 @@ export async function createDraftAction(
   input: DraftInput,
   includeContent: true,
 ): Promise<ActionResult<Draft>>;
+
 export async function createDraftAction(
   input: DraftInput,
   includeContent?: false,
 ): Promise<ActionResult<DraftWithoutContent>>;
+
 export async function createDraftAction(
   input: DraftInput,
   includeContent = false,
@@ -145,6 +156,7 @@ export async function createDraftAction(
     if (error) return { success: false, error: error.message };
 
     revalidatePath("/admin");
+
     return { success: true, data };
   }
 
@@ -157,6 +169,7 @@ export async function createDraftAction(
   if (error) return { success: false, error: error.message };
 
   revalidatePath("/admin");
+
   return { success: true, data };
 }
 
@@ -185,8 +198,13 @@ export async function upsertDraftAction(
     .eq("id", parsedId.data)
     .maybeSingle();
 
-  if (readError) return { success: false, error: readError.message };
-  if (!existing) return { success: false, error: "Draft not found." };
+  if (readError) {
+    return { success: false, error: readError.message };
+  }
+
+  if (!existing) {
+    return { success: false, error: "Draft not found." };
+  }
 
   const draft = {
     ...toDraftMetadata(validation.data),
@@ -204,6 +222,48 @@ export async function upsertDraftAction(
   if (error) return { success: false, error: error.message };
 
   revalidatePath("/admin");
+
+  return { success: true, data };
+}
+
+export async function updateDraftContent(
+  id: Draft["id"],
+  content: string,
+): Promise<ActionResult<Pick<Draft, "id" | "content">>> {
+  const validation = DraftContentUpdateSchema.safeParse({
+    id,
+    content,
+  });
+
+  if (!validation.success) {
+    return {
+      success: false,
+      error: validation.error.issues[0]?.message ?? "Invalid draft content.",
+    };
+  }
+
+  const { data, error } = await db
+    .from("drafts")
+    .update({
+      content: validation.data.content,
+    })
+    .eq("id", validation.data.id)
+    .select("id,content")
+    .maybeSingle();
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  if (!data) {
+    return {
+      success: false,
+      error: "Draft not found or could not be updated.",
+    };
+  }
+
+  revalidatePath("/admin");
+
   return { success: true, data };
 }
 
@@ -227,6 +287,7 @@ export async function deleteDraftAction(
   if (!data) return { success: false, error: "Draft not found." };
 
   revalidatePath("/admin");
+
   return { success: true };
 }
 
@@ -277,10 +338,12 @@ export async function publishDraftAction(
   id: Draft["id"],
   includeContent: true,
 ): Promise<PublishDraftResult<Blog>>;
+
 export async function publishDraftAction(
   id: Draft["id"],
   includeContent?: false,
 ): Promise<PublishDraftResult<BlogWithoutContent>>;
+
 export async function publishDraftAction(
   id: Draft["id"],
   includeContent = false,
@@ -297,8 +360,13 @@ export async function publishDraftAction(
     .eq("id", parsedId.data)
     .maybeSingle();
 
-  if (draftError) return { success: false, error: draftError.message };
-  if (!draft) return { success: false, error: "Draft not found." };
+  if (draftError) {
+    return { success: false, error: draftError.message };
+  }
+
+  if (!draft) {
+    return { success: false, error: "Draft not found." };
+  }
 
   const validation = PublishableDraftSchema.safeParse(draft);
 
@@ -331,6 +399,7 @@ export async function publishDraftAction(
       .single();
 
     if (error) return { success: false, error: error.message };
+
     return finishPublishing(parsedId.data, data);
   }
 
@@ -341,5 +410,6 @@ export async function publishDraftAction(
     .single();
 
   if (error) return { success: false, error: error.message };
+
   return finishPublishing(parsedId.data, data);
 }

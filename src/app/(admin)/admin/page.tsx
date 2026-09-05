@@ -45,7 +45,7 @@ export default async function Page({ searchParams }: Props) {
         )}
       />
       {isViewer && postId && (
-        <DocumentViewer className="w-5/12 h-full border-r border-y rounded-r-md">
+        <DocumentViewer className="w-5/12 h-full border-r border-y rounded-r-md relative">
           <ArticleCover id={postId} draft={draft} />
           <ArticleContent id={postId} draft={draft} />
         </DocumentViewer>

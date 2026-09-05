@@ -17,7 +17,19 @@ const POST_SELECT_WITH_CONTENT =
   "banner_image,content,description,id,level,published_at,tags,title" as const;
 
 const PostIdSchema = z.number().int().positive();
-const PostMetadataSchema = PublishableDraftSchema.omit({ content: true });
+
+const PostMetadataSchema = PublishableDraftSchema.omit({
+  content: true,
+});
+
+const PostContentUpdateSchema = z.object({
+  id: PostIdSchema,
+  content: z.string(),
+});
+
+const PublishedContentSchema = PublishableDraftSchema.pick({
+  content: true,
+});
 
 export type BlogWithoutContent = Omit<Blog, "content">;
 
@@ -36,9 +48,11 @@ type ActionResult<T> =
 type DeletePostResult = { success: true } | ActionError;
 
 export async function viewPostsAction(includeContent: true): Promise<Blog[]>;
+
 export async function viewPostsAction(
   includeContent?: false,
 ): Promise<BlogWithoutContent[]>;
+
 export async function viewPostsAction(
   includeContent = false,
 ): Promise<Blog[] | BlogWithoutContent[]> {
@@ -49,6 +63,7 @@ export async function viewPostsAction(
       .order("published_at", { ascending: false });
 
     if (error) throw new Error(error.message);
+
     return data;
   }
 
@@ -58,6 +73,7 @@ export async function viewPostsAction(
     .order("published_at", { ascending: false });
 
   if (error) throw new Error(error.message);
+
   return data;
 }
 
@@ -117,8 +133,13 @@ export async function upsertPostAction(
     .eq("id", parsedId.data)
     .maybeSingle();
 
-  if (readError) return { success: false, error: readError.message };
-  if (!existing) return { success: false, error: "Post not found." };
+  if (readError) {
+    return { success: false, error: readError.message };
+  }
+
+  if (!existing) {
+    return { success: false, error: "Post not found." };
+  }
 
   const post = {
     id: existing.id,
@@ -138,6 +159,61 @@ export async function upsertPostAction(
     .single();
 
   if (error) return { success: false, error: error.message };
+
+  revalidatePath("/admin");
+  revalidatePath("/", "layout");
+
+  return { success: true, data };
+}
+
+export async function updatePostContent(
+  id: Blog["id"],
+  content: string,
+): Promise<ActionResult<Pick<Blog, "id" | "content">>> {
+  const validation = PostContentUpdateSchema.safeParse({
+    id,
+    content,
+  });
+
+  if (!validation.success) {
+    return {
+      success: false,
+      error: validation.error.issues[0]?.message ?? "Invalid post content.",
+    };
+  }
+
+  const contentValidation = PublishedContentSchema.safeParse({
+    content: validation.data.content,
+  });
+
+  if (!contentValidation.success) {
+    return {
+      success: false,
+      error:
+        contentValidation.error.issues[0]?.message ??
+        "Invalid published post content.",
+    };
+  }
+
+  const { data, error } = await db
+    .from("blog_posts")
+    .update({
+      content: validation.data.content,
+    })
+    .eq("id", validation.data.id)
+    .select("id,content")
+    .maybeSingle();
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  if (!data) {
+    return {
+      success: false,
+      error: "Post not found or could not be updated.",
+    };
+  }
 
   revalidatePath("/admin");
   revalidatePath("/", "layout");

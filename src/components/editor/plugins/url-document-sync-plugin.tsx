@@ -5,7 +5,7 @@ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext
 import { CLEAR_EDITOR_COMMAND, CLEAR_HISTORY_COMMAND } from "lexical";
 import { useEffect, useRef } from "react";
 
-import { docFromHash } from "@/components/doc-serialization";
+import { docFromHash } from "@/lib/serialization";
 
 type UrlDocumentSyncPluginProps = {
   documentHash?: string | null;

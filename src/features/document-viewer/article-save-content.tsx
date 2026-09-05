@@ -1,1 +1,3 @@
-﻿export function ArticleSaveContent() {}
+﻿"use client";
+
+export function ArticleSaveContent() {}

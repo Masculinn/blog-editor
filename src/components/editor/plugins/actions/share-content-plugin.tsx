@@ -17,7 +17,6 @@ import {
 import { toast } from "sonner";
 
 import { createSmallTalkAction } from "@/app/actions/create-small-talk";
-import { docToHash } from "@/components/doc-serialization";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -36,6 +35,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { docToHash } from "@/lib/serialization";
 
 type SaveState =
   | {

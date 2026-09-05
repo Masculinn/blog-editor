@@ -1,4 +1,4 @@
-import type { SerializedDocument } from "@lexical/file";
+﻿import type { SerializedDocument } from "@lexical/file";
 
 async function readBytes(
   reader: ReadableStreamDefaultReader<Uint8Array>,

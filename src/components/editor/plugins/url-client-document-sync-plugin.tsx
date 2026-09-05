@@ -1,9 +1,9 @@
 ﻿"use client";
 
-import { docFromHash, docToHash } from "@/components/doc-serialization";
 import { Badge, type badgeVariants } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { useDebounce } from "@/hooks/use-debounce";
+import { docFromHash, docToHash } from "@/lib/serialization";
 import { publishDocumentSnapshot } from "@/store/document.store";
 import {
   editorStateFromSerializedDocument,
@@ -242,9 +242,7 @@ export function UrlClientDocumentSyncPlugin({
     const hydrationId = ++hydrationIdRef.current;
 
     initializedRef.current = false;
-
     setSyncStatus("loading");
-
     writeSnapshot.cancel();
 
     ++writeIdRef.current;
