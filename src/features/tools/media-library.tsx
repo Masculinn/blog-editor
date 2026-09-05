@@ -34,6 +34,7 @@ import {
 } from "react";
 import { toast } from "sonner";
 
+import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import type { ToolComponentProps } from "../../types/tools.types";
 
 type MediaItem = {
@@ -78,10 +79,12 @@ function getBentoClass(index: number) {
 
     case 3:
       return "row-span-2";
-    case 5:
+
+    case 6:
       return "col-span-2";
+
     default:
-      return "col-span-auto";
+      return "col-span-1 row-span-1";
   }
 }
 
@@ -383,15 +386,15 @@ export function MediaLibrary({ render, title }: ToolComponentProps) {
                     </p>
                   </div>
                 ) : (
-                  <div className="grid auto-rows-40 grid-cols-2 gap-3 xl:grid-cols-3">
+                  <div className="grid auto-rows-40 grid-cols-2 grid-flow-dense gap-3 xl:grid-cols-3">
                     {media.map((item, index) => (
                       <ImageItem
+                        key={item.id}
                         item={item}
                         setPreviewItem={setPreviewItem}
                         isDeleting={deleting.has(item.path)}
                         handleDelete={handleDelete}
                         className={getBentoClass(index)}
-                        key={item.id}
                       />
                     ))}
                   </div>
@@ -452,14 +455,34 @@ const ImageItem: FC<ImageItemProps> = ({
   setPreviewItem,
   className,
 }) => {
+  const [confirmation, setConfirmation] = useState(false);
   const [error, setError] = useState(false);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
-
+  const [isPreviewFocused, setIsPreviewFocused] = useState(false);
   const name = item.name || "Untitled image";
 
   const itemSize = item.size ? (
     <p className="mt-0.5 text-[11px] text-white/65">{formatBytes(item.size)}</p>
   ) : null;
+
+  const confirmationDialog = (
+    <ConfirmationDialog
+      open={confirmation}
+      onOpenChange={setConfirmation}
+      onConfirm={() => void handleDelete(item)}
+      title="Delete image?"
+      description={
+        <>
+          This will permanently delete{" "}
+          <span className="font-medium text-foreground">{name}</span>. This
+          action cannot be undone.
+        </>
+      }
+      confirmLabel={isDeleting ? "Deleting..." : "Delete"}
+      variant="destructive"
+      disabled={isDeleting}
+    />
+  );
 
   const actions = (
     <div
@@ -486,7 +509,7 @@ const ImageItem: FC<ImageItemProps> = ({
         variant="ghost"
         size="icon"
         disabled={isDeleting}
-        onClick={() => void handleDelete(item)}
+        onClick={() => setConfirmation(true)}
         className={cn(
           "size-9 bg-black/55 text-white backdrop-blur-md",
           "hover:bg-destructive hover:text-destructive-foreground",
@@ -523,172 +546,185 @@ const ImageItem: FC<ImageItemProps> = ({
 
   if (error) {
     return (
+      <>
+        <div
+          className={cn(
+            "group relative isolate flex min-h-40 overflow-hidden rounded-2xl",
+            "border border-destructive/20 bg-muted",
+            "transition duration-200",
+            isDeleting && "cursor-wait",
+            className,
+          )}
+          aria-busy={isDeleting}
+        >
+          <div
+            className={cn(
+              "absolute inset-0",
+              "bg-[radial-gradient(circle_at_top_right,var(--destructive),transparent_55%)]",
+              "opacity-[0.06]",
+            )}
+            aria-hidden="true"
+          />
+
+          <div className="relative z-10 flex size-full min-h-40 flex-col items-center justify-center gap-3 p-5 text-center">
+            <div
+              className={cn(
+                "flex size-11 items-center justify-center rounded-2xl",
+                "border border-destructive/15 bg-destructive/10",
+                "text-destructive shadow-sm",
+              )}
+            >
+              <ImageOff className="size-5" />
+            </div>
+
+            <div className="max-w-48 space-y-1">
+              <p className="truncate text-sm font-medium text-foreground">
+                {name}
+              </p>
+
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                The image source could not be loaded.
+              </p>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={isDeleting}
+              onClick={() => {
+                setIsImageLoaded(false);
+                setError(false);
+              }}
+              className="mt-1 gap-1.5"
+            >
+              <RefreshCw className="size-3.5" />
+              Retry
+            </Button>
+          </div>
+
+          {actions}
+          {deletingOverlay}
+        </div>
+
+        {confirmationDialog}
+      </>
+    );
+  }
+
+  return (
+    <>
       <div
         className={cn(
-          "group relative isolate flex min-h-40 overflow-hidden rounded-2xl",
-          "border border-destructive/20 bg-muted",
-          "transition duration-200",
-          isDeleting && "cursor-wait",
+          "group relative isolate overflow-hidden rounded-2xl border bg-muted",
+          "outline-offset-2 transition-[border-color,box-shadow,outline-color] duration-200",
+          isPreviewFocused && "outline-2 outline-primary",
+          isDeleting && "cursor-wait border-border/50",
           className,
         )}
         aria-busy={isDeleting}
       >
-        <div
-          className={cn(
-            "absolute inset-0",
-            "bg-[radial-gradient(circle_at_top_right,var(--destructive),transparent_55%)]",
-            "opacity-[0.06]",
-          )}
-          aria-hidden="true"
-        />
+        {!isImageLoaded && (
+          <Skeleton className="absolute inset-0 z-10 size-full rounded-none">
+            <div className="absolute inset-0 grid place-items-center">
+              <div
+                className={cn(
+                  "flex size-10 items-center justify-center rounded-full",
+                  "border bg-background/75 text-muted-foreground shadow-sm",
+                  "backdrop-blur-sm",
+                )}
+              >
+                <Loader2 className="size-4 animate-spin" />
+              </div>
+            </div>
+          </Skeleton>
+        )}
 
-        <div className="relative z-10 flex size-full min-h-40 flex-col items-center justify-center gap-3 p-5 text-center">
+        <button
+          type="button"
+          data-image-preview
+          disabled={isDeleting || !isImageLoaded}
+          onFocus={() => setIsPreviewFocused(true)}
+          onBlur={() => setIsPreviewFocused(false)}
+          onClick={() => setPreviewItem(item)}
+          className={cn(
+            "group/preview absolute inset-0 z-0 size-full overflow-hidden text-left",
+            "cursor-zoom-in focus-visible:outline-none",
+            "disabled:cursor-default",
+            isDeleting && "disabled:cursor-wait",
+          )}
+          aria-label={`Preview ${name}`}
+        >
+          {/* biome-ignore lint/performance/noImgElement: dynamic animated media */}
+          <img
+            src={item.publicUrl}
+            alt={item.id}
+            loading="lazy"
+            decoding="async"
+            fetchPriority="low"
+            onLoad={() => {
+              setError(false);
+              setIsImageLoaded(true);
+            }}
+            onError={() => {
+              setIsImageLoaded(false);
+              setError(true);
+            }}
+            className={cn(
+              "size-full object-cover",
+              "transition-[opacity,transform,filter] duration-300 ease-out",
+              !isImageLoaded && "opacity-0",
+              isImageLoaded && "opacity-100",
+              !isDeleting && [
+                "group-hover/preview:scale-[1.025]",
+                "group-focus-visible/preview:scale-[1.025]",
+              ],
+              isDeleting && "scale-[1.02] opacity-40 blur-[1px] grayscale",
+            )}
+          />
+
           <div
             className={cn(
-              "flex size-11 items-center justify-center rounded-2xl",
-              "border border-destructive/15 bg-destructive/10",
-              "text-destructive shadow-sm",
+              "pointer-events-none absolute inset-0 flex items-center justify-center",
+              "bg-black/0 opacity-0 transition-[background-color,opacity] duration-200",
+              !isDeleting && [
+                "group-hover/preview:bg-black/10 group-hover/preview:opacity-100",
+                "group-focus-visible/preview:bg-black/10",
+                "group-focus-visible/preview:opacity-100",
+              ],
             )}
           >
-            <ImageOff className="size-5" />
+            <div
+              className={cn(
+                "flex size-10 items-center justify-center rounded-full",
+                "border border-white/10 bg-black/50 text-white",
+                "shadow-lg backdrop-blur-md",
+              )}
+            >
+              <ZoomIn className="size-4" />
+            </div>
           </div>
+        </button>
 
-          <div className="max-w-48 space-y-1">
-            <p className="truncate text-sm font-medium text-foreground">
-              {name}
-            </p>
-
-            <p className="text-xs leading-relaxed text-muted-foreground">
-              The image source could not be loaded.
-            </p>
-          </div>
-
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={isDeleting}
-            onClick={() => {
-              setIsImageLoaded(false);
-              setError(false);
-            }}
-            className="mt-1 gap-1.5"
-          >
-            <RefreshCw className="size-3.5" />
-            Retry
-          </Button>
+        <div
+          className={cn(
+            "pointer-events-none absolute inset-x-0 bottom-0 z-20",
+            "bg-linear-to-t from-black/80 via-black/35 to-transparent",
+            "px-3 pt-12 pb-3",
+            "transition-opacity duration-200",
+            isDeleting && "opacity-50",
+          )}
+        >
+          <p className="truncate text-xs font-medium text-white">{name}</p>
+          {itemSize}
         </div>
 
         {actions}
         {deletingOverlay}
       </div>
-    );
-  }
 
-  return (
-    <div
-      className={cn(
-        "group relative isolate overflow-hidden rounded-2xl border bg-muted",
-        "transition-[border-color,box-shadow] duration-200",
-        isDeleting && "cursor-wait border-border/50",
-        className,
-      )}
-      aria-busy={isDeleting}
-    >
-      {!isImageLoaded && (
-        <Skeleton className="absolute inset-0 z-10 size-full rounded-none">
-          <div className="absolute inset-0 grid place-items-center">
-            <div
-              className={cn(
-                "flex size-10 items-center justify-center rounded-full",
-                "border bg-background/75 text-muted-foreground shadow-sm",
-                "backdrop-blur-sm",
-              )}
-            >
-              <Loader2 className="size-4 animate-spin" />
-            </div>
-          </div>
-        </Skeleton>
-      )}
-
-      <button
-        type="button"
-        disabled={isDeleting || !isImageLoaded}
-        onClick={() => setPreviewItem(item)}
-        className={cn(
-          "absolute inset-0 z-0 size-full overflow-hidden text-left",
-          "cursor-zoom-in",
-          "focus-visible:outline-none",
-          "focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/80",
-          "disabled:cursor-default",
-          isDeleting && "disabled:cursor-wait",
-        )}
-        aria-label={`Preview ${name}`}
-      >
-        {/* biome-ignore lint/performance/noImgElement: dynamic animated media */}
-        <img
-          src={item.publicUrl}
-          alt={item.id}
-          loading="lazy"
-          decoding="async"
-          fetchPriority="low"
-          onLoad={() => {
-            setError(false);
-            setIsImageLoaded(true);
-          }}
-          onError={() => {
-            setIsImageLoaded(false);
-            setError(true);
-          }}
-          className={cn(
-            "size-full object-cover",
-            "transition-[opacity,transform,filter] duration-300 ease-out",
-            !isImageLoaded && "opacity-0",
-            isImageLoaded && "opacity-100",
-            !isDeleting && "group-hover:scale-[1.025]",
-            isDeleting && "scale-[1.02] opacity-40 blur-[1px] grayscale",
-          )}
-        />
-
-        <div
-          className={cn(
-            "pointer-events-none absolute inset-0 flex items-center justify-center",
-            "bg-black/0 opacity-0 transition-[background-color,opacity] duration-200",
-            !isDeleting && [
-              "group-hover:bg-black/10 group-hover:opacity-100",
-              "group-focus-within:bg-black/10 group-focus-within:opacity-100",
-            ],
-          )}
-        >
-          <div
-            className={cn(
-              "flex size-10 items-center justify-center rounded-full",
-              "border border-white/10 bg-black/50 text-white",
-              "shadow-lg backdrop-blur-md",
-            )}
-          >
-            <ZoomIn className="size-4" />
-          </div>
-        </div>
-      </button>
-
-      <div
-        className={cn(
-          "pointer-events-none absolute inset-x-0 bottom-0 z-20",
-          "bg-linear-to-t from-black/80 via-black/35 to-transparent",
-          "px-3 pt-12 pb-3",
-          "transition-opacity duration-200",
-          isDeleting && "opacity-50",
-        )}
-      >
-        <p className="truncate text-xs font-medium text-white">{name}</p>
-
-        {itemSize}
-      </div>
-
-      {actions}
-      {deletingOverlay}
-    </div>
+      {confirmationDialog}
+    </>
   );
 };
 

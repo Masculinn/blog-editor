@@ -26,7 +26,7 @@ export function useEditorModal(): [
     const { title, content } = modalContent;
     return (
       <Dialog onOpenChange={onClose} modal defaultOpen>
-        <DialogContent>
+        <DialogContent className="border size-auto">
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
           </DialogHeader>

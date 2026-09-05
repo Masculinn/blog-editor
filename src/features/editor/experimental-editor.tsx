@@ -23,7 +23,7 @@ import {
   type EditorState,
   type SerializedEditorState,
 } from "lexical";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { ContentEditable } from "@/components/content-editable";
 
@@ -108,6 +108,15 @@ import { HR } from "@/components/editor/transformers/markdown-hr-transformer";
 import { IMAGE } from "@/components/editor/transformers/markdown-image-transformer";
 import { TABLE } from "@/components/editor/transformers/markdown-table-transformer";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { validateUrl } from "@/utils/editor/validateUrl";
 import {
@@ -118,6 +127,15 @@ import {
   TEXT_MATCH_TRANSFORMERS,
 } from "@lexical/markdown";
 import { CharacterLimitPlugin } from "@lexical/react/LexicalCharacterLimitPlugin";
+import {
+  BarChart3Icon,
+  ExternalLinkIcon,
+  ImageIcon,
+  ListTreeIcon,
+  TriangleAlertIcon,
+  XIcon,
+} from "lucide-react";
+import Link from "next/link";
 
 const PLACEHOLDER = "Press / to open up the commands";
 const MAX_LENGTH = 300;
@@ -258,7 +276,7 @@ export function ExperimentalEditor({
     <div
       className={cn(
         //650.5
-        "bg-background/65 size-full rounded-lg border shadow flex flex-col",
+        "bg-background/65 size-full rounded-lg border shadow flex flex-col relative",
         className,
       )}
     >
@@ -420,6 +438,160 @@ export function ExperimentalEditor({
           />
         </TooltipProvider>
       </LexicalExtensionComposer>
+      <EditorWarningModal />
+    </div>
+  );
+}
+
+const unavailableCommands = [
+  {
+    command: "Chart",
+    icon: BarChart3Icon,
+  },
+  {
+    command: "Image",
+    icon: ImageIcon,
+  },
+  {
+    command: "Details",
+    icon: ListTreeIcon,
+  },
+];
+
+export function EditorWarningModal() {
+  const [open, setOpen] = useState(true);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    closeButtonRef.current?.focus();
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
+  if (!open) {
+    return null;
+  }
+
+  return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: modal backdrop closes on click
+    <div
+      className="absolute inset-0 bottom-0 left-0 z-50 flex size-xl items-center justify-center overflow-y-auto bg-background/75 p-4 backdrop-blur-sm"
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) {
+          setOpen(false);
+        }
+      }}
+    >
+      <Card
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="editor-warning-title"
+        aria-describedby="editor-warning-description"
+        className="relative w-full max-w-lg gap-0 overflow-hidden rounded-3xl border-border bg-background py-0 shadow-2xl"
+        onMouseDown={(event) => event.stopPropagation()}
+        size="sm"
+      >
+        <Button
+          ref={closeButtonRef}
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={() => setOpen(false)}
+          aria-label="Close warning"
+          className="absolute top-4 right-4 z-20 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          <XIcon className="size-4" />
+        </Button>
+
+        <CardHeader className="px-6 py-6 pr-16 sm:px-8 sm:py-7 sm:pr-16">
+          <div className="flex items-start gap-4">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <TriangleAlertIcon className="size-5" />
+            </div>
+
+            <div className="space-y-2">
+              <Badge variant="primary" className="font-medium">
+                Editor limitation
+              </Badge>
+
+              <CardTitle
+                id="editor-warning-title"
+                className="text-xl tracking-tight"
+              >
+                Some commands are unavailable
+              </CardTitle>
+
+              <CardDescription
+                id="editor-warning-description"
+                className="max-w-md leading-6"
+              >
+                The following commands are currently unavailable in this editor.
+                Content containing them may not render or behave as expected.
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3 p-6 -mt-8">
+          <div className="grid grid-cols-3 gap-2">
+            {unavailableCommands.map(({ command, icon: Icon }) => (
+              <Card
+                key={command}
+                className="gap-3 rounded-xl bg-muted/30 py-2 shadow-none"
+              >
+                <CardContent className="flex flex-col items-center gap-2 px-2 text-center">
+                  <div className="flex size-9 items-center justify-center rounded-lg border bg-background text-muted-foreground">
+                    <Icon className="size-4" />
+                  </div>
+
+                  <span className="truncate text-xs font-medium text-foreground">
+                    {command}
+                  </span>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </CardContent>
+
+        <CardFooter className="flex flex-col-reverse gap-2 border-t bg-transparent px-6 py-5 sm:flex-row sm:justify-end sm:px-8">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setOpen(false)}
+          >
+            Continue to editor
+          </Button>
+
+          <Button
+            render={
+              <Link
+                href="https://github.com/Masculinn/blog-editor"
+                target="_blank"
+                rel="noopener noreferrer"
+              />
+            }
+            nativeButton={false}
+            className="gap-2"
+          >
+            See documentation
+            <ExternalLinkIcon className="size-4" />
+          </Button>
+        </CardFooter>
+      </Card>
     </div>
   );
 }

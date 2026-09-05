@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { LexicalEditor, NodeKey } from "lexical";
-import { ArrowUpRight, PlusIcon, Trash2Icon } from "lucide-react";
+import { PlusIcon, Trash2Icon } from "lucide-react";
 import { useId, useState, type JSX } from "react";
 import { INSERT_CHART_COMMAND, UPDATE_CHART_COMMAND } from "./chart-commands";
 import { ChartRenderer } from "./chart-renderer";
@@ -600,12 +600,12 @@ function ChartDialogBody({
           <ChartRenderer chart={chart} />
         </CardContent>
       </Card>
-
       <Button
         type="button"
-        size={"sm"}
+        size="default"
+        variant="success"
         disabled={isDisabled}
-        className="bottom-0 left-0 absolute"
+        className="bottom-0 left-0 absolute w-94 "
         onClick={() => {
           if (!isDisabled) {
             onSubmit(cloneChartPayload(chart));
@@ -613,7 +613,7 @@ function ChartDialogBody({
         }}
       >
         {submitLabel}
-        <ArrowUpRight className="size-4" />
+        <PlusIcon className="size-4" />
       </Button>
     </div>
   );

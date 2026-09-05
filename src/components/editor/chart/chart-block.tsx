@@ -110,7 +110,7 @@ export function ChartBlock({
       </BlockWithAlignableContents>
 
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="max-h-[92vh] sm:max-w-6xl ">
+        <DialogContent className="max-h-[92vh] sm:max-w-6xl border">
           <DialogHeader>
             <DialogTitle>Edit chart</DialogTitle>
           </DialogHeader>

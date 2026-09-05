@@ -1,5 +1,5 @@
 import { Toaster } from "@/components/ui/sonner";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, VT323 } from "next/font/google";
 import "./globals.css";
 
@@ -20,17 +20,36 @@ const cyberpunk = VT323({
 });
 
 export const metadata: Metadata = {
-  title: "Blog Editor",
-  description: "Blog Editor",
+  title: {
+    default: "justc0de_sessions | Editor",
+    template: "%s | justc0de_sessions",
+  },
+  description: "Create, edit, and manage your blog content.",
+  applicationName: "Blog Editor",
+  manifest: "/site.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: "Blog Editor",
+    statusBarStyle: "default",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    {
+      media: "(prefers-color-scheme: dark)",
+      color: "#09090b",
+    },
+  ],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${cyberpunk.variable} antialiased font-primary`}
+      className={`${geistSans.variable} ${geistMono.variable} ${cyberpunk.variable} font-primary antialiased`}
     >
-      <body className="min-h-full h-screen w-full ">
+      <body className="h-screen min-h-full w-full">
         {children}
         <Toaster richColors />
       </body>

@@ -29,29 +29,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { formatTime } from "@/utils/formatTime";
 import { FileTextIcon, LoaderCircleIcon, TrashIcon } from "lucide-react";
 import { useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import type { ToolComponentProps } from "../../types/tools.types";
-
-const dateFormatter = new Intl.DateTimeFormat("en", {
-  dateStyle: "medium",
-  timeStyle: "short",
-});
-
-function formatDate(value: string | null) {
-  if (!value) {
-    return "—";
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return dateFormatter.format(date);
-}
 
 export function ManagePosts({ render, title }: ToolComponentProps) {
   const [posts, setPosts] = useState<BlogWithoutContent[]>([]);
@@ -260,7 +242,9 @@ export function ManagePosts({ render, title }: ToolComponentProps) {
                         </TableCell>
 
                         <TableCell className="whitespace-nowrap px-4 py-3 text-muted-foreground">
-                          {formatDate(post.published_at)}
+                          {post.published_at
+                            ? formatTime(post.published_at)
+                            : "N/A"}
                         </TableCell>
 
                         <TableCell
@@ -358,13 +342,7 @@ function PostsTableSkeleton() {
           <TableHead className="h-11 w-24 px-4">Level</TableHead>
           <TableHead className="h-11 min-w-52 px-4">Tags</TableHead>
           <TableHead className="h-11 min-w-44 px-4">Published at</TableHead>
-
-          <TableHead
-            className={cn(
-              "sticky z-30 h-11 w-32 min-w-32",
-              "border-l px-4 text-center ",
-            )}
-          >
+          <TableHead className={cn("z-30 h-11 w-32 min-w-32")}>
             Actions
           </TableHead>
         </TableRow>
@@ -402,7 +380,7 @@ function PostsTableSkeleton() {
               <Skeleton className="h-4 w-32" />
             </TableCell>
 
-            <TableCell className="sticky right-0 z-10 border-l bg-background px-4 py-3">
+            <TableCell className="sticky right-0 z-10 border-l px-4 py-3">
               <div className="flex justify-end">
                 <Skeleton className="h-8 w-20" />
               </div>
