@@ -6,6 +6,7 @@ import { Tools } from "@/features/tools";
 import { withMDX } from "@/hoc/withMDX";
 import { withPost } from "@/hoc/withPost";
 import { withPostContent } from "@/hoc/withPostContent";
+import { withPostMeta } from "@/hoc/withPostMeta";
 import { cn } from "@/lib/utils";
 import { connection } from "next/server";
 
@@ -19,7 +20,7 @@ interface Props {
   searchParams: Promise<Partial<SearchParamsRecords>>;
 }
 
-const ArticleCover = withPost(_ArticleCover);
+const ArticleCover = withPostMeta(_ArticleCover);
 const ArticleContent = withPost(withMDX(_ArticleContent));
 const Editor = withPostContent(_Editor);
 
