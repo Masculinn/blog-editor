@@ -53,12 +53,12 @@ export function ChartBlock({
         format={format}
         className={{
           base: "group/chart relative my-6 rounded-xl border bg-card/60 p-4 shadow-sm transition-shadow",
-          focus: "ring-2 ring-primary ring-offset-2 ring-offset-background",
+          focus: "ring-1 ring-primary/80 ring-offset-2 ring-offset-accent/30",
         }}
       >
         {/** biome-ignore lint/a11y/noStaticElementInteractions: false positive */}
         <div className="relative" onDoubleClick={() => setIsEditOpen(true)}>
-          <div className="absolute right-0 top-0 z-10 flex translate-y-[-50%] gap-1 rounded-lg border bg-background/95 p-1 opacity-0 shadow-sm  transition-opacity group-hover/chart:opacity-100">
+          <div className="absolute right-0 top-0 z-10 flex translate-y-[-50%] gap-1 rounded-lg border bg-background/95 p-1 opacity-0 shadow-sm  transition-opacity group-hover/chart:opacity-100 group-focus-within/chart:opacity-100">
             <Tooltip>
               <TooltipTrigger
                 render={
@@ -94,7 +94,6 @@ export function ChartBlock({
 
                 <span className="sr-only">Delete chart</span>
               </TooltipTrigger>
-
               <TooltipContent>Delete chart</TooltipContent>
             </Tooltip>
           </div>

@@ -45,7 +45,12 @@ export const MdPre: FC<MdPreProps> = ({ lang, ...props }) => {
   const language = getLanguage(child);
 
   if (language === "chart") {
-    return <ChartRenderer chart={JSON.parse(code) as ChartPayload} />;
+    return (
+      <ChartRenderer
+        chart={JSON.parse(code) as ChartPayload}
+        isAnimationActive={false}
+      />
+    );
   }
   return (
     <div className="w-full my-4 flex justify-center relative overflow-y-hidden">

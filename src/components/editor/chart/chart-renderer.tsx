@@ -28,9 +28,14 @@ import type { ChartPayload } from "./chart-types";
 interface ChartRendererProps {
   chart: ChartPayload;
   className?: string;
+  isAnimationActive?: boolean;
 }
 
-export function ChartRenderer({ chart, className }: ChartRendererProps) {
+export function ChartRenderer({
+  chart,
+  className,
+  isAnimationActive,
+}: ChartRendererProps) {
   const config = Object.fromEntries(
     chart.series.map((series) => [
       series.dataKey,
@@ -78,6 +83,7 @@ export function ChartRenderer({ chart, className }: ChartRendererProps) {
 
           {chart.series.map((series) => (
             <Bar
+              isAnimationActive={isAnimationActive}
               key={series.dataKey}
               dataKey={series.dataKey}
               fill={series.color}
@@ -91,6 +97,7 @@ export function ChartRenderer({ chart, className }: ChartRendererProps) {
 
           {chart.series.map((series) => (
             <Area
+              isAnimationActive={isAnimationActive}
               key={series.dataKey}
               dataKey={series.dataKey}
               stroke={series.color}
@@ -106,6 +113,7 @@ export function ChartRenderer({ chart, className }: ChartRendererProps) {
 
           {chart.series.map((series) => (
             <Line
+              isAnimationActive={isAnimationActive}
               key={series.dataKey}
               dataKey={series.dataKey}
               stroke={series.color}

@@ -43,15 +43,16 @@ export function ConfirmationDialog({
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
-
         <AlertDialogFooter>
           <AlertDialogCancel disabled={disabled}>
             {cancelLabel}
           </AlertDialogCancel>
-
           <AlertDialogAction
             disabled={disabled}
-            onClick={onConfirm}
+            onClick={(e) => {
+              e.preventDefault();
+              onConfirm();
+            }}
             className={cn(
               variant === "destructive" &&
                 "bg-destructive text-destructive-foreground hover:bg-destructive/90",

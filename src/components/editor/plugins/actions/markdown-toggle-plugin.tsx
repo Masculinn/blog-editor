@@ -51,6 +51,7 @@ export function MarkdownTogglePlugin({
       allowInEditable: true,
       preventDefault: true,
       stopPropagation: true,
+      stopImmediatePropagation: true,
     },
   );
 

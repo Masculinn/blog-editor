@@ -6,17 +6,8 @@ import {
   type BlogWithoutContent,
 } from "@/app/actions/posts.action";
 import { PostDifficulty } from "@/components/blog/post-difficulty";
+import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { Modal, useModalTrigger } from "@/components/modal";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -68,7 +59,7 @@ function EditPostTrigger({ disabled }: { disabled: boolean }) {
   return (
     <Button
       type="button"
-      variant="outline"
+      variant="primary"
       size="sm"
       disabled={disabled}
       aria-haspopup="dialog"
@@ -85,6 +76,7 @@ function EditPostTrigger({ disabled }: { disabled: boolean }) {
 }
 
 export function ManagePosts({ render, title }: ToolComponentProps) {
+  const [confirmation, setConfirmation] = useState(false);
   const [posts, setPosts] = useState<BlogWithoutContent[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [postToDelete, setPostToDelete] = useState<BlogWithoutContent | null>(
@@ -281,7 +273,10 @@ export function ManagePosts({ render, title }: ToolComponentProps) {
                             variant="destructive"
                             size="sm"
                             disabled={isPending}
-                            onClick={() => requestDelete(post)}
+                            onClick={() => {
+                              setConfirmation(true);
+                              requestDelete(post);
+                            }}
                           >
                             {isDeleting ? (
                               <LoaderCircleIcon className="size-4 animate-spin" />
@@ -307,7 +302,30 @@ export function ManagePosts({ render, title }: ToolComponentProps) {
           </Table>
         )}
       </Modal>
-      <AlertDialog
+      <ConfirmationDialog
+        open={confirmation && postToDelete !== null}
+        onOpenChange={(open) => {
+          if (!open && !mutationRef.current) setPostToDelete(null);
+          setConfirmation(open);
+        }}
+        onConfirm={() => {
+          if (postToDelete) void handleDelete(postToDelete.id);
+        }}
+        description={
+          <>
+            This action cannot be undone. The post{" "}
+            <span className="font-medium text-foreground">
+              {postToDelete?.title}
+            </span>{" "}
+            will be permanently deleted.
+          </>
+        }
+        confirmLabel={isPending ? "Deleting..." : "Delete"}
+        variant="destructive"
+        disabled={isPending || !postToDelete}
+      />
+
+      {/* <AlertDialog
         open={postToDelete !== null}
         onOpenChange={(open) => {
           if (!open && !mutationRef.current) setPostToDelete(null);
@@ -343,7 +361,7 @@ export function ManagePosts({ render, title }: ToolComponentProps) {
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
-      </AlertDialog>
+      </AlertDialog> */}
     </>
   );
 }

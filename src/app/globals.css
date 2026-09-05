@@ -109,6 +109,7 @@
 
 .scrollbar-custom::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
   z-index: 999;
 }
 

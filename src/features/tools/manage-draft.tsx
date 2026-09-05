@@ -5,17 +5,8 @@ import viewDraftsAction, {
   publishDraftAction,
 } from "@/app/actions/drafts.action";
 import { PostDifficulty } from "@/components/blog/post-difficulty";
+import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { Modal, useModalTrigger } from "@/components/modal";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -69,7 +60,7 @@ function DraftsTableWrapper({ children }: { children: ReactNode }) {
   return (
     <div className="w-full px-4 pb-8 sm:px-6 lg:px-10 lg:pb-16">
       <div className="overflow-hidden rounded-2xl border bg-accent/20 shadow-sm">
-        <div className="scrollbar-custom max-h-[70dvh] w-full overflow-x-scroll overflow-y-auto overscroll-contain [&>div]:overflow-visible">
+        <div className="scrollbar-custom  max-h-[70dvh] w-full overflow-x-scroll overflow-y-auto overscroll-contain [&>div]:overflow-visible">
           {children}
         </div>
       </div>
@@ -83,7 +74,7 @@ function EditDraftTrigger({ disabled }: { disabled: boolean }) {
   return (
     <Button
       type="button"
-      variant="outline"
+      variant="primary"
       size="sm"
       disabled={disabled}
       aria-haspopup="dialog"
@@ -112,23 +103,16 @@ export function ManageDraft({ render, title }: ToolComponentProps) {
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const loadedRef = useRef(false);
-  const loadingRef = useRef(false);
   const mutationRef = useRef(false);
 
   async function loadDrafts() {
-    if (loadedRef.current || loadingRef.current) return;
-
-    loadingRef.current = true;
     setIsLoading(true);
 
     try {
       setDrafts(await viewDraftsAction(true));
-      loadedRef.current = true;
     } catch {
       toast.error("Failed to fetch drafts.");
     } finally {
-      loadingRef.current = false;
       setIsLoading(false);
     }
   }
@@ -162,7 +146,9 @@ export function ManageDraft({ render, title }: ToolComponentProps) {
     if (!confirmation || mutationRef.current) return;
 
     const { action, draftId } = confirmation;
+
     mutationRef.current = true;
+
     setPendingDraftId(draftId);
     setPendingAction(action);
 
@@ -229,7 +215,7 @@ export function ManageDraft({ render, title }: ToolComponentProps) {
                     {column.label}
                   </TableHead>
                 ))}
-                <TableHead className="sticky right-0 z-30 h-11 min-w-76 border-l  px-4 text-right text-xs font-semibold text-muted-foreground backdrop-blur">
+                <TableHead className="sticky right-0 z-30 h-11 min-w-76 border-l text-center text-xs font-semibold text-muted-foreground">
                   Actions
                 </TableHead>
               </TableRow>
@@ -285,8 +271,10 @@ export function ManageDraft({ render, title }: ToolComponentProps) {
                       <TableRow
                         aria-selected={isSelected}
                         className={cn(
-                          "group cursor-pointer transition-colors hover:bg-accent/20",
+                          "group transition-colors hover:bg-accent/20",
                           isSelected && "bg-accent/50",
+                          !canPublish &&
+                            "bg-destructive/15 hover:bg-destructive/20 cursor-pointer",
                         )}
                         onClick={() =>
                           setSelectedDraftId((current) =>
@@ -303,7 +291,7 @@ export function ManageDraft({ render, title }: ToolComponentProps) {
                               {draft.title}
                             </p>
                           ) : (
-                            <span className="text-muted-foreground">—</span>
+                            <EmptyRow />
                           )}
                         </TableCell>
                         <TableCell className="max-w-80 px-4 py-3">
@@ -315,14 +303,14 @@ export function ManageDraft({ render, title }: ToolComponentProps) {
                               {draft.description}
                             </p>
                           ) : (
-                            <span className="text-muted-foreground">—</span>
+                            <EmptyRow />
                           )}
                         </TableCell>
                         <TableCell className="px-4 py-3">
                           {draft.level !== null ? (
                             <PostDifficulty level={draft.level} />
                           ) : (
-                            <span className="text-muted-foreground">—</span>
+                            <EmptyRow />
                           )}
                         </TableCell>
                         <TableCell className="px-4 py-3">
@@ -339,10 +327,10 @@ export function ManageDraft({ render, title }: ToolComponentProps) {
                               ))}
                             </div>
                           ) : (
-                            <span className="text-muted-foreground">—</span>
+                            <EmptyRow />
                           )}
                         </TableCell>
-                        <TableCell className="whitespace-nowrap px-4 py-3 text-muted-foreground">
+                        <TableCell className="whitespace-nowrap px-4 py-3 text-muted-foreground font-secondary text-xs">
                           {draft.published_at
                             ? formatTime(draft.published_at)
                             : "N/A"}
@@ -368,7 +356,7 @@ export function ManageDraft({ render, title }: ToolComponentProps) {
                             </Button>
                             <Button
                               type="button"
-                              variant="primary"
+                              variant="success"
                               size="sm"
                               disabled={isPending || !canPublish}
                               onClick={() => requestPublish(draft.id)}
@@ -399,7 +387,7 @@ export function ManageDraft({ render, title }: ToolComponentProps) {
                                 <p className="text-sm font-medium text-destructive">
                                   This draft cannot be published.
                                 </p>
-                                <ul className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted-foreground">
+                                <ul className="flex flex-col gap-x-5 gap-y-1 text-xs text-muted-foreground">
                                   {issues.map((issue) => (
                                     <li
                                       key={issue}
@@ -422,56 +410,46 @@ export function ManageDraft({ render, title }: ToolComponentProps) {
           </Table>
         )}
       </Modal>
-      <AlertDialog
+      <ConfirmationDialog
         open={confirmation !== null}
         onOpenChange={(open) => {
           if (!open && !mutationRef.current) setConfirmation(null);
         }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {confirmation?.action === "delete" ? (
-                <>
-                  This will permanently delete{" "}
-                  <span className="font-medium text-foreground">
-                    {confirmationDraft?.title || "this draft"}
-                  </span>
-                  . This action cannot be undone.
-                </>
-              ) : (
-                <>
-                  This will publish{" "}
-                  <span className="font-medium text-foreground">
-                    {confirmationDraft?.title || "this draft"}
-                  </span>{" "}
-                  and remove it from your drafts.
-                </>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              disabled={isPending || !confirmationDraft}
-              onClick={(event) => {
-                event.preventDefault();
-                handleConfirm();
-              }}
-              className={cn(
-                confirmation?.action === "delete" &&
-                  "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-              )}
-            >
-              {isPending && (
-                <LoaderCircleIcon className="size-4 animate-spin" />
-              )}
-              {confirmation?.action === "delete" ? "Delete" : "Publish"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onConfirm={handleConfirm}
+        description={
+          confirmation?.action === "delete" ? (
+            <>
+              This will permanently delete{" "}
+              <span className="font-medium text-foreground">
+                {confirmationDraft?.title || "this draft"}
+              </span>
+              . This action cannot be undone.
+            </>
+          ) : (
+            <>
+              This will publish{" "}
+              <span className="font-medium text-foreground">
+                {confirmationDraft?.title || "this draft"}
+              </span>{" "}
+              and remove it from your drafts.
+            </>
+          )
+        }
+        confirmLabel={confirmation?.action === "delete" ? "Delete" : "Publish"}
+        variant={confirmation?.action === "delete" ? "destructive" : "default"}
+        disabled={isPending || !confirmationDraft}
+      />
     </>
+  );
+}
+
+function EmptyRow() {
+  return (
+    <div className="w-auto min-w-min items-start justify-center flex flex-col gap-0.5">
+      <span className="text-muted-foreground">N/A</span>
+      <span className="text-destructive text-xs block">
+        *Need attention to publish
+      </span>
+    </div>
   );
 }
