@@ -1,6 +1,7 @@
 ﻿"use server";
 
 import {
+  createIdentityToken,
   getRequestIdentity,
   IDENTITY_COOKIE_NAME,
   verifyIdentityToken,
@@ -18,6 +19,7 @@ import { cookies, headers } from "next/headers";
 
 const MAX_CONTENT_HASH_LENGTH = 65_536;
 const MAX_POSTS_PER_USER = 3;
+const IDENTITY_COOKIE_MAX_AGE = 60 * 60 * 24 * 30;
 
 export type CreateSmallTalkResult =
   | {
@@ -82,22 +84,35 @@ export async function createSmallTalkAction(
       };
     }
 
-    const identityToken = cookieStore.get(IDENTITY_COOKIE_NAME)?.value;
+    const existingToken = cookieStore.get(IDENTITY_COOKIE_NAME)?.value;
 
-    if (!identityToken) {
-      return {
-        success: false,
-        message: "Identity cookie is missing.",
-      };
-    }
-
-    const verifiedIdentity = await verifyIdentityToken(identityToken, identity);
+    let verifiedIdentity = existingToken
+      ? await verifyIdentityToken(existingToken, identity)
+      : null;
 
     if (!verifiedIdentity) {
-      return {
-        success: false,
-        message: "Request identity could not be verified.",
-      };
+      const token = await createIdentityToken(identity);
+
+      verifiedIdentity = await verifyIdentityToken(token, identity);
+
+      if (!verifiedIdentity) {
+        console.error("Newly created identity token could not be verified.");
+
+        return {
+          success: false,
+          message: "Request identity could not be established.",
+        };
+      }
+
+      cookieStore.set({
+        name: IDENTITY_COOKIE_NAME,
+        value: token,
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        path: "/",
+        maxAge: IDENTITY_COOKIE_MAX_AGE,
+      });
     }
 
     const { count, error: countError } = await db
