@@ -1,15 +1,20 @@
 ﻿"use server";
 
-import { revalidatePath } from "next/cache";
-import { cookies, headers } from "next/headers";
-
 import {
   getRequestIdentity,
   IDENTITY_COOKIE_NAME,
   verifyIdentityToken,
 } from "@/lib/auth";
 import { db } from "@/lib/db/server";
+import { docToHash } from "@/lib/serialization";
+import {
+  MAX_TITLE_LENGTH,
+  validateDocument,
+} from "@/lib/small-talk-validation";
 import { createSmallTalk } from "@/utils/db/create-small-talk";
+import type { SerializedDocument } from "@lexical/file";
+import { revalidatePath } from "next/cache";
+import { cookies, headers } from "next/headers";
 
 const MAX_CONTENT_HASH_LENGTH = 65_536;
 const MAX_POSTS_PER_USER = 3;
@@ -28,65 +33,73 @@ function isValidContentHash(value: unknown): value is string {
   return (
     typeof value === "string" &&
     value.startsWith("#doc=") &&
+    value.length > "#doc=".length &&
     value.length <= MAX_CONTENT_HASH_LENGTH
   );
 }
 
-function isValidTitle(value: unknown): value is string {
-  return typeof value === "string" && value.trim().length > 0;
-}
-
 export async function createSmallTalkAction(
-  contentHashed: string,
+  document: SerializedDocument,
   title: string,
 ): Promise<CreateSmallTalkResult> {
-  if (!isValidTitle(title)) {
+  if (typeof title !== "string" || !title.trim()) {
     return {
       success: false,
       message: "A title is required.",
     };
   }
 
-  if (!isValidContentHash(contentHashed)) {
-    return {
-      success: false,
-      message: "Invalid document payload.",
-    };
-  }
-
   const normalizedTitle = title.trim();
 
-  const requestHeaders = await headers();
-  const cookieStore = await cookies();
-
-  const identity = getRequestIdentity(requestHeaders);
-
-  if (!identity.ip || !identity.userAgent) {
+  if (normalizedTitle.length > MAX_TITLE_LENGTH) {
     return {
       success: false,
-      message: "Request identity could not be determined.",
+      message: `The title cannot exceed ${MAX_TITLE_LENGTH} characters.`,
     };
   }
 
-  const identityToken = cookieStore.get(IDENTITY_COOKIE_NAME)?.value;
+  const validationError = validateDocument(document);
 
-  if (!identityToken) {
+  if (validationError) {
     return {
       success: false,
-      message: "Identity cookie is missing.",
-    };
-  }
-
-  const verifiedIdentity = await verifyIdentityToken(identityToken, identity);
-
-  if (!verifiedIdentity) {
-    return {
-      success: false,
-      message: "Request identity could not be verified.",
+      message: validationError,
     };
   }
 
   try {
+    const [requestHeaders, cookieStore] = await Promise.all([
+      headers(),
+      cookies(),
+    ]);
+
+    const identity = getRequestIdentity(requestHeaders);
+
+    if (!identity.ip || !identity.userAgent) {
+      return {
+        success: false,
+        message: "Request identity could not be determined.",
+      };
+    }
+
+    const identityToken = cookieStore.get(IDENTITY_COOKIE_NAME)?.value;
+
+    if (!identityToken) {
+      return {
+        success: false,
+        message: "Identity cookie is missing.",
+      };
+    }
+
+    const verifiedIdentity = await verifyIdentityToken(identityToken, identity);
+
+    if (!verifiedIdentity) {
+      return {
+        success: false,
+        message: "Request identity could not be verified.",
+      };
+    }
+
     const { count, error: countError } = await db
       .from("small_talks")
       .select("id", {
@@ -108,6 +121,16 @@ export async function createSmallTalkAction(
       return {
         success: false,
         message: `You can only publish up to ${MAX_POSTS_PER_USER} posts.`,
+      };
+    }
+
+    const hash = await docToHash(document);
+    const contentHashed = hash.startsWith("#") ? hash : `#${hash}`;
+
+    if (!isValidContentHash(contentHashed)) {
+      return {
+        success: false,
+        message: "Invalid document payload.",
       };
     }
 

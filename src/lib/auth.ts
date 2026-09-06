@@ -66,8 +66,9 @@ export function isAdminIdentity(
 ): boolean {
   const adminCookieHeader = request.cookies.get("x-editor-admin")?.value;
   if (
-    process.env.NODE_ENV !== "production" ||
-    (Boolean(adminCookieHeader) && adminCookieHeader === process.env.ADMIN_KEY)
+    // process.env.NODE_ENV !== "production" ||
+    Boolean(adminCookieHeader) &&
+    adminCookieHeader === process.env.ADMIN_KEY
   ) {
     return true;
   }
