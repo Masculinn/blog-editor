@@ -7,7 +7,6 @@ import {
   verifyIdentityToken,
 } from "@/lib/auth";
 import { db } from "@/lib/db/server";
-import { docToHash } from "@/lib/serialization";
 import {
   MAX_TITLE_LENGTH,
   validateDocument,
@@ -168,5 +167,111 @@ export async function createSmallTalkAction(
       success: false,
       message: "Content could not be saved.",
     };
+  }
+}
+
+async function readBytes(
+  reader: ReadableStreamDefaultReader<Uint8Array>,
+): Promise<Uint8Array<ArrayBuffer>> {
+  const chunks: Uint8Array[] = [];
+  let totalLength = 0;
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+
+      if (done) break;
+
+      if (value !== undefined) {
+        chunks.push(value);
+        totalLength += value.length;
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  const result = new Uint8Array(totalLength);
+  let offset = 0;
+
+  for (const chunk of chunks) {
+    result.set(chunk, offset);
+    offset += chunk.length;
+  }
+
+  return result;
+}
+
+function toBase64Url(bytes: Uint8Array): string {
+  let binary = "";
+
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
+
+  return btoa(binary)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/g, "");
+}
+
+function fromBase64Url(value: string): Uint8Array<ArrayBuffer> {
+  const base64 = value.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = base64 + "=".repeat((4 - (base64.length % 4)) % 4);
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+
+  return bytes;
+}
+
+export async function docToHash(doc: SerializedDocument): Promise<string> {
+  const cs = new CompressionStream("gzip");
+  const writer = cs.writable.getWriter();
+
+  try {
+    const [, compressed] = await Promise.all([
+      writer
+        .write(new TextEncoder().encode(JSON.stringify(doc)))
+        .then(() => writer.close()),
+      readBytes(cs.readable.getReader()),
+    ]);
+
+    return `#doc=${toBase64Url(compressed)}`;
+  } finally {
+    writer.releaseLock();
+  }
+}
+
+export async function docFromHash(
+  hash: string,
+): Promise<SerializedDocument | null> {
+  const match = /^#doc=([A-Za-z0-9_-]+)$/.exec(hash);
+  const encoded = match?.[1];
+
+  if (!encoded) return null;
+
+  try {
+    const compressed = fromBase64Url(encoded);
+    const ds = new DecompressionStream("gzip");
+    const writer = ds.writable.getWriter();
+
+    try {
+      const [, decompressed] = await Promise.all([
+        writer.write(compressed).then(() => writer.close()),
+        readBytes(ds.readable.getReader()),
+      ]);
+
+      return JSON.parse(
+        new TextDecoder().decode(decompressed),
+      ) as SerializedDocument;
+    } finally {
+      writer.releaseLock();
+    }
+  } catch {
+    return null;
   }
 }
