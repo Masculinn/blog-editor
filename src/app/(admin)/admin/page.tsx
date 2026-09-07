@@ -3,6 +3,7 @@ import { ArticleContent as _ArticleContent } from "@/features/document-viewer/ar
 import { ArticleCover as _ArticleCover } from "@/features/document-viewer/article-cover";
 import { Editor as _Editor } from "@/features/editor";
 import { Tools } from "@/features/tools";
+import { EditorBackground } from "@/features/tools/background";
 import { withMDX } from "@/hoc/withMDX";
 import { withPost } from "@/hoc/withPost";
 import { withPostContent } from "@/hoc/withPostContent";
@@ -34,7 +35,8 @@ export default async function Page({ searchParams }: Props) {
   const draft = params.draft === "true";
 
   return (
-    <main className="w-full h-screen overflow-hidden items-center justify-center-safe py-16 px-36 flex flex-row">
+    <main className="w-full h-screen overflow-hidden items-center justify-center-safe py-16 px-36 flex flex-row relative isolate">
+      <EditorBackground />
       <Tools className="w-xl bg-accent/20" />
       <Editor
         id={postId}
@@ -45,7 +47,7 @@ export default async function Page({ searchParams }: Props) {
         )}
       />
       {isViewer && postId && (
-        <DocumentViewer className="w-5/12 h-full border-r border-y rounded-r-md relative">
+        <DocumentViewer className="w-5/12 h-full border-r border-y rounded-r-md relative bg-background/80 backdrop-blur-md">
           <ArticleCover id={postId} draft={draft} />
           <ArticleContent id={postId} draft={draft} />
         </DocumentViewer>

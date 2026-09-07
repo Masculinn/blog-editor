@@ -1,4 +1,5 @@
-﻿import { CreateDraft } from "@/features/tools/create-draft";
+﻿import { Backgrounds } from "@/features/tools/background";
+import { CreateDraft } from "@/features/tools/create-draft";
 import { ManageDraft } from "@/features/tools/manage-draft";
 import { ManagePosts } from "@/features/tools/manage-posts";
 import { MediaLibrary } from "@/features/tools/media-library";
@@ -111,6 +112,24 @@ export default [
       shadow:
         "group-hover:shadow-orange-500/15 group-focus-visible:shadow-orange-500/20",
       text: "group-hover:text-orange-400 group-focus-visible:text-orange-400",
+    },
+  },
+  {
+    id: "backgrounds",
+    title: "Choose Background",
+    img: "/app/image-collection.webp",
+    Component: Backgrounds,
+    accent: {
+      selected:
+        "data-[selected=true]:bg-violet-500/10 data-[selected=true]:ring-2 data-[selected=true]:ring-violet-500",
+      focus: "focus-visible:ring-violet-500",
+      surface:
+        "group-hover:bg-violet-500/8 group-focus-visible:bg-violet-500/10",
+      border:
+        "group-hover:border-violet-400/50 group-focus-visible:border-violet-400/70",
+      shadow:
+        "group-hover:shadow-violet-500/15 group-focus-visible:shadow-violet-500/20",
+      text: "group-hover:text-violet-400 group-focus-visible:text-violet-400",
     },
   },
 ] as const satisfies readonly Tool[];

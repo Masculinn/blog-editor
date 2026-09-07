@@ -44,22 +44,24 @@ export function ConfirmationDialog({
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={disabled}>
+          <AlertDialogCancel disabled={disabled} variant="ghost">
             {cancelLabel}
           </AlertDialogCancel>
-          <AlertDialogAction
-            disabled={disabled}
-            onClick={(e) => {
-              e.preventDefault();
-              onConfirm();
-            }}
-            className={cn(
-              variant === "destructive" &&
-                "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-            )}
-          >
-            {confirmLabel}
-          </AlertDialogAction>
+          {confirmLabel && (
+            <AlertDialogAction
+              disabled={disabled}
+              onClick={(e) => {
+                e.preventDefault();
+                onConfirm();
+              }}
+              className={cn(
+                variant === "destructive" &&
+                  "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+              )}
+            >
+              {confirmLabel}
+            </AlertDialogAction>
+          )}
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
