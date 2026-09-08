@@ -1,305 +1,232 @@
-# Editor App
+![Ultimate Blog Editor App](/public/editor-app-campaign.png)
 
-A modern, extensible rich-text editor built at the top of **Next.js**, **React**, **TypeScript**, and **Lexical**.
+I always thought that using our own custom solutions over the ready ones is not necessary but genuine idea because we face with an unknown in other words **real challenge.** I used to write my articles using [Obsidian](https://obsidian.md/) and manually update the DB so far.
 
-Aimed at providing a responsive document-editing experience with modular toolbar controls, rich formatting, custom editor nodes, keyboard interaction, and a component architecture that can be extended without coupling individual editor features together.
+It turns out actively using this app to write and manage my technical articles. Just like this one 😅
 
-**This project is primarily tailored for my personal use**, but it is also intended to serve as a reference for others interested in the editor architecture and development of editor features. It serve as a starting point for building custom editor applications with its highly modular architecture and extensibility. Just like a puzzle box, it can be customized to fit your needs.
+## Introduction
 
-I am actively using this editor to write my technical articles about the web. I hope you will find it useful because it's pretty much everything you might need when transforming the `.md` into a `.mdx` where it can be used to build SSG sites with highly performant static rendering.
+The **open-source Ultimate Blog Editor App** brings together the Markdown editing experience of [Obsidian](https://obsidian.md/) and the publishing flexibility of [Substack](https://substack.com/) in a single workspace.
 
-> **Status:** Active development. APIs, editor plugins, and internal component structure may change as the editor evolves.
+_The stack doesn't cost a penny._ [_Supabase_ ](https://supabase.com/)_and_ [_Netlify_](https://www.netlify.com/) _free plans are suitable. It won't let you down halfway through even at scale._
 
----
+**[Try out limited version now!](https://justcodesessions.netlify.app/)**
 
-## Overview
+That said, it comes with amazing features listed down below:
 
-The project uses [Lexical](https://lexical.dev/) as its editor framework and Next.js as the application platform.
+- **Rich-Text Editing**
+- **Blazing Fast Editing**
+- **Markdown Editing Mode**
+- **MDX Content Viewer**
+- **Dynamic Error Display for Compiled MDX Source**
+- **Media Library**
+- **Image Optimization (converting primary formats to `.webp`)**
+- **Extensive Autocomplete In English**
+- **Custom Content Components (including charts from `recharts`)**
+- **Command Center**
+- **50+ Predefined Eye Soothing Backgrounds**
+- **Draft & Post Management**
+- **Document Serialization and Compression**
+- **URL-Based Document State**
+- **Comprehensive Keyboard Shortcuts With Full Accessibility Support**
+- **Dialogs, Sheets, Shared Controls**
+- **Feedback and Cloud Syncing**
+- **Backend Integration**
 
-Rather than implementing the editor as one large component, functionality is separated into editor plugins, toolbar controls, shared context, hooks, and UI primitives.
+**This project is primarily tailored for my personal use**, but it is also intended to serve as a reference for others interested in the editor architecture and development of editor features. It's so easy to change the serialized custom components and allowing you to curate them as you wish.
 
-The current development focus is on:
+It serve as a starting point for building custom editor applications with its highly modular architecture and extensibility. Just like a puzzle box, it can be customized to fit your needs.
 
-- predictable Lexical state management;
-- reliable selection synchronization;
-- modular toolbar plugins;
-- rich-text formatting;
-- custom node interaction;
-- image selection and keyboard handling;
-- reducing unnecessary React memoization;
-- compatibility with the React Compiler;
-- clean TypeScript APIs;
-- maintainable editor component boundaries.
+| tech                   | version  | purpose                                                                                                       |
+| ---------------------- | -------- | ------------------------------------------------------------------------------------------------------------- |
+| Next.js                | ≥16      | Application framework, routing, server rendering, and server actions. (Not with the cache components enabled) |
+| React / React DOM      | >19      | Component-based UI and browser rendering.                                                                     |
+| TypeScript             | ≥5.0     | Static typing across the application.                                                                         |
+| Lexical                | ≥0.49.0  | Rich-text editing, editor state, and Markdown integration.                                                    |
+| Supabase JS            | ≥2.112.3 | Client for backend services and database operations.                                                          |
+| Tailwind CSS           | ≥4.0.0   | Utility-based styling and responsive layouts.                                                                 |
+| shadcn                 | ≥4.19.0  | Tooling for adding and managing UI components.                                                                |
+| Base UI                | ≥1.7.0   | Accessible React primitives for UI components.                                                                |
+| next-mdx-remote-client | ≥2.1.12  | Rendering MDX content with React components.                                                                  |
+| React Hook Form        | ≥7.87.0  | Form state management and submission handling.                                                                |
+| Zod                    | ≥4.5.4   | Schema validation and type inference.                                                                         |
 
----
+My experience on very first blog using this editor was pretty good actually you can write your thoughts abot the repo maybe some improvements down the blog [using this link](https://burakdev.com/blogs/i-have-built-an-ultimate-blogging-workspace-and-open-sourced-it)
 
-## Tech Stack
+For inspiration purposes you can always [check out my Github portfolio repo slug](https://github.com/Masculinn/burakdev/blob/main/src/pages/blogs/%5Bslug%5D.tsx) to see that how I made the integration for my SSG rendered Next.js personal blog.
 
-| Technology             | Purpose                            |
-| ---------------------- | ---------------------------------- |
-| **Next.js**            | Application framework              |
-| **React**              | UI and component model             |
-| **TypeScript**         | Static typing                      |
-| **Lexical**            | Rich-text editor engine            |
-| **@lexical/react**     | React integration for Lexical      |
-| **@lexical/selection** | Selection and text-style utilities |
-| **@lexical/utils**     | Lexical utility functions          |
-| **Lucide React**       | Interface icons                    |
-| **Biome**              | Formatting and static checks       |
+## Motivation
 
-The UI layer also uses reusable primitives such as buttons and dropdown menus, allowing editor-specific controls to remain separate from lower-level interface components.
+Of course, those who rely on others' solutions rather than coming up with their own in 2026 are not fools or timid. What I mean is that whatever [Substack](https://substack.com/) or [Obsidian](https://obsidian.md/) provides is maybe convenient enough for you.
 
----
+Therefore you might not end up with going further, it's totally up to you.
 
-## Editor Architecture
+_As far as I am concerned, these techs don't meet my expectations on their own, but would meet them if they were combined, if you're the one looking from the same window like me then you've come to the right place._
 
-Editor App follows Lexical's plugin-oriented model.
+## Architecture
 
-Conceptually, the application is structured around:
+The app follows a modular architecture that separates editing, document previews, and content management into dedicated feature areas. Shared UI components, an extensible Lexical editor, and centralized server actions keep the code organized and make it easier to maintain and expand. Respected to DRY principles heavily.
 
-```text
-Editor
-├── Lexical configuration
-├── Editor state
-├── Toolbar context
-├── Toolbar plugins
-│   ├── Text formatting
-│   └── Additional formatting controls
-├── Editor plugins
-├── Custom nodes
-│   └── Interactive media/image nodes
-├── Selection synchronization
-├── Keyboard commands
-└── Shared UI components
+- **Admin entry point(mainland):** `app/(admin)/admin/page.tsx` provides the admin route, with access-control logic organized in `proxy.ts` and `lib/auth.ts`.
+- **Feature modules:** `features/` separates the editor, document viewer, and management tools for drafts, posts, and the media library.
+- **Extensible editor:** `components/editor/` organizes Lexical nodes, plugins, extensions, toolbars, and Markdown transformers. Charts and Contents have dedicated modules for editing, rendering, and conversion.
+- **MDX rendering:** `components/mdx/` defines content components and processing plugins, while `lib/mdx/` handles serialization and related error handling.
+- **Server and DB layer:** `app/actions/` groups content operations, supported by the server database client in `lib/db/` and generated database types in `types/`.
+- **State and validation:** `store/document.store.ts` holds document state, `providers/tools-provider.tsx` supplies shared tool context, and `schema/` defines draft validation.
+- **Shared interface:** `components/ui/`, reusable modals, and `hooks/` provide consistent controls, dialogs, keyboard shortcuts, and URL parameter handling.
+
+The working tree is pretty straightforward and scalable with it's modular design:
+
+```javascript
+src/
+├── app/
+│   ├── (admin)/admin/    # Entry point
+│   └── actions/         # Server-side content operations
+├── features/
+│   ├── editor/          # Editor workspace
+│   ├── document-viewer/ # Content preview
+│   └── tools/           # Drafts, posts, and media management
+├── components/
+│   ├── editor/          # Lexical nodes, plugins, and extensions
+│   ├── mdx/             # MDX rendering components
+│   └── ui/              # Shared interface components
+├── lib/                 # Auth, database, and serialization
+├── store/               # Document state
+├── providers/           # Shared tool context
+├── hooks/               # Reusable React hooks
+├── hoc/                 # Content and metadata wrappers
+├── schema/              # Validation schemas
+├── types/               # Application and database types
+├── constants/           # Tool and editor configuration
+├── utils/               # Supporting utilities
+└── proxy.ts             # Request interception
 ```
 
-A core design goal is to keep individual editor features independent.
+## Installation
 
-For example, a toolbar control should generally:
-
-1. read the current Lexical selection;
-2. derive the formatting state it needs;
-3. dispatch or apply an editor update;
-4. synchronize itself when the selection changes.
-
-It should not need to understand the implementation of unrelated toolbar controls.
-
----
-
-## Lexical Integration
-
-The editor makes extensive use of Lexical's command and selection APIs, including concepts such as:
-
-```ts
-$getSelection();
-$isRangeSelection();
-$isNodeSelection();
-$setSelection();
-```
-
-and editor commands such as:
-
-```ts
-CLICK_COMMAND;
-DRAGSTART_COMMAND;
-KEY_ENTER_COMMAND;
-KEY_ESCAPE_COMMAND;
-SELECTION_CHANGE_COMMAND;
-```
-
-Lexical command registration is composed where appropriate with:
-
-```ts
-mergeRegister(...)
-```
-
-This keeps setup and cleanup of related command listeners together.
-
----
-
-## Toolbar System
-
-Toolbar functionality is implemented as independent React components/plugins instead of placing all formatting logic inside the editor root.
-
-Shared editor state can be coordinated through the toolbar context and editor update hooks.
-
-Representative internal modules include:
-
-```text
-components/
-├── toolbar-context
-├── use-update-toolbar
-└── ui/
-    ├── button
-    └── dropdown-menu
-```
-
-This arrangement allows toolbar plugins to focus on a single editor concern.
-
----
-
-## Selection Handling
-
-Selection is treated as editor state rather than ordinary DOM state.
-
-The project distinguishes between Lexical selection types when implementing editor behavior:
-
-### Range selections
-
-Used for normal text selections and cursor-based formatting.
-
-```ts
-$isRangeSelection(selection);
-```
-
-### Node selections
-
-Used when interacting with custom nodes such as media or images.
-
-```ts
-$isNodeSelection(selection);
-```
-
-This distinction is particularly important for keyboard handling, click behavior, deletion, focus management, and custom node interactions.
-
----
-
-## Interactive Nodes
-
-The editor supports interaction patterns for non-text editor nodes.
-
-These components can integrate with:
-
-```ts
-useLexicalComposerContext();
-useLexicalEditable();
-useLexicalNodeSelection();
-```
-
-This enables a custom node component to understand:
-
-- the current Lexical editor instance;
-- whether the editor is editable;
-- whether the node itself is selected;
-- selection changes;
-- click interactions;
-- keyboard commands;
-- drag operations.
-
-Node-specific behavior is kept connected to Lexical's editor state instead of maintaining a second independent selection system in the DOM.
-
----
-
-## React Compiler
-
-The project is designed with the **React Compiler** enabled.
-
-Because of that, manual memoization is not added automatically to every component or callback.
-
-The codebase favors ordinary React code unless referential stability is actually required by:
-
-> _It's worth to mention that due to using memoization pretty much everywhere in the project, some edge cases may cause unexpected bugs. So I am actively working on ensuring the memoizationsare stable enough to keep the app performant across the app. I will be so glad if in case you folks find one and create an issue ticket, would be great for anyone ✨_
-
-- an effect dependency;
-- an external subscription;
-- command registration;
-- a third-party API;
-- or another concrete identity-sensitive boundary.
-
-This avoids unnecessary combinations of:
-
-```ts
-useMemo(...)
-useCallback(...)
-memo(...)
-```
-
-when the compiler or normal React rendering model can handle the component correctly without them.
-
-Memoization is therefore treated as a correctness or measurable performance tool rather than a default coding convention.
-
----
-
-### React Compiler
-
-```ts
-reactCompiler: true;
-```
-
-Allows the project to take advantage of compiler-driven React optimizations.
-
-### Typed Routes
-
-```ts
-typedRoutes: true;
-```
-
-Provides stronger TypeScript checking for application routes.
-
-### Partial Prefetching
-
-```ts
-partialPrefetching: true;
-```
-
-Enables the corresponding Next.js navigation optimization.
-
-### Cache Components
-
-```ts
-cacheComponents: true;
-```
-
-Uses Next.js component caching infrastructure.
-
-Some of these capabilities may depend on the installed Next.js version and can evolve between framework releases.
-
----
-
-## TypeScript
-
-The project is written in TypeScript and favors explicit types around editor boundaries.
-
-Examples include Lexical types such as:
-
-```ts
-LexicalCommand;
-LexicalEditor;
-NodeKey;
-BaseSelection;
-```
-
-and React types where appropriate:
-
-```ts
-JSX;
-```
-
-The intent is to preserve type information through editor commands, nodes, plugins, and component props rather than falling back to broad `any` types.
-
----
-
-## Development
-
-### Requirements
+### 1. Requirements
 
 You will need:
 
-- Node.js
+- Node.js >= 22
 - npm
 
 Clone the repository:
 
-```bash
+```javascript
 git clone https://github.com/Masculinn/blog-editor.git
 cd blog-editor
 ```
 
 Install dependencies:
 
-```bash
+```javascript
 npm install
 ```
+
+> **⚠️ CAUTION: Before continuing further you must configure the DB layer. Do not attempt running the dev server unless all the database environments and tables are configured properly. See instructions below to be able to start the dev server.**
+
+---
+
+### 2. Database Configuration
+
+Visit [Supabase auth page ](https://supabase.com/dashboard/sign-up)to signup or if you have already an account simply login. Create a new organization and choose your own namespace. After that, create a table called
+`blog_posts` and paste the given [PostgreSQL ](https://www.postgresql.org/)snippet below into the SQL Editor section placed in the sidebar of your dashboard.
+
+This will create our very first table for our articles.
+
+```sql
+create table public.blog_posts (
+  id serial not null,
+  title text not null default 'title'::text,
+  content text not null,
+  tags text[] not null,
+  published_at timestamp with time zone null default now(),
+  description text not null default 'I AM JOHN DOE BUT CANT PROVE IT'::text,
+  banner_image text not null default 'MY_DEFAULT_IMAGE_URL'::text,
+  level numeric not null default '1'::numeric,
+  constraint blog_posts_pkey primary key (id),
+  constraint blog_posts_level_check check ((level > (0)::numeric))
+) TABLESPACE pg_default;
+```
+
+> After configuring the DB and ensuring everything is stable, you can curate the predefined tables however you want.
+
+Next, we need the secondary table for our article candidates that isn't actually ready to be considered under the category of posts. I call it **draft.**
+
+Paste the given snippet below to create **draft** table into the SQL Editor as well.
+
+```sql
+create table public.drafts (
+  id serial not null,
+  title text not null default 'title'::text,
+  content text null default 'The quick brown fox jumps over the lazy dog.'::text,
+  tags text[] null,
+  published_at timestamp with time zone null default now(),
+  description text null,
+  banner_image text null,
+  level numeric not null default '1'::numeric,
+  constraint drafts_pkey primary key (id),
+  constraint drafts_level_check check ((level > (0)::numeric))
+) TABLESPACE pg_default;
+```
+
+> These tables are almost identical. The only difference is the partially defined columns, which are in response to the separation of concerns principle.
+
+Finally, we're one step away to be done on DB configuration which is creating a bucket called **banner**. To do that, move into the _storage page_ via dashboard > sidebar and create a new bucket called **banner**.
+
+![storage-tutorial](https://ytpmpkgcjlcdidphswzv.supabase.co/storage/v1/object/public/banner/screenshot-2026-09-07-000037-9c56f442.webp)
+
+I'm currently using my bucket publicly because I treat my bucket as an external CDN point for my media elements in my site — idc how unsafe it is so if you think that things in it must remain private then you can leave the toggle state as-is like the one showed above.
+
+### 3. Environment Configuration
+
+Create a brand new env file called `.env` at the root of your project and get the corresponding values of your env keys from project settings of your Supabase organization.
+
+```bash
+SUPABASE_URL = YOUR_PROJECT_URI;
+SUPABASE_SERVICE_ROLE_KEY = YOUR_SERVICE_ROLE_KEY;
+BUCKET_NAME = banner;
+
+APP_ENCRYPT_TOKEN = YOUR_APP_BASE64_PSW;
+
+MY_IP = YOUR_IP;
+MY_USER_AGENT = TRIMMED_VERSION_OF_YOUR_USER_DEVICE_INFO;
+
+ADMIN_KEY = YOUR_BASE64_ADMIN_KEY;
+```
+
+At first glance to the project, you might find yourself skeptical for all those weird things. As I mentioned earlier, current architecture that are in the repo is considered to personal use. So for demo purposes, everything under the root page is removable because I've created all those extensions to demonstrate and test for you folks.
+
+\*That said, some of the env keys other than what's belong to the Supabase is used to authenticate the user **with a particular rate limiter based on digital footprint of the user\***
+_as I haven't implemented a proper auth for the user cause I found myself in boredom while doing so and YES — I reinvented the wheel 🫠_
+
+The values broken down below are presented for the demo page so after configuration you can remove those keys and pretty much every piece of the code where it's being used **BUT FOR LOCAL DEVELOPMENT!**
+
+- `APP_ENCRYPT_TOKEN`
+- `MY_IP`
+- `MY_USER_AGENT`
+- `ADMIN_KEY`
+
+> If you do like to self-host via Netlify or Vercel on free plan, leave everything as-is.
+
+### 4. Database Types
+
+The app uses the typegen for DB types for in particular for React actions. Everything in the `package.json` file is configured for you to invoke codegen but before doing so, you must login to your Supabase account via CLI
+
+Run the CLI command to login your account in your IDE.
+
+```javascript
+npx supabase login
+```
+
+This is going to open up a new window inside of your browser to SSO. Follow the instructions given in the CLI to login then run the following command to fetch the DB types
+
+```javascript
+npm run db:types
+```
+
+### 5. Running the App
 
 Start the development server:
 
@@ -307,252 +234,136 @@ Start the development server:
 npm run dev
 ```
 
-The current development script starts Next.js on port `36805`:
-
-```text
-http://localhost:36805
-```
-
----
-
-## Available Scripts
-
-### Development
+The current development script starts Next.js on port `36805`:
 
 ```bash
-npm run dev
+http://localhost:36805/admin
 ```
 
-Runs:
+That's pretty much everything so far to run the app on locally, it takes max 5 minutes from scratch, I think it's fair.
+
+## Tidy Up The Repo — important
+
+The app root `http://localhost:36805/` might be a junk for you so in order to keep things fresh for your personal use not mine, you can always remove imported components/files.
+
+I've added a specific npm command to wipe the staffs out.
+
+Go the the file under `/src/app/page.tsx` and replace it's content with plain function export:
+
+```tsx
+export default function Page() {
+  return <div>Everything clean</div>;
+}
+```
+
+As well as `src/proxy.ts` with:
+
+```tsx
+import { NextResponse, type NextRequest } from "next/server";
+
+export async function proxy(_: NextRequest): Promise<NextResponse> {
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+  ],
+};
+```
+
+Afterwards run the command:
 
 ```bash
-next dev -p 36805
+npm run check
 ```
 
-### Production build
+This will break down unused functions that you can easily delete later on depending on your needing.
 
-```bash
-npm run build
-```
+## Usage & Writing Your First Article
 
-Runs:
+#### Important Note for Unix-Based OS Developers
 
-```bash
-next build
-```
+It's worth to mention that the **Unix**-based users like mac or linux OS, a bit differs in particular scenarios such as key bindings. If you're the one, you may want to configure the app shortcuts in a way that the modifier key `meta` handles the shortcut over `Control` because initially it's defined to `Control`
 
-### Production server
-
-```bash
-npm run start
-```
-
-Runs:
-
-```bash
-next start
-```
-
-### Static checks
-
-```bash
-npm run lint
-```
-
-Runs:
-
-```bash
-biome check
-```
-
-### Formatting
-
-```bash
-npm run format
-```
-
-Runs:
-
-```bash
-biome format --write
-```
-
----
-
-## Development Principles
-
-### Keep Lexical updates inside Lexical
-
-Editor mutations should happen through:
+Simply find the components in your IDE search with a match for the hook imported as:
 
 ```ts
-editor.update(() => {
-  // Lexical state mutation
+import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut";
+```
+
+And configure like:
+
+```tsx
+useKeyboardShortcut(["Meta", "/"], () => {
+  /* INTERNAL CALLBACK */
 });
 ```
 
-rather than by directly manipulating content in the DOM.
+---
 
-### Treat selections explicitly
+### Command Center & Shortcuts
 
-Before performing a formatting operation, the implementation should verify the expected selection type.
+> Consider `Ctrl` as `Meta` please don't make me write this.
 
-For example:
+Press `Ctrl + K` to toggle the Command Center, even while editing. Search for a tool, navigate with `↑` / `↓`, and press `Enter` to open its modal. Selecting a tool automatically closes the Command Center.
 
-```ts
-const selection = $getSelection();
+| Shortcut   | Action                    |
+| ---------- | ------------------------- |
+| `Ctrl + K` | Toggle the Command Center |
+| `↑` / `↓`  | Navigate tools            |
+| `Enter`    | Open the selected tool    |
+| `Esc`      | Dismiss the active dialog |
 
-if (!$isRangeSelection(selection)) {
-  return;
-}
-```
+Available tools: **View Posts**, **View Drafts**, **Create Draft**, **Media Library**, **Manage Drafts**, and **Manage Posts**.
 
-Node-oriented operations should similarly validate node selections where required.
-
-### Keep toolbar state derived
-
-Toolbar UI should represent the current editor state rather than becoming an independent source of truth for document formatting.
-
-### Separate editor behavior from UI primitives
-
-Components such as buttons and dropdown menus should remain generic.
-
-Lexical-specific behavior belongs in editor plugins and toolbar components.
-
-### Prefer focused plugins
-
-A plugin should have a clear responsibility rather than becoming a global controller for unrelated editor behavior.
-
-### Avoid speculative memoization
-
-`useMemo`, `useCallback`, and `React.memo` should be introduced when they solve an actual identity or performance problem—not solely because a function or value is recreated during rendering.
-
-### Clean up editor registrations
-
-Lexical commands and listeners must be unregistered when their owning React component is disposed.
-
-Where multiple registrations belong together, `mergeRegister()` is preferred.
+| Shortcut   | Purpose                                                                                                                                                                                                |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Ctrl + M` | Toggle between rich-text editing and Markdown mode. [Source](https://github.com/Masculinn/blog-editor/blob/main/src/components/editor/plugins/actions/markdown-toggle-plugin.tsx)                      |
+| `Ctrl + /` | Show or hide the document viewer. Requires a selected post or draft. [Source](https://github.com/Masculinn/blog-editor/blob/main/src/features/document-viewer/toggle-viewer.tsx)                       |
+| `Ctrl + S` | Save content changes to the selected draft or post while the document viewer is mounted. [Source](https://github.com/Masculinn/blog-editor/blob/main/src/features/document-viewer/article-content.tsx) |
 
 ---
 
-## Example Plugin Pattern
+If you'd like to publish the posts powered by SSG render power in Next.js Pages router that maximizes your SEO by god knows how many times, you can [take a look at my blog app's Github Repo ](https://github.com/Masculinn/burakdev/blob/main/src/pages/blogs/%5Bslug%5D.tsx)to inspire by.
 
-A typical editor plugin obtains the Lexical instance through the composer context:
+## Deployment
 
-```tsx
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { $getSelection, $isRangeSelection } from "lexical";
+Please ensure that the DB configuration has done properly before moving on this part
 
-export function ExamplePlugin() {
-  const [editor] = useLexicalComposerContext();
+#### Deploy To Netlify
 
-  function applyChange() {
-    editor.update(() => {
-      const selection = $getSelection();
+The app may fail during the build and to prevent this add 2 more env key-pair to the env file alongside the existing keys to prevent this behaviour in your Netlify dashboard. Although I don't know the reason, I found this patch due to an error caused by its external systems.
 
-      if (!$isRangeSelection(selection)) {
-        return;
-      }
-
-      // Apply the editor operation here.
-    });
-  }
-
-  // Render plugin UI or register editor behavior.
-  return null;
-}
+```javascript
+SECRETS_SCAN_ENABLED=false
+SECRETS_SCAN_OMIT_PATHS=.netlify/.next/cache
 ```
-
-More complex plugins can additionally register Lexical commands, listen for selection changes, or interact with custom nodes.
 
 ---
 
-## Project Direction
-
-Editor App is being developed as an editor foundation rather than a single-purpose text area.
-
-The architecture is intended to make it practical to continue adding features such as:
-
-```text
-Formatting
-├── Typography
-├── Block formatting
-├── Lists
-├── Links
-└── Additional text styles
-
-Content
-├── Images
-├── Media
-└── Custom Lexical nodes
-
-Interaction
-├── Keyboard commands
-├── Node selection
-├── Drag handling
-└── Context-sensitive toolbar state
-
-Application
-├── Document persistence
-├── Import/export
-└── Extended document workflows
-```
-
-Features listed in this section describe the architectural direction and should not necessarily be interpreted as completed functionality.
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/Masculinn/blog-editor)
 
 ---
+
+#### Deploy to Vercel
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Masculinn/blog-editor)
 
 ## Contributing
 
-The project is currently under active development.
+Contributions are welcome! Open an issue to report a bug, suggest a feature, or discuss a significant change before starting.
 
-When contributing:
+1. Fork the repository and create a branch for your changes.
+2. Install dependencies with `npm install`.
+3. Start the development server with `npm run dev`.
+4. Make your changes, keeping them focused and consistent with the existing architecture.
+5. Run `npm run check` and `npm run build` before submitting.
+6. Open a pull request describing the changes, any related issues, and how you tested
+7. them. Include screenshots for UI updates.
 
-1. keep editor features isolated where practical;
-2. preserve Lexical's editor-state model;
-3. avoid direct DOM mutations for document state;
-4. maintain strict TypeScript typing;
-5. remove unnecessary abstractions rather than adding them preemptively;
-6. use manual React memoization only when it serves a concrete purpose;
-7. run Biome checks before submitting changes.
-
-Before opening a pull request:
-
-```bash
-npm run lint
-npm run build
-```
-
-Formatting can be normalized with:
-
-```bash
-npm run format
-```
-
----
-
-## Repository Status
-
-The editor architecture is still being refined, particularly around complex interactions between React lifecycle behavior and Lexical's command, node, and selection systems.
-
-Expect refactoring while those APIs are stabilized.
-
-Bug reports and focused improvements are welcome.
-
----
+Keep credentials and environment files out of your commits.
 
 ## Acknowledgements
 
-Editor App is built on top of the excellent open-source work provided by:
-
-- [Lexical](https://lexical.dev/)
-- [React](https://react.dev/)
-- [Next.js](https://nextjs.org/)
-- [Lucide](https://lucide.dev/)
-- [Biome](https://biomejs.dev/)
-
----
-
-## License
-
-MIT license is currently specified for this project.
+Huge thanks to [this repo ](https://github.com/htmujahid/shadcn-editor)and its hard-working contributors for allowing me to curate their Shadcn Editor! Lovely set of backgrounds are also scraped from [patterns craft](https://patterncraft.fun/) definitely worth to add in your checklist.
