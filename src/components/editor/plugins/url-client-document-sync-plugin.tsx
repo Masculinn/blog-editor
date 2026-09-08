@@ -5,6 +5,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { useDebounce } from "@/hooks/use-debounce";
 import { docFromHash, docToHash } from "@/lib/serialization";
 import { publishDocumentSnapshot } from "@/store/document.store";
+import { useSyncStore, type SyncStatus } from "@/store/sync.store";
 import {
   editorStateFromSerializedDocument,
   serializedDocumentFromEditorState,
@@ -23,11 +24,11 @@ import {
   type EditorState,
 } from "lexical";
 import { CheckCheckIcon, ShieldAlertIcon } from "lucide-react";
-import React, {
+import {
   useCallback,
   useEffect,
   useRef,
-  useState,
+  type ReactNode,
   type RefObject,
 } from "react";
 
@@ -38,8 +39,6 @@ type UrlClientDocumentSyncPluginProps = {
   debounceMs?: number;
   scrollContainerRef?: RefObject<HTMLDivElement | null>;
 };
-
-type SyncStatus = "loading" | "syncing" | "synced" | "error";
 
 type EditorDocumentSnapshot = {
   hash: string;
@@ -63,12 +62,13 @@ const STATUS_CONFIG = {
     Component: <Spinner className="size-3" />,
     variant: "primary",
   },
-} as const satisfies {
-  [key in SyncStatus]: {
-    Component: React.ReactNode;
+} as const satisfies Record<
+  SyncStatus,
+  {
+    Component: ReactNode;
     variant: VariantProps<typeof badgeVariants>["variant"];
-  };
-};
+  }
+>;
 
 const URL_DOCUMENT_SYNC_TAG = "url-document-sync";
 
@@ -80,6 +80,23 @@ const CODE_LANGUAGE_ALIASES: Record<string, string> = {
   tsx: "ts",
   jsx: "js",
 };
+
+function DocumentSyncBadge() {
+  const syncStatus = useSyncStore((state) => state.syncStatus);
+  const { Component, variant } = STATUS_CONFIG[syncStatus];
+
+  return (
+    <Badge
+      variant={variant}
+      className="pointer-events-none"
+      role="status"
+      aria-live="polite"
+    >
+      {Component}
+      <span>{syncStatus}</span>
+    </Badge>
+  );
+}
 
 function normalizeExternalMarkdown(markdown: string): string {
   const normalizedLineEndings = markdown
@@ -171,7 +188,7 @@ export function UrlClientDocumentSyncPlugin({
   debounceMs = DEFAULT_DEBOUNCE_MS,
   scrollContainerRef,
 }: UrlClientDocumentSyncPluginProps) {
-  const [syncStatus, setSyncStatus] = useState<SyncStatus>("loading");
+  const setSyncStatus = useSyncStore((state) => state.setSyncStatus);
 
   const initializedRef = useRef(false);
   const hashBootstrappedRef = useRef(false);
@@ -200,6 +217,10 @@ export function UrlClientDocumentSyncPlugin({
 
   const commitEditorState = useCallback(
     async (editorState: EditorState) => {
+      if (!initializedRef.current) {
+        return;
+      }
+
       const writeId = ++writeIdRef.current;
 
       try {
@@ -209,7 +230,7 @@ export function UrlClientDocumentSyncPlugin({
           shouldPreserveNewLinesInMarkdown,
         );
 
-        if (writeId !== writeIdRef.current) {
+        if (!initializedRef.current || writeId !== writeIdRef.current) {
           return;
         }
 
@@ -222,14 +243,14 @@ export function UrlClientDocumentSyncPlugin({
 
         setSyncStatus("synced");
       } catch {
-        if (writeId !== writeIdRef.current) {
+        if (!initializedRef.current || writeId !== writeIdRef.current) {
           return;
         }
 
         setSyncStatus("error");
       }
     },
-    [transformers, shouldPreserveNewLinesInMarkdown],
+    [transformers, shouldPreserveNewLinesInMarkdown, setSyncStatus],
   );
 
   const writeSnapshot = useDebounce((editorState: EditorState) => {
@@ -243,8 +264,8 @@ export function UrlClientDocumentSyncPlugin({
 
     initializedRef.current = false;
     setSyncStatus("loading");
-    writeSnapshot.cancel();
 
+    writeSnapshot.cancel();
     ++writeIdRef.current;
 
     if (scrollFrameRef.current !== null) {
@@ -254,20 +275,15 @@ export function UrlClientDocumentSyncPlugin({
 
     const unregister = editor.registerUpdateListener(
       ({ editorState, dirtyElements, dirtyLeaves, tags }) => {
-        if (!initializedRef.current) {
-          return;
-        }
+        if (!initializedRef.current) return;
 
-        if (tags.has(URL_DOCUMENT_SYNC_TAG)) {
-          return;
-        }
+        if (tags.has(URL_DOCUMENT_SYNC_TAG)) return;
 
-        if (dirtyElements.size === 0 && dirtyLeaves.size === 0) {
-          return;
-        }
+        if (dirtyElements.size === 0 && dirtyLeaves.size === 0) return;
+
+        ++writeIdRef.current;
 
         setSyncStatus("syncing");
-
         writeSnapshot(editorState);
       },
     );
@@ -316,8 +332,6 @@ export function UrlClientDocumentSyncPlugin({
         }
 
         if (!hashBootstrappedRef.current) {
-          hashBootstrappedRef.current = true;
-
           const hash = window.location.hash;
 
           if (hash.startsWith("#doc=")) {
@@ -339,8 +353,6 @@ export function UrlClientDocumentSyncPlugin({
 
               editor.dispatchCommand(CLEAR_HISTORY_COMMAND, undefined);
 
-              initializedRef.current = true;
-
               resetScrollToTop();
 
               const source = editorStateToMarkdown(
@@ -354,11 +366,16 @@ export function UrlClientDocumentSyncPlugin({
                 source,
               });
 
+              hashBootstrappedRef.current = true;
+              initializedRef.current = true;
+
               setSyncStatus("synced");
 
               return;
             }
           }
+
+          hashBootstrappedRef.current = true;
         }
 
         initializedRef.current = true;
@@ -381,11 +398,14 @@ export function UrlClientDocumentSyncPlugin({
 
     return () => {
       disposed = true;
+      initializedRef.current = false;
 
       unregister();
 
       writeSnapshot.cancel();
       ++writeIdRef.current;
+
+      setSyncStatus("loading");
 
       if (scrollFrameRef.current !== null) {
         cancelAnimationFrame(scrollFrameRef.current);
@@ -400,14 +420,8 @@ export function UrlClientDocumentSyncPlugin({
     writeSnapshot,
     commitEditorState,
     resetScrollToTop,
+    setSyncStatus,
   ]);
 
-  const { Component, variant } = STATUS_CONFIG[syncStatus];
-
-  return (
-    <Badge variant={variant} className="pointer-events-none">
-      {Component}
-      <span>{syncStatus}</span>
-    </Badge>
-  );
+  return <DocumentSyncBadge />;
 }

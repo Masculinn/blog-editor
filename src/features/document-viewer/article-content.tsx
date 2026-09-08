@@ -10,8 +10,9 @@ import { useSearchParam } from "@/hooks/use-search-param";
 import { isSerializedMDXWithError } from "@/lib/mdx/isSerializedMDXWithError";
 import type { MDXRecord, SerializedMDXSource } from "@/lib/mdx/serializeMDX";
 import { useDocumentSnapshot } from "@/store/document.store";
+import { useSyncStore } from "@/store/sync.store";
 import type { Blog } from "@/types/db.types";
-import { LoaderCircleIcon, SaveIcon } from "lucide-react";
+import { LoaderCircleIcon, SaveIcon, ShieldAlertIcon } from "lucide-react";
 import { MDXClient } from "next-mdx-remote-client";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -23,6 +24,58 @@ type ArticleContentBodyProps = {
   article: Props;
   isDraft: boolean;
 };
+
+type ArticleSaveButtonProps = {
+  hasChanges: boolean;
+  isSaving: boolean;
+  onSave: () => Promise<void>;
+};
+
+function ArticleSaveButton({
+  hasChanges,
+  isSaving,
+  onSave,
+}: ArticleSaveButtonProps) {
+  const syncStatus = useSyncStore((state) => state.syncStatus);
+
+  const isSyncPending = syncStatus === "loading" || syncStatus === "syncing";
+
+  const isBusy = isSaving || isSyncPending;
+
+  const disabled = syncStatus !== "synced" || !hasChanges || isSaving;
+
+  const label = isSaving
+    ? "Saving…"
+    : syncStatus === "loading"
+      ? "Loading…"
+      : syncStatus === "syncing"
+        ? "Syncing…"
+        : syncStatus === "error"
+          ? "Sync failed"
+          : "Save Changes";
+
+  return (
+    <Button
+      type="button"
+      size="lg"
+      className="shrink-0 absolute left-3 top-3"
+      disabled={disabled}
+      variant={syncStatus === "error" ? "destructive" : "default"}
+      aria-busy={isBusy}
+      onClick={onSave}
+    >
+      {isBusy ? (
+        <LoaderCircleIcon className="size-4 animate-spin" />
+      ) : syncStatus === "error" ? (
+        <ShieldAlertIcon className="size-4" />
+      ) : (
+        <SaveIcon className="size-4" />
+      )}
+
+      {label}
+    </Button>
+  );
+}
 
 function getInitialMdxSource(props: Props): SerializedMDXSource {
   if (isSerializedMDXWithError(props)) {
@@ -181,10 +234,25 @@ function ArticleContentBody({ article, isDraft }: ArticleContentBodyProps) {
   ]);
 
   async function handleSave() {
+    const syncStatus = useSyncStore.getState().syncStatus;
+
+    if (syncStatus !== "synced") {
+      if (syncStatus === "error") {
+        toast.error("Cannot save while document sync has failed");
+      } else {
+        toast.info("Wait for the document to finish syncing");
+      }
+
+      return;
+    }
+
+    if (savingRef.current) {
+      return;
+    }
+
     if (
       source === null ||
       !hasChanges ||
-      savingRef.current ||
       window.location.hash !== snapshot.hash
     ) {
       toast.info(`No changes to update the ${isDraft ? "draft" : "post"}`);
@@ -212,7 +280,8 @@ function ArticleContentBody({ article, isDraft }: ArticleContentBodyProps) {
         return;
       }
 
-      if (result.data.content) setSavedContent(result.data.content);
+      setSavedContent(result.data.content ?? submittedContent);
+
       toast.success(isDraft ? "Draft content updated" : "Post content updated");
     } catch (error) {
       const message =
@@ -239,24 +308,11 @@ function ArticleContentBody({ article, isDraft }: ArticleContentBodyProps) {
 
   return (
     <>
-      {hasChanges && (
-        <Button
-          type="button"
-          size="lg"
-          className="shrink-0 absolute left-3 top-3"
-          disabled={!hasChanges || isSaving}
-          variant="success"
-          onClick={handleSave}
-        >
-          {isSaving ? (
-            <LoaderCircleIcon className="size-4 animate-spin" />
-          ) : (
-            <SaveIcon className="size-4" />
-          )}
-
-          {isSaving ? "Saving…" : isDraft ? "Save Changes" : "Save Changes"}
-        </Button>
-      )}
+      <ArticleSaveButton
+        hasChanges={hasChanges}
+        isSaving={isSaving}
+        onSave={handleSave}
+      />
 
       <div className="space-y-6 relative">
         {isSerializedMDXWithError(mdxSource) ? (
