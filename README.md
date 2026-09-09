@@ -10,8 +10,6 @@ The **open-source Ultimate Blog Editor App** brings together the Markdown editin
 
 _The stack doesn't cost a penny._ [_Supabase_ ](https://supabase.com/)_and_ [_Netlify_](https://www.netlify.com/) _free plans are suitable. It won't let you down halfway through even at scale._
 
-**[Try out limited version now!](https://justcodesessions.netlify.app/)**
-
 That said, it comes with amazing features listed down below:
 
 - **Rich-Text Editing**
@@ -35,21 +33,31 @@ That said, it comes with amazing features listed down below:
 
 **This project is primarily tailored for my personal use**, but it is also intended to serve as a reference for others interested in the editor architecture and development of editor features. It's so easy to change the serialized custom components and allowing you to curate them as you wish.
 
-It serve as a starting point for building custom editor applications with its highly modular architecture and extensibility. Just like a puzzle box, it can be customized to fit your needs.
+A snippet from the collection of app features:
 
-| tech                   | version  | purpose                                                                                                       |
-| ---------------------- | -------- | ------------------------------------------------------------------------------------------------------------- |
-| Next.js                | ≥16      | Application framework, routing, server rendering, and server actions. (Not with the cache components enabled) |
-| React / React DOM      | >19      | Component-based UI and browser rendering.                                                                     |
-| TypeScript             | ≥5.0     | Static typing across the application.                                                                         |
-| Lexical                | ≥0.49.0  | Rich-text editing, editor state, and Markdown integration.                                                    |
-| Supabase JS            | ≥2.112.3 | Client for backend services and database operations.                                                          |
-| Tailwind CSS           | ≥4.0.0   | Utility-based styling and responsive layouts.                                                                 |
-| shadcn                 | ≥4.19.0  | Tooling for adding and managing UI components.                                                                |
-| Base UI                | ≥1.7.0   | Accessible React primitives for UI components.                                                                |
-| next-mdx-remote-client | ≥2.1.12  | Rendering MDX content with React components.                                                                  |
-| React Hook Form        | ≥7.87.0  | Form state management and submission handling.                                                                |
-| Zod                    | ≥4.5.4   | Schema validation and type inference.                                                                         |
+![App features collection](/public//blog-editor-thumb-98412b75.webp)
+
+---
+
+It serve as a starting point for building custom editor apps with its highly modular architecture and extensibility. Just like a puzzle box, it can be customized to fit your needs.
+
+## Stack
+
+| tech                   | version  |
+| ---------------------- | -------- |
+| Next.js                | ≥16      |
+| React / React DOM      | >19      |
+| TypeScript             | ≥5.0     |
+| Lexical                | ≥0.49.0  |
+| Supabase JS            | ≥2.112.3 |
+| Tailwind CSS           | ≥4.0.0   |
+| shadcn                 | ≥4.19.0  |
+| Base UI                | ≥1.7.0   |
+| next-mdx-remote-client | ≥2.1.12  |
+| React Hook Form        | ≥7.87.0  |
+| Zod                    | ≥4.5.4   |
+
+---
 
 My experience on very first blog using this editor was pretty good actually you can write your thoughts abot the repo maybe some improvements down the blog [using this link](https://burakdev.com/blogs/i-have-built-an-ultimate-blogging-workspace-and-open-sourced-it)
 
@@ -67,7 +75,6 @@ _As far as I am concerned, these techs don't meet my expectations on their own, 
 
 The app follows a modular architecture that separates editing, document previews, and content management into dedicated feature areas. Shared UI components, an extensible Lexical editor, and centralized server actions keep the code organized and make it easier to maintain and expand. Respected to DRY principles heavily.
 
-- **Admin entry point(mainland):** `app/(admin)/admin/page.tsx` provides the admin route, with access-control logic organized in `proxy.ts` and `lib/auth.ts`.
 - **Feature modules:** `features/` separates the editor, document viewer, and management tools for drafts, posts, and the media library.
 - **Extensible editor:** `components/editor/` organizes Lexical nodes, plugins, extensions, toolbars, and Markdown transformers. Charts and Contents have dedicated modules for editing, rendering, and conversion.
 - **MDX rendering:** `components/mdx/` defines content components and processing plugins, while `lib/mdx/` handles serialization and related error handling.
@@ -77,10 +84,10 @@ The app follows a modular architecture that separates editing, document previews
 
 The working tree is pretty straightforward and scalable with it's modular design:
 
-```javascript
+```text
 src/
 ├── app/
-│   ├── (admin)/admin/    # Entry point
+│   ├── page.tsx         # Entry point
 │   └── actions/         # Server-side content operations
 ├── features/
 │   ├── editor/          # Editor workspace
@@ -189,26 +196,7 @@ SUPABASE_SERVICE_ROLE_KEY = YOUR_SERVICE_ROLE_KEY;
 BUCKET_NAME = banner;
 
 APP_ENCRYPT_TOKEN = YOUR_APP_BASE64_PSW;
-
-MY_IP = YOUR_IP;
-MY_USER_AGENT = TRIMMED_VERSION_OF_YOUR_USER_DEVICE_INFO;
-
-ADMIN_KEY = YOUR_BASE64_ADMIN_KEY;
 ```
-
-At first glance to the project, you might find yourself skeptical for all those weird things. As I mentioned earlier, current architecture that are in the repo is considered to personal use. So for demo purposes, everything under the root page is removable because I've created all those extensions to demonstrate and test for you folks.
-
-\*That said, some of the env keys other than what's belong to the Supabase is used to authenticate the user **with a particular rate limiter based on digital footprint of the user\***
-_as I haven't implemented a proper auth for the user cause I found myself in boredom while doing so and YES — I reinvented the wheel 🫠_
-
-The values broken down below are presented for the demo page so after configuration you can remove those keys and pretty much every piece of the code where it's being used **BUT FOR LOCAL DEVELOPMENT!**
-
-- `APP_ENCRYPT_TOKEN`
-- `MY_IP`
-- `MY_USER_AGENT`
-- `ADMIN_KEY`
-
-> If you do like to self-host via Netlify or Vercel on free plan, leave everything as-is.
 
 ### 4. Database Types
 
@@ -216,13 +204,13 @@ The app uses the typegen for DB types for in particular for React actions. Every
 
 Run the CLI command to login your account in your IDE.
 
-```javascript
+```bash
 npx supabase login
 ```
 
 This is going to open up a new window inside of your browser to SSO. Follow the instructions given in the CLI to login then run the following command to fetch the DB types
 
-```javascript
+```bash
 npm run db:types
 ```
 
@@ -241,44 +229,6 @@ http://localhost:36805/admin
 ```
 
 That's pretty much everything so far to run the app on locally, it takes max 5 minutes from scratch, I think it's fair.
-
-## Tidy Up The Repo — important
-
-The app root `http://localhost:36805/` might be a junk for you so in order to keep things fresh for your personal use not mine, you can always remove imported components/files.
-
-I've added a specific npm command to wipe the staffs out.
-
-Go the the file under `/src/app/page.tsx` and replace it's content with plain function export:
-
-```tsx
-export default function Page() {
-  return <div>Everything clean</div>;
-}
-```
-
-As well as `src/proxy.ts` with:
-
-```tsx
-import { NextResponse, type NextRequest } from "next/server";
-
-export async function proxy(_: NextRequest): Promise<NextResponse> {
-  return NextResponse.next();
-}
-
-export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
-  ],
-};
-```
-
-Afterwards run the command:
-
-```bash
-npm run check
-```
-
-This will break down unused functions that you can easily delete later on depending on your needing.
 
 ## Usage & Writing Your First Article
 
@@ -304,7 +254,7 @@ useKeyboardShortcut(["Meta", "/"], () => {
 
 ### Command Center & Shortcuts
 
-> Consider `Ctrl` as `Meta` please don't make me write this.
+> Consider `Ctrl` as `Meta` please mac & linux users.
 
 Press `Ctrl + K` to toggle the Command Center, even while editing. Search for a tool, navigate with `↑` / `↓`, and press `Enter` to open its modal. Selecting a tool automatically closes the Command Center.
 
@@ -333,7 +283,7 @@ Please ensure that the DB configuration has done properly before moving on this 
 
 #### Deploy To Netlify
 
-The app may fail during the build and to prevent this add 2 more env key-pair to the env file alongside the existing keys to prevent this behaviour in your Netlify dashboard. Although I don't know the reason, I found this patch due to an error caused by its external systems.
+The app may fail during the build when next.js is used in your stack and to prevent this add 2 more env key-pair to the env file alongside the existing keys to prevent this behaviour in your Netlify dashboard. Although I don't know the reason, I found this patch due to an error caused by its external systems.
 
 ```javascript
 SECRETS_SCAN_ENABLED=false
