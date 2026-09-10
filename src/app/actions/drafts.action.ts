@@ -161,7 +161,7 @@ export async function createDraftAction(
 
     if (error) return { success: false, error: error.message };
 
-    revalidatePath("/admin");
+    revalidatePath("/");
 
     return { success: true, data };
   }
@@ -174,7 +174,7 @@ export async function createDraftAction(
 
   if (error) return { success: false, error: error.message };
 
-  revalidatePath("/admin");
+  revalidatePath("/");
 
   return { success: true, data };
 }
@@ -227,7 +227,7 @@ export async function upsertDraftAction(
 
   if (error) return { success: false, error: error.message };
 
-  revalidatePath("/admin");
+  revalidatePath("/");
 
   return { success: true, data };
 }
@@ -268,7 +268,7 @@ export async function updateDraftContent(
     };
   }
 
-  revalidatePath("/admin");
+  revalidatePath("/");
 
   return { success: true, data };
 }
@@ -292,7 +292,7 @@ export async function deleteDraftAction(
   if (error) return { success: false, error: error.message };
   if (!data) return { success: false, error: "Draft not found." };
 
-  revalidatePath("/admin");
+  revalidatePath("/");
 
   return { success: true };
 }
@@ -315,7 +315,7 @@ async function finishPublishing<T extends Blog | BlogWithoutContent>(
       .eq("id", publishedBlog.id);
 
     if (rollbackError) {
-      revalidatePath("/admin");
+      revalidatePath("/");
       revalidatePath("/", "layout");
 
       return {
@@ -334,7 +334,7 @@ async function finishPublishing<T extends Blog | BlogWithoutContent>(
     };
   }
 
-  revalidatePath("/admin");
+  revalidatePath("/");
   revalidatePath("/", "layout");
 
   return { success: true, data: publishedBlog };

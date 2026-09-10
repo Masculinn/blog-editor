@@ -4,6 +4,7 @@ import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { Modal } from "@/components/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import PRESETS from "@/constants/backgrounds.data";
 import type { ToolComponentProps } from "@/types/tools.types";
 import {
@@ -14,8 +15,8 @@ import {
 } from "lucide-react";
 import {
   type CSSProperties,
-  type FormEvent,
   type ReactNode,
+  type SubmitEvent,
   useEffect,
   useId,
   useState,
@@ -366,7 +367,7 @@ function AddBackground({ onBack }: { onBack: () => void }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy) return;
 
@@ -427,18 +428,21 @@ function AddBackground({ onBack }: { onBack: () => void }) {
   return (
     <form onSubmit={handleSubmit} className="max-w-lg space-y-5 px-4">
       <div>
-        <h3 className="text-xl font-semibold tracking-tight">
+        <span className="text-xl font-semibold tracking-tight text-foreground">
           Bring your own atmosphere
-        </h3>
+        </span>
         <p className="mt-2 text-sm text-muted-foreground">
           Add a landscape, texture, or illustration using a direct image link.
         </p>
       </div>
 
       <div className="space-y-2">
-        <label htmlFor={`${formId}-name`} className="text-sm font-medium">
+        <Label
+          htmlFor={`${formId}-name`}
+          className="text-sm font-medium text-foreground"
+        >
           Name
-        </label>
+        </Label>
         <Input
           id={`${formId}-name`}
           placeholder="A quiet place"
@@ -450,9 +454,12 @@ function AddBackground({ onBack }: { onBack: () => void }) {
       </div>
 
       <div className="space-y-2">
-        <label htmlFor={`${formId}-url`} className="text-sm font-medium">
+        <Label
+          htmlFor={`${formId}-url`}
+          className="text-sm font-medium text-foreground"
+        >
           Image URL
-        </label>
+        </Label>
         <Input
           id={`${formId}-url`}
           type="url"

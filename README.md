@@ -195,7 +195,8 @@ SUPABASE_URL = YOUR_PROJECT_URI;
 SUPABASE_SERVICE_ROLE_KEY = YOUR_SERVICE_ROLE_KEY;
 BUCKET_NAME = banner;
 
-APP_ENCRYPT_TOKEN = YOUR_APP_BASE64_PSW;
+APP_TOKEN = YOUR_APP_BASE64_PSW;
+APP_USER_AGENT = YOUR_APP_USER_AGENT_WITHOUT_WHITESPACE;
 ```
 
 ### 4. Database Types
@@ -225,7 +226,7 @@ npm run dev
 The current development script starts Next.js on port `36805`:
 
 ```bash
-http://localhost:36805/admin
+http://localhost:36805
 ```
 
 That's pretty much everything so far to run the app on locally, it takes max 5 minutes from scratch, I think it's fair.

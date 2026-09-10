@@ -1,19 +1,15 @@
-"use client";
-
-import { Button } from "@/components/ui/button";
-import { ArrowLeftIcon, FileQuestion } from "lucide-react";
+﻿import { FileQuestion } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "404 — Page Not Found",
   description: "The page you are looking for does not exist.",
+  icons: {
+    icon: "/logo.png",
+  },
 };
 
-export default function NotFound() {
-  const handleClick = () => {
-    window.location.assign("/admin");
-  };
-
+export default function Forbidden() {
   return (
     <main
       aria-labelledby="not-found-heading"
@@ -34,17 +30,12 @@ export default function NotFound() {
           id="not-found-heading"
           className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl"
         >
-          Post not found
+          Page not found
         </h1>
         <p className="max-w-md text-balance text-sm text-muted-foreground sm:text-base">
-          This post does not exist.
+          The page you&apos;re looking for doesn&apos;t exist or has been moved.
         </p>
       </div>
-
-      <Button size="lg" className="mt-2" onClick={handleClick}>
-        <ArrowLeftIcon className="size-4" />
-        Back to Editor
-      </Button>
     </main>
   );
 }

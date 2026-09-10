@@ -1,141 +1,54 @@
-import Banner from "@/components/banner";
-import { Guide } from "@/components/guide";
-import { Posts } from "@/components/posts";
-import { PostsSkeleton } from "@/components/skeleton/posts-skeleton";
-import { ExperimentalDocumentViewer } from "@/features/document-viewer/experimental-viewer";
-import { ExperimentalEditor } from "@/features/editor/experimental-editor";
-import { getSmallTalk } from "@/utils/db/get-small-talk";
-import { connection } from "next/server";
-import { Suspense } from "react";
+import { DocumentViewer } from "@/features/document-viewer";
+import { ArticleContent as _ArticleContent } from "@/features/document-viewer/article-content";
+import { ArticleCover as _ArticleCover } from "@/features/document-viewer/article-cover";
+import { Editor as _Editor } from "@/features/editor";
+import { Tools } from "@/features/tools";
+import { EditorBackground } from "@/features/tools/background";
+import { withMDX } from "@/hoc/withMDX";
+import { withPost } from "@/hoc/withPost";
+import { withPostContent } from "@/hoc/withPostContent";
+import { withPostMeta } from "@/hoc/withPostMeta";
+import { cn } from "@/lib/utils";
+
+export type SearchParamsRecords = {
+  id: string;
+  viewer: string;
+  draft: string;
+};
 
 interface Props {
-  searchParams: Promise<{
-    post?: string;
-  }>;
+  searchParams: Promise<Partial<SearchParamsRecords>>;
 }
 
-export default async function Page({ searchParams }: Props) {
-  await connection();
+const ArticleCover = withPostMeta(_ArticleCover);
+const ArticleContent = withPost(withMDX(_ArticleContent));
+const Editor = withPostContent(_Editor);
 
+export default async function Page({ searchParams }: Props) {
   const params = await searchParams;
 
-  const postId = typeof params.post === "string" ? params.post : undefined;
-
-  let documentHash: string | null = null;
-  let title = "";
-  let timestamp = "";
-
-  if (postId) {
-    const data = await getSmallTalk(postId);
-
-    documentHash = data?.content_hashed ?? null;
-    title = data?.title ?? "";
-    timestamp = data?.timestamp ?? "";
-  }
+  const postId = typeof params.id === "string" ? Number(params.id) : undefined;
+  const isViewer = params.viewer === "true";
+  const draft = params.draft === "true";
 
   return (
-    <main
-      className="
-        relative
-        grid
-        min-h-dvh
-        w-full
-        grid-cols-1
-        gap-3
-        overflow-x-hidden
-        overflow-y-auto
-        p-3
-        font-primary
-
-        laptop:h-dvh
-        laptop:grid-cols-12
-        laptop:grid-rows-6
-        laptop:gap-0
-        laptop:overflow-hidden
-        laptop:p-12
-
-        desktop:p-12
-      "
-    >
-      <section
-        className="
-          min-w-0
-          w-full
-
-          laptop:col-start-5
-          laptop:col-span-8
-          laptop:row-start-1
-          laptop:row-span-1
-          laptop:h-full
-        "
-      >
-        <Banner />
-      </section>
-
-      <section
-        className="
-          relative
-          min-h-64
-          min-w-0
-          w-full
-          overflow-hidden
-
-          laptop:col-start-1
-          laptop:col-span-4
-          laptop:row-start-1
-          laptop:row-span-2
-          laptop:h-full
-          laptop:min-h-0
-        "
-      >
-        <Guide />
-      </section>
-
-      <section
-        className="
-          min-w-0
-          w-full
-          pb-3
-
-          laptop:col-start-1
-          laptop:col-span-4
-          laptop:row-start-3
-          laptop:row-span-4
-          laptop:h-full
-          laptop:pt-3
-          laptop:pb-0
-        "
-      >
-        <Suspense fallback={<PostsSkeleton />} name="posts-suspense">
-          <Posts />
-        </Suspense>
-      </section>
-
-      <section
-        className="
-          min-h-[70dvh]
-          min-w-0
-          w-full
-
-          laptop:col-start-5
-          laptop:col-span-8
-          laptop:row-start-2
-          laptop:row-span-5
-          laptop:h-full
-          laptop:min-h-0
-          laptop:pl-3
-        "
-      >
-        {documentHash ? (
-          <ExperimentalDocumentViewer
-            documentHash={documentHash}
-            title={title}
-            timestamp={timestamp}
-          />
-        ) : (
-          <ExperimentalEditor className="z-50" documentHash={documentHash} />
+    <main className="w-full h-screen overflow-hidden items-center justify-center-safe py-16 px-36 flex flex-row relative isolate">
+      <EditorBackground />
+      <Tools className="w-xl bg-accent/20" />
+      <Editor
+        id={postId}
+        draft={draft}
+        className={cn(
+          "h-full w-7/12 p-2",
+          isViewer ? "border-y border-l rounded-l-md" : "rounded-md border",
         )}
-      </section>
+      />
+      {isViewer && postId && (
+        <DocumentViewer className="w-5/12 h-full border-r border-y rounded-r-md relative bg-background/80 backdrop-blur-md">
+          <ArticleCover id={postId} draft={draft} />
+          <ArticleContent id={postId} draft={draft} />
+        </DocumentViewer>
+      )}
     </main>
   );
 }

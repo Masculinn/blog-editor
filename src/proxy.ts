@@ -1,45 +1,18 @@
-﻿import { NextResponse, type NextRequest } from "next/server";
-
-import {
-  createIdentityToken,
-  getRequestIdentity,
-  IDENTITY_COOKIE_NAME,
-  isAdminIdentity,
-  verifyIdentityToken,
-} from "@/lib/auth";
+﻿import auth from "@/lib/auth";
+import { NextResponse, type NextRequest } from "next/server";
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
-  const identity = getRequestIdentity(request.headers);
-  const { pathname } = request.nextUrl;
+  const pathname = request.nextUrl.pathname;
 
-  if (pathname.startsWith("/admin") && !isAdminIdentity(identity, request)) {
-    return NextResponse.redirect(new URL("/", request.url), 307);
+  if (pathname === "/forbidden" || pathname === "/forbidden/") {
+    return NextResponse.next();
   }
 
-  const response = NextResponse.next();
-  if (!identity.ip || !identity.userAgent) return response;
-
-  const existingToken = request.cookies.get(IDENTITY_COOKIE_NAME)?.value;
-
-  const existingIdentity = existingToken
-    ? await verifyIdentityToken(existingToken, identity)
-    : null;
-
-  if (!existingIdentity) {
-    const token = await createIdentityToken(identity);
-
-    response.cookies.set({
-      name: IDENTITY_COOKIE_NAME,
-      value: token,
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 30,
-    });
+  if (!auth(request)) {
+    return NextResponse.redirect(new URL("/forbidden", request.url));
   }
 
-  return response;
+  return NextResponse.next();
 }
 
 export const config = {

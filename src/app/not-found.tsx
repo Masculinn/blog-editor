@@ -1,53 +1,53 @@
-﻿import { Button } from "@/components/ui/button";
-import { ArrowLeftIcon, FileQuestion } from "lucide-react";
-import type { Metadata } from "next";
-import Link from "next/link";
+"use client";
 
-export const metadata: Metadata = {
-  title: "404 — Page Not Found",
-  description: "The page you are looking for does not exist.",
-  icons: {
-    icon: "/logo.png",
-  },
-};
+import { Button } from "@/components/ui/button";
+import { ArrowLeftIcon, FileQuestion } from "lucide-react";
 
 export default function NotFound() {
   return (
-    <main
-      aria-labelledby="not-found-heading"
-      className="flex min-h-dvh w-full flex-col items-center justify-center gap-6 px-4 py-16 text-center sm:px-6 lg:px-8"
-    >
-      <div
-        aria-hidden="true"
-        className="flex h-16 w-16 items-center justify-center rounded-full bg-muted sm:h-20 sm:w-20"
-      >
-        <FileQuestion className="h-8 w-8 text-muted-foreground sm:h-10 sm:w-10" />
-      </div>
+    <>
+      <title>404 — Page Not Found</title>
+      <meta
+        name="description"
+        content="The page you are looking for does not exist."
+      />
 
-      <div className="flex flex-col gap-2">
-        <p className="text-sm font-medium tracking-wide text-muted-foreground">
-          Error 404
-        </p>
-        <h1
-          id="not-found-heading"
-          className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl"
+      <main
+        aria-labelledby="not-found-heading"
+        className="flex min-h-dvh w-full flex-col items-center justify-center gap-6 px-4 py-16 text-center sm:px-6 lg:px-8"
+      >
+        <div
+          aria-hidden="true"
+          className="flex h-16 w-16 items-center justify-center rounded-full bg-muted sm:h-20 sm:w-20"
         >
-          Page not found
-        </h1>
-        <p className="max-w-md text-balance text-sm text-muted-foreground sm:text-base">
-          The page you&apos;re looking for doesn&apos;t exist or has been moved.
-        </p>
-      </div>
+          <FileQuestion className="h-8 w-8 text-muted-foreground sm:h-10 sm:w-10" />
+        </div>
 
-      <Button
-        render={<Link href="/" replace aria-label="Return to home page" />}
-        size="lg"
-        nativeButton={false}
-        className="mt-2"
-      >
-        <ArrowLeftIcon className="size-4" />
-        Back to Home
-      </Button>
-    </main>
+        <div className="flex flex-col gap-2">
+          <p className="text-sm font-medium tracking-wide text-muted-foreground">
+            Error 404
+          </p>
+          <h1
+            id="not-found-heading"
+            className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl"
+          >
+            Post/Draft not found
+          </h1>
+          <p className="max-w-md text-balance text-sm text-muted-foreground sm:text-base">
+            This post/draft does not exist anymore or has been moved.
+          </p>
+        </div>
+
+        <Button
+          type="button"
+          size="lg"
+          className="mt-2"
+          onClick={() => window.location.assign("/")}
+        >
+          <ArrowLeftIcon className="size-4" />
+          Refresh Editor
+        </Button>
+      </main>
+    </>
   );
 }

@@ -160,7 +160,7 @@ export async function upsertPostAction(
 
   if (error) return { success: false, error: error.message };
 
-  revalidatePath("/admin");
+  revalidatePath("/");
   revalidatePath("/", "layout");
 
   return { success: true, data };
@@ -215,7 +215,7 @@ export async function updatePostContent(
     };
   }
 
-  revalidatePath("/admin");
+  revalidatePath("/");
   revalidatePath("/", "layout");
 
   return { success: true, data };
@@ -240,7 +240,7 @@ export async function deletePostAction(
   if (error) return { success: false, error: error.message };
   if (!data) return { success: false, error: "Post not found." };
 
-  revalidatePath("/admin");
+  revalidatePath("/");
   revalidatePath("/", "layout");
 
   return { success: true };
