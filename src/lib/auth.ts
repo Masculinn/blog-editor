@@ -8,11 +8,7 @@ export default function auth(request: NextRequest): boolean {
 
   if (process.env.NODE_ENV === "production") {
     if (!userAgent || !cookieValue) return false;
-    const expectedAgent = userAgent.replace(/\s+/g, "");
-    return (
-      expectedAgent === process.env.APP_USER_AGENT &&
-      cookieValue === process.env.APP_TOKEN
-    );
+    return cookieValue === process.env.APP_TOKEN;
   }
 
   return true;
