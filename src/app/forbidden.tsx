@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   description: "The page you are looking for does not exist.",
   icons: {
     icon: "/logo.png",
+    apple: "/logo.png",
   },
 };
 

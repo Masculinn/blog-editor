@@ -1,7 +1,8 @@
+import "./globals.css";
+
 import { Toaster } from "@/components/ui/sonner";
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, VT323 } from "next/font/google";
-import "./globals.css";
+import { Geist, Geist_Mono } from "next/font/google";
 
 const geistSans = Geist({
   variable: "--font-primary",
@@ -13,16 +14,10 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const cyberpunk = VT323({
-  variable: "--font-cyberpunk",
-  subsets: ["latin"],
-  weight: ["400"],
-});
-
 export const metadata: Metadata = {
   title: {
-    default: "justc0de_sessions | Editor",
-    template: "%s | justc0de_sessions",
+    default: "Editor",
+    template: "%s",
   },
   description: "Create, edit, and manage your blog content.",
   applicationName: "Blog Editor",
@@ -30,15 +25,17 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     title: "Blog Editor",
-    statusBarStyle: "default",
+    statusBarStyle: "black",
+    startupImage: "/logo.png",
   },
+  creator: "Burak Bilen",
 };
 
 export const viewport: Viewport = {
   themeColor: [
     {
       media: "(prefers-color-scheme: dark)",
-      color: "#09090b",
+      color: "#000000",
     },
   ],
 };
@@ -47,9 +44,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${cyberpunk.variable} font-primary antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} antialiased`}
     >
-      <body className="h-screen min-h-full w-full">
+      <body className="h-screen min-h-full w-full font-primary">
         {children}
         <Toaster richColors />
       </body>

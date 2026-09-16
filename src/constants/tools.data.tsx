@@ -9,7 +9,7 @@ import type { Tool } from "../types/tools.types";
 
 export default [
   {
-    img: "/app/view-post.webp",
+    img: "/assets/command-icons/view-post.webp",
     title: "View Posts",
     id: "view-post",
     Component: ViewPosts,
@@ -26,7 +26,7 @@ export default [
     },
   },
   {
-    img: "/app/view-draft.webp",
+    img: "/assets/command-icons/view-draft.webp",
     title: "View Drafts",
     id: "view-draft",
     Component: ViewDrafts,
@@ -43,7 +43,7 @@ export default [
     },
   },
   {
-    img: "/app/create-draft.webp",
+    img: "/assets/command-icons/create-draft.webp",
     title: "Create Draft",
     id: "create-draft",
     Component: CreateDraft,
@@ -61,7 +61,7 @@ export default [
     },
   },
   {
-    img: "/app/image-collection.webp",
+    img: "/assets/command-icons/image-collection.webp",
     title: "Media Library",
     id: "media-library",
     Component: MediaLibrary,
@@ -79,7 +79,7 @@ export default [
     },
   },
   {
-    img: "/app/publish-post.webp",
+    img: "/assets/command-icons/publish-post.webp",
     title: "Manage Drafts",
     id: "manage-drafts",
     Component: ManageDraft,
@@ -97,7 +97,7 @@ export default [
     },
   },
   {
-    img: "/app/manage-posts.webp",
+    img: "/assets/command-icons/manage-posts.webp",
     title: "Manage Posts",
     id: "manage-posts",
     Component: ManagePosts,
@@ -117,7 +117,7 @@ export default [
   {
     id: "backgrounds",
     title: "Choose Background",
-    img: "/app/image-collection.webp",
+    img: "/assets/command-icons/image-collection.webp",
     Component: Backgrounds,
     accent: {
       selected:
