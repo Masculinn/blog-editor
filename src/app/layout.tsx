@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     capable: true,
     title: "Blog Editor",
     statusBarStyle: "black",
-    startupImage: "/logo.png",
+    startupImage: "/assets/logo.png",
   },
   creator: "Burak Bilen",
 };
