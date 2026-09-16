@@ -1,4 +1,4 @@
-![Ultimate Blog Editor App](/public/editor-app-campaign.png)
+![Ultimate Blog Editor App](/public/assets/editor-app-campaign.png)
 
 I always thought that using our own custom solutions over the ready ones is not necessary but genuine idea because we face with an unknown in other words **real challenge.** I used to write my articles using [Obsidian](https://obsidian.md/) and manually update the DB so far.
 
@@ -35,7 +35,7 @@ That said, it comes with amazing features listed down below:
 
 A snippet from the collection of app features:
 
-![App features collection](/public//blog-editor-thumb-98412b75.webp)
+![App features collection](/public/assets/blog-editor-thumb-98412b75.webp)
 
 ---
 
