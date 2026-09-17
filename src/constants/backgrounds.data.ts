@@ -142,44 +142,6 @@ export default [
     `,
   },
   {
-    id: "pc-dark-sphere-grid",
-    name: "Dark Sphere Grid",
-    image: `
-      repeating-linear-gradient(to right, rgba(71,85,105,0.3) 0 1px, transparent 1px 32px),
-      repeating-linear-gradient(to bottom, rgba(71,85,105,0.3) 0 1px, transparent 1px 32px),
-      radial-gradient(circle at 50% 50%, rgba(139,92,246,0.15) 0%, transparent 70%),
-      linear-gradient(#020617, #020617)
-    `,
-  },
-  {
-    id: "pc-magenta-orb-grid",
-    name: "Magenta Orb Grid",
-    image: `
-      repeating-linear-gradient(to right, rgba(71,85,105,0.15) 0 1px, transparent 1px 40px),
-      repeating-linear-gradient(to bottom, rgba(71,85,105,0.15) 0 1px, transparent 1px 40px),
-      radial-gradient(circle at 50% 60%, rgba(236,72,153,0.15) 0%, rgba(168,85,247,0.05) 40%, transparent 70%),
-      linear-gradient(#020617, #020617)
-    `,
-  },
-  {
-    id: "pc-dark-basic-grid-slate",
-    name: "Dark Basic Grid",
-    image: `
-      repeating-linear-gradient(to right, rgba(100,116,139,0.4) 0 1px, transparent 1px 40px),
-      repeating-linear-gradient(to bottom, rgba(100,116,139,0.4) 0 1px, transparent 1px 40px),
-      linear-gradient(#020617, #020617)
-    `,
-  },
-  {
-    id: "pc-dark-basic-grid-faded",
-    name: "Dark Basic Grid — Faded",
-    image: `
-      repeating-linear-gradient(to right, rgba(148,163,184,0.2) 0 1px, transparent 1px 40px),
-      repeating-linear-gradient(to bottom, rgba(148,163,184,0.2) 0 1px, transparent 1px 40px),
-      linear-gradient(#0f172a, #0f172a)
-    `,
-  },
-  {
     id: "pc-black-basic-grid",
     name: "Black Basic Grid",
     image: `
@@ -203,15 +165,6 @@ export default [
     image: `
       repeating-linear-gradient(to right, #262626 0 1px, transparent 1px 20px),
       repeating-linear-gradient(to bottom, #262626 0 1px, transparent 1px 20px),
-      linear-gradient(#000000, #000000)
-    `,
-  },
-  {
-    id: "pc-pixel-grid-pattern",
-    name: "Pixel Grid Pattern",
-    image: `
-      repeating-linear-gradient(180deg, #333333 0 1px, transparent 1px 8px),
-      repeating-linear-gradient(90deg, #333333 0 1px, transparent 1px 8px),
       linear-gradient(#000000, #000000)
     `,
   },

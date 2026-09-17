@@ -40,11 +40,11 @@ export default async function Page({ searchParams }: Props) {
         draft={draft}
         className={cn(
           "h-full w-7/12 p-2",
-          isViewer ? "border-y border-l rounded-l-md" : "rounded-md border",
+          isViewer ? "border-y border-l rounded-l-md " : "rounded-md border",
         )}
       />
       {isViewer && postId && (
-        <DocumentViewer className="w-5/12 h-full border-r border-y rounded-r-md relative bg-background/80 backdrop-blur-md">
+        <DocumentViewer className="w-5/12 h-full border rounded-r-md relative bg-background/80 backdrop-blur-md">
           <ArticleCover id={postId} draft={draft} />
           <ArticleContent id={postId} draft={draft} />
         </DocumentViewer>

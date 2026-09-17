@@ -72,7 +72,7 @@ const DEFAULT_VALUES: DraftInput = {
 
 const PostMetadataSchema = PublishableDraftSchema.omit({ content: true });
 
-function DraftModalWrapper({ children }: { children: ReactNode }) {
+function Wrapper({ children }: { children: ReactNode }) {
   return (
     <div className="relative max-h-[80dvh] w-full overflow-y-auto px-4">
       {children}
@@ -121,8 +121,12 @@ function getPreviewBanner(value: string | null | undefined) {
 }
 
 export function CreateDraft(props: CreateDraftProps) {
-  const { render, title, type, id } = props;
+  const sessionRef = useRef(0);
+  const submittingRef = useRef(false);
   const formId = useId();
+
+  const { render, title, type, id } = props;
+
   const editing = type !== undefined;
   const recordLabel = type === "post" ? "post" : "draft";
 
@@ -133,10 +137,8 @@ export function CreateDraft(props: CreateDraftProps) {
 
   const [retry, setRetry] = useState(0);
   const [loadedAttempt, setLoadedAttempt] = useState<number | null>(null);
-  const loaded = loadedAttempt === retry;
 
-  const sessionRef = useRef(0);
-  const submittingRef = useRef(false);
+  const loaded = loadedAttempt === retry;
 
   const form = useForm<DraftInput>({
     resolver: zodResolver(DraftSchema),
@@ -146,6 +148,7 @@ export function CreateDraft(props: CreateDraftProps) {
 
   const { reset, trigger } = form;
   const { isSubmitting, isValid, isDirty } = form.formState;
+
   const preview = useWatch({ control: form.control });
   const parsedPreview = DraftSchema.safeParse(preview);
   const parsedBaseline = DraftSchema.safeParse(baseline);
@@ -308,7 +311,7 @@ export function CreateDraft(props: CreateDraftProps) {
       finalFocus={false}
       className="mx-4 sm:mx-12 lg:mx-24"
       onOpenChange={handleOpenChange}
-      wrapper={DraftModalWrapper}
+      wrapper={Wrapper}
     >
       {({ close }) =>
         editing && !loaded ? (

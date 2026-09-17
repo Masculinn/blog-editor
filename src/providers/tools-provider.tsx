@@ -1,9 +1,16 @@
 ﻿"use client";
 
 import { CommandDialog } from "@/components/ui/command";
-import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut";
+import {
+  type KeyboardShortcut,
+  useKeyboardShortcut,
+} from "@/hooks/use-keyboard-shortcut";
+import settings from "@/settings/client";
 import type { ToolsContext as ToolsContextType } from "@/types/tools.types";
 import { createContext, useContext, useState } from "react";
+
+const shortcut = settings.shortcuts
+  .toggleCommandCenter as unknown as KeyboardShortcut;
 
 const ToolsContext = createContext<ToolsContextType | undefined>(undefined);
 
@@ -21,7 +28,7 @@ function ToolsProvider({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
 
   useKeyboardShortcut(
-    ["Control", "k"],
+    shortcut,
     () => {
       setOpen((curr) => !curr);
     },

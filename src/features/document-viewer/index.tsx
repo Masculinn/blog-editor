@@ -10,7 +10,7 @@ export function DocumentViewer({
   return (
     <div
       className={cn(
-        "overflow-y-scroll scrollbar-custom bg-transparent scroll-fade",
+        "overflow-y-scroll scrollbar-custom bg-transparent",
         className,
       )}
     >

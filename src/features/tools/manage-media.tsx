@@ -4,13 +4,15 @@ import {
   deleteMediaAction,
   getMediaAction,
   uploadMediaAction,
-} from "@/app/actions/media-library.action";
+} from "@/app/actions/media.action";
+import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { CopyCode } from "@/components/mdx/copy-code";
 import { Modal } from "@/components/modal";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import settings from "@/settings/client";
 import {
   ImageIcon,
   ImageOff,
@@ -33,8 +35,6 @@ import {
   useTransition,
 } from "react";
 import { toast } from "sonner";
-
-import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import type { ToolComponentProps } from "../../types/tools.types";
 
 type MediaItem = {
@@ -48,7 +48,7 @@ type MediaItem = {
   mimeType: string | null;
 };
 
-const MAX_FILE_SIZE = 12 * 1024 * 1024;
+const { maxFileSize } = settings.tools.media;
 
 const ACCEPTED_TYPES = new Set([
   "image/jpeg",
@@ -61,13 +61,8 @@ const ACCEPTED_TYPES = new Set([
 function formatBytes(bytes: number | null) {
   if (bytes === null) return null;
 
-  if (bytes < 1024) {
-    return `${bytes} B`;
-  }
-
-  if (bytes < 1024 ** 2) {
-    return `${(bytes / 1024).toFixed(1)} KB`;
-  }
+  if (bytes < 1024) return `${bytes} B`;
+  else if (bytes < 1024 ** 2) return `${(bytes / 1024).toFixed(1)} KB`;
 
   return `${(bytes / 1024 ** 2).toFixed(1)} MB`;
 }
@@ -76,33 +71,31 @@ function getBentoClass(index: number) {
   switch (index % 7) {
     case 0:
       return "col-span-2 row-span-2";
-
     case 3:
       return "row-span-2";
-
     case 6:
       return "col-span-2";
-
     default:
       return "col-span-1 row-span-1";
   }
 }
 
-function MediaLibraryWrapper({ children }: PropsWithChildren<unknown>) {
+function Wrapper({ children }: PropsWithChildren<unknown>) {
   return <div className="relative h-max w-full px-4">{children}</div>;
 }
 
-export function MediaLibrary({ render, title }: ToolComponentProps) {
+export function ManageMedia({ render, title }: ToolComponentProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [, startTransition] = useTransition();
+
   const [media, setMedia] = useState<MediaItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isDragging, setIsDragging] = useState(false);
-  const [uploadingCount, setUploadingCount] = useState(0);
-  const [deleting, setDeleting] = useState<Set<string>>(() => new Set());
   const [previewItem, setPreviewItem] = useState<MediaItem | null>(null);
 
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [deleting, setDeleting] = useState<Set<string>>(() => new Set());
 
-  const [, startTransition] = useTransition();
+  const [isDragging, setIsDragging] = useState(false);
+  const [uploadingCount, setUploadingCount] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -146,7 +139,7 @@ export function MediaLibrary({ render, title }: ToolComponentProps) {
         continue;
       }
 
-      if (file.size > MAX_FILE_SIZE) {
+      if (file.size > maxFileSize) {
         toast.error(`${file.name} exceeds the 12 MB limit.`);
         continue;
       }
@@ -304,7 +297,7 @@ export function MediaLibrary({ render, title }: ToolComponentProps) {
       render={render}
       finalFocus={false}
       className="m-8"
-      wrapper={MediaLibraryWrapper}
+      wrapper={Wrapper}
     >
       {({ close: _ }) => (
         <>
@@ -459,6 +452,7 @@ const ImageItem: FC<ImageItemProps> = ({
   const [error, setError] = useState(false);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [isPreviewFocused, setIsPreviewFocused] = useState(false);
+
   const name = item.name || "Untitled image";
 
   const itemSize = item.size ? (
@@ -732,7 +726,7 @@ function ImageItemPreview({ publicUrl, name, size }: MediaItem) {
   return (
     <div className="relative flex max-h-[90vh] min-h-0 w-full items-center justify-center overflow-hidden">
       {/**
-       * biome-ignore lint/performance/noImgElement: dynamic animated media
+       * biome-ignore lint/performance/noImgElement: dynamic media ele
        */}
       <img
         src={publicUrl}

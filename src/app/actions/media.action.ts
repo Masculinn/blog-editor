@@ -1,16 +1,15 @@
 ﻿"use server";
 
 import { db } from "@/lib/db/server";
+import settings from "@/settings/server";
 import { Buffer } from "node:buffer";
 import { randomUUID } from "node:crypto";
 import sharp from "sharp";
 
-const WEBP_QUALITY = 80;
-const MAX_FILE_SIZE = 12 * 1024 * 1024;
-const PAGE_SIZE = 100;
-const CACHE_CONTROL = "31536000";
-const SUPPORTED_INPUT_FORMATS = new Set(["jpeg", "png", "webp", "gif"]);
+const { bucket, cacheControl, maxFileSize, pageSize, webpQuality } =
+  settings.actions.media;
 
+const SUPPORTED_INPUT_FORMATS = new Set(["jpeg", "png", "webp", "gif"]);
 const SUPPORTED_MEDIA_TYPES = new Set([
   "image/jpeg",
   "image/png",
@@ -19,23 +18,14 @@ const SUPPORTED_MEDIA_TYPES = new Set([
   "image/avif",
 ]);
 
-function getBucketName() {
-  const bucket = process.env.BUCKET_NAME;
-
-  if (!bucket) {
-    throw new Error("Missing BUCKET_NAME.");
-  }
-
-  return bucket;
-}
+// utils
 
 function sanitizeFileName(fileName: string) {
-  const extensionIndex = fileName.lastIndexOf(".");
+  const extIdx = fileName.lastIndexOf(".");
 
-  const withoutExtension =
-    extensionIndex === -1 ? fileName : fileName.slice(0, extensionIndex);
+  const withoutExt = extIdx === -1 ? fileName : fileName.slice(0, extIdx);
 
-  const sanitized = withoutExtension
+  const sanitized = withoutExt
     .normalize("NFKD")
     .replace(/[^\w\s-]/g, "")
     .trim()
@@ -48,9 +38,9 @@ function sanitizeFileName(fileName: string) {
 
 function createStoragePath(fileName: string, extension: string) {
   const baseName = sanitizeFileName(fileName);
-  const identifier = randomUUID().slice(0, 8);
+  const id = randomUUID().slice(0, 8);
 
-  return `${baseName}-${identifier}.${extension}`;
+  return `${baseName}-${id}.${extension}`;
 }
 
 function isSafeStoragePath(path: string) {
@@ -62,12 +52,6 @@ function isSafeStoragePath(path: string) {
   );
 }
 
-function getPublicUrl(path: string) {
-  const bucket = getBucketName();
-
-  return db.storage.from(bucket).getPublicUrl(path).data.publicUrl;
-}
-
 function isImageObject(file: {
   name: string;
   metadata?: Record<string, unknown> | null;
@@ -77,9 +61,7 @@ function isImageObject(file: {
       ? file.metadata.mimetype
       : undefined;
 
-  if (mimeType?.startsWith("image/")) {
-    return true;
-  }
+  if (mimeType?.startsWith("image/")) return true;
 
   return /\.(?:webp|png|jpe?g|gif|avif)$/i.test(file.name);
 }
@@ -108,13 +90,11 @@ function isSupportedImageMetadata(metadata: {
   const format = metadata.format?.toLowerCase();
   const mediaType = metadata.mediaType?.toLowerCase();
 
-  if (isAvifMetadata(metadata)) {
+  if (
+    isAvifMetadata(metadata) ||
+    (format && SUPPORTED_INPUT_FORMATS.has(format))
+  )
     return true;
-  }
-
-  if (format && SUPPORTED_INPUT_FORMATS.has(format)) {
-    return true;
-  }
 
   return Boolean(mediaType && SUPPORTED_MEDIA_TYPES.has(mediaType));
 }
@@ -122,12 +102,16 @@ function isSupportedImageMetadata(metadata: {
 function shouldReadAnimated(metadata: { format?: string; pages?: number }) {
   const format = metadata.format?.toLowerCase();
 
-  if (format !== "gif" && format !== "webp") {
-    return false;
-  }
+  if (format !== "gif" && format !== "webp") return false;
 
   return (metadata.pages ?? 1) > 1;
 }
+
+function getPublicUrl(path: string) {
+  return db.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+}
+
+// actions
 
 async function uploadStorageObject({
   path,
@@ -138,11 +122,9 @@ async function uploadStorageObject({
   buffer: Buffer;
   contentType: string;
 }) {
-  const bucket = getBucketName();
-
   const { error } = await db.storage.from(bucket).upload(path, buffer, {
     contentType,
-    cacheControl: CACHE_CONTROL,
+    cacheControl,
     upsert: false,
   });
 
@@ -153,8 +135,6 @@ async function uploadStorageObject({
 
 export async function getMediaAction() {
   try {
-    const bucket = getBucketName();
-
     let offset = 0;
 
     const objects: Array<{
@@ -167,7 +147,7 @@ export async function getMediaAction() {
 
     while (true) {
       const { data, error } = await db.storage.from(bucket).list("", {
-        limit: PAGE_SIZE,
+        limit: pageSize,
         offset,
         sortBy: {
           column: "created_at",
@@ -184,11 +164,11 @@ export async function getMediaAction() {
 
       objects.push(...data);
 
-      if (data.length < PAGE_SIZE) {
+      if (data.length < pageSize) {
         break;
       }
 
-      offset += PAGE_SIZE;
+      offset += pageSize;
     }
 
     const media = objects
@@ -247,7 +227,7 @@ export async function uploadMediaAction(formData: FormData) {
       } as const;
     }
 
-    if (file.size > MAX_FILE_SIZE) {
+    if (file.size > maxFileSize) {
       return {
         success: false,
         error: `${file.name} exceeds the 12 MB upload limit.`,
@@ -273,7 +253,7 @@ export async function uploadMediaAction(formData: FormData) {
 
     const outputBuffer = await image
       .webp({
-        quality: WEBP_QUALITY,
+        quality: webpQuality,
         effort: 4,
         smartSubsample: true,
 
@@ -330,8 +310,6 @@ export async function deleteMediaAction(path: string) {
         error: "Invalid media path.",
       } as const;
     }
-
-    const bucket = getBucketName();
 
     const { error } = await db.storage.from(bucket).remove([path]);
 

@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import settings from "@/client.settings.json";
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { Modal } from "@/components/modal";
 import { Button } from "@/components/ui/button";
@@ -42,9 +43,7 @@ type BackgroundState = {
   custom: SavedBackground[];
 };
 
-const STORAGE_KEY = "editor.backgrounds.v1";
-const CHANGE_EVENT = "editor-backgrounds-change";
-const MAX_CUSTOM = 24;
+const { changeEventName, maxItem, storageKey } = settings.tools.background;
 
 const DEFAULT_STATE: BackgroundState = {
   selected: "none",
@@ -84,9 +83,9 @@ function parseState(raw: string | null): BackgroundState {
 
     if (!value || typeof value !== "object") return DEFAULT_STATE;
 
-    const record = value as Record<string, unknown>;
-    const custom: SavedBackground[] = [];
-    const ids = new Set<string>();
+    const record = value as Record<string, unknown>,
+      custom: SavedBackground[] = [],
+      ids = new Set<string>();
 
     if (Array.isArray(record.custom)) {
       for (const item of record.custom) {
@@ -110,13 +109,14 @@ function parseState(raw: string | null): BackgroundState {
         if (!url) continue;
 
         ids.add(entry.id);
+
         custom.push({
           id: entry.id,
           name: entry.name.trim().slice(0, 60),
           url,
         });
 
-        if (custom.length === MAX_CUSTOM) break;
+        if (custom.length === maxItem) break;
       }
     }
 
@@ -136,7 +136,7 @@ function parseState(raw: string | null): BackgroundState {
 
 function getSnapshot(): string | null {
   try {
-    return window.localStorage.getItem(STORAGE_KEY);
+    return window.localStorage.getItem(storageKey);
   } catch {
     return null;
   }
@@ -147,17 +147,20 @@ function getServerSnapshot(): null {
 }
 
 function subscribe(listener: () => void) {
+  const controller = new AbortController();
+
   function handleStorage(event: StorageEvent) {
-    if (event.key === STORAGE_KEY || event.key === null) listener();
+    if (event.key === storageKey || event.key === null) listener();
   }
 
-  window.addEventListener("storage", handleStorage);
-  window.addEventListener(CHANGE_EVENT, listener);
+  window.addEventListener("storage", handleStorage, {
+    signal: controller.signal,
+  });
+  window.addEventListener(changeEventName, listener, {
+    signal: controller.signal,
+  });
 
-  return () => {
-    window.removeEventListener("storage", handleStorage);
-    window.removeEventListener(CHANGE_EVENT, listener);
-  };
+  return () => controller.abort();
 }
 
 function useBackgrounds() {
@@ -180,13 +183,14 @@ function useBackgrounds() {
     selected: backgrounds.find((item) => item.id === state.selected) ?? NONE,
   };
 }
+
 function updateBackgrounds(
   update: (current: BackgroundState) => BackgroundState,
 ): boolean {
   try {
-    const current = parseState(window.localStorage.getItem(STORAGE_KEY));
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(update(current)));
-    window.dispatchEvent(new Event(CHANGE_EVENT));
+    const current = parseState(window.localStorage.getItem(storageKey));
+    window.localStorage.setItem(storageKey, JSON.stringify(update(current)));
+    window.dispatchEvent(new Event(changeEventName));
     return true;
   } catch {
     toast.error("Could not save background settings.", {
@@ -250,12 +254,14 @@ function preloadImage(url: string): Promise<void> {
 }
 
 export function EditorBackground() {
-  const { selected } = useBackgrounds();
-  const { id, name, image, url } = selected;
   const [ready, setReady] = useState<Background>(NONE);
   const [shown, setShown] = useState<Background>(NONE);
   const [incoming, setIncoming] = useState<Background | null>(null);
   const [visible, setVisible] = useState(false);
+
+  const {
+    selected: { id, name, image, url },
+  } = useBackgrounds();
 
   useEffect(() => {
     let cancelled = false;
@@ -284,9 +290,8 @@ export function EditorBackground() {
   }, [id, name, image, url]);
 
   useEffect(() => {
-    if (incoming || (ready.id === shown.id && ready.image === shown.image)) {
+    if (incoming || (ready.id === shown.id && ready.image === shown.image))
       return;
-    }
 
     setIncoming(ready);
   }, [incoming, ready, shown]);
@@ -387,9 +392,9 @@ function AddBackground({ onBack }: { onBack: () => void }) {
       const current = parseState(getSnapshot());
       const existing = current.custom.find((item) => item.url === normalized);
 
-      if (!existing && current.custom.length >= MAX_CUSTOM) {
+      if (!existing && current.custom.length >= maxItem) {
         setError(
-          `Remove a custom background before adding more than ${MAX_CUSTOM}.`,
+          `Remove a custom background before adding more than ${maxItem}.`,
         );
         return;
       }
@@ -405,7 +410,7 @@ function AddBackground({ onBack }: { onBack: () => void }) {
 
         if (duplicate) return { ...state, selected: duplicate.id };
 
-        if (state.custom.length >= MAX_CUSTOM) {
+        if (state.custom.length >= maxItem) {
           throw new Error("Custom background limit reached.");
         }
 
@@ -595,7 +600,7 @@ export function Backgrounds({ render, title }: ToolComponentProps) {
 
                       {background.id === "none" && (
                         <span className="absolute inset-0 grid place-items-center text-sm text-muted-foreground">
-                          Original appearance
+                          No Background
                         </span>
                       )}
 

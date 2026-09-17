@@ -17,7 +17,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut";
+import {
+  type KeyboardShortcut,
+  useKeyboardShortcut,
+} from "@/hooks/use-keyboard-shortcut";
+import settings from "@/settings/client";
 
 type MarkdownTogglePluginProps = {
   id: string;
@@ -25,6 +29,9 @@ type MarkdownTogglePluginProps = {
   transformers: Transformer[];
   withUI?: boolean;
 };
+
+const shortcut = settings.shortcuts
+  .toggleMarkdown as unknown as KeyboardShortcut;
 
 function $isMarkdownMode(): boolean {
   const firstChild = $getRoot().getFirstChild();
@@ -45,7 +52,7 @@ export function MarkdownTogglePlugin({
   );
 
   useKeyboardShortcut(
-    ["Control", "m"],
+    shortcut,
     () => handleMarkdownModeChange(!isMarkdownMode),
     {
       allowInEditable: true,

@@ -199,6 +199,7 @@ export function UrlClientDocumentSyncPlugin({
 
   const [editor] = useLexicalComposerContext();
 
+  // checkout scrolltop
   const resetScrollToTop = useCallback(() => {
     if (scrollFrameRef.current !== null) {
       cancelAnimationFrame(scrollFrameRef.current);

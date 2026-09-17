@@ -41,7 +41,7 @@ const COLUMNS = [
   { label: "Published at", className: "min-w-44", skeleton: "w-32" },
 ] as const;
 
-function PostsTableWrapper({ children }: { children: ReactNode }) {
+function Wrapper({ children }: { children: ReactNode }) {
   return (
     <div className="w-full px-4 pb-8 sm:px-6 lg:px-10 lg:pb-16">
       <div className="overflow-hidden rounded-2xl border bg-accent/20 shadow-sm">
@@ -76,20 +76,21 @@ function EditPostTrigger({ disabled }: { disabled: boolean }) {
 }
 
 export function ManagePosts({ render, title }: ToolComponentProps) {
+  const loadedRef = useRef(false);
+  const loadingRef = useRef(false);
+  const mutationRef = useRef(false);
+
   const [confirmation, setConfirmation] = useState(false);
   const [posts, setPosts] = useState<BlogWithoutContent[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
   const [postToDelete, setPostToDelete] = useState<BlogWithoutContent | null>(
     null,
   );
   const [pendingPostId, setPendingPostId] = useState<
     BlogWithoutContent["id"] | null
   >(null);
-  const [isPending, startTransition] = useTransition();
-
-  const loadedRef = useRef(false);
-  const loadingRef = useRef(false);
-  const mutationRef = useRef(false);
 
   async function loadPosts() {
     if (loadedRef.current || loadingRef.current) return;
@@ -152,7 +153,7 @@ export function ManagePosts({ render, title }: ToolComponentProps) {
         title={title}
         render={render}
         finalFocus={false}
-        wrapper={PostsTableWrapper}
+        wrapper={Wrapper}
         onOpenChange={(open) => {
           if (open) void loadPosts();
         }}
@@ -179,8 +180,9 @@ export function ManagePosts({ render, title }: ToolComponentProps) {
             </TableHeader>
             <TableBody>
               {isLoading && !posts.length ? (
-                [1, 2, 3, 4, 5].map((row) => (
-                  <TableRow key={row}>
+                Array.from({ length: 8 }).map((_, idx) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: skeleton list idx stable
+                  <TableRow key={idx}>
                     {COLUMNS.map((column) => (
                       <TableCell key={column.label} className="px-4 py-3">
                         <Skeleton className={cn("h-4", column.skeleton)} />
@@ -324,44 +326,6 @@ export function ManagePosts({ render, title }: ToolComponentProps) {
         variant="destructive"
         disabled={isPending || !postToDelete}
       />
-
-      {/* <AlertDialog
-        open={postToDelete !== null}
-        onOpenChange={(open) => {
-          if (!open && !mutationRef.current) setPostToDelete(null);
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. The post{" "}
-              <span className="font-medium text-foreground">
-                {postToDelete?.title}
-              </span>{" "}
-              will be permanently deleted.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              disabled={isPending || !postToDelete}
-              onClick={(event) => {
-                event.preventDefault();
-                if (postToDelete) handleDelete(postToDelete.id);
-              }}
-              render={<Button type="button" variant="destructive" />}
-            >
-              {isPending ? (
-                <LoaderCircleIcon className="size-4 animate-spin" />
-              ) : (
-                <TrashIcon className="size-4" />
-              )}
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog> */}
     </>
   );
 }

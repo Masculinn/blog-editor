@@ -3,12 +3,17 @@
 import { updateDraftContent } from "@/app/actions/drafts.action";
 import { updatePostContent } from "@/app/actions/posts.action";
 import { serializeMDXAction } from "@/app/actions/serialize.action";
+import { PostReadingTime } from "@/components/blog/post-reading-time";
 import { MDXComponents } from "@/components/mdx/mdx-components";
 import { Button } from "@/components/ui/button";
-import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut";
+import {
+  type KeyboardShortcut,
+  useKeyboardShortcut,
+} from "@/hooks/use-keyboard-shortcut";
 import { useSearchParam } from "@/hooks/use-search-param";
 import { isSerializedMDXWithError } from "@/lib/mdx/isSerializedMDXWithError";
 import type { MDXRecord, SerializedMDXSource } from "@/lib/mdx/serializeMDX";
+import settings from "@/settings/client";
 import { useDocumentSnapshot } from "@/store/document.store";
 import { useSyncStore } from "@/store/sync.store";
 import type { Blog } from "@/types/db.types";
@@ -30,6 +35,8 @@ type ArticleSaveButtonProps = {
   isSaving: boolean;
   onSave: () => Promise<void>;
 };
+
+const shortcut = settings.shortcuts.saveContent as unknown as KeyboardShortcut;
 
 function ArticleSaveButton({
   hasChanges,
@@ -58,7 +65,7 @@ function ArticleSaveButton({
     <Button
       type="button"
       size="lg"
-      className="shrink-0 absolute left-3 top-3"
+      className="shrink-0 left-3 top-3 absolute"
       disabled={disabled}
       variant={syncStatus === "error" ? "destructive" : "default"}
       aria-busy={isBusy}
@@ -299,12 +306,14 @@ function ArticleContentBody({ article, isDraft }: ArticleContentBodyProps) {
     }
   }
 
-  useKeyboardShortcut(["Control", "s"], handleSave, {
+  useKeyboardShortcut(shortcut, handleSave, {
     allowInEditable: true,
     preventDefault: true,
-    stopImmediatePropagation: true,
     stopPropagation: true,
   });
+
+  if (isSerializedMDXWithError(mdxSource))
+    return <ArticleErrorModal {...mdxSource.error} />;
 
   return (
     <>
@@ -313,20 +322,16 @@ function ArticleContentBody({ article, isDraft }: ArticleContentBodyProps) {
         isSaving={isSaving}
         onSave={handleSave}
       />
-
+      <PostReadingTime source={mdxSource.compiledSource} />
       <div className="space-y-6 relative">
-        {isSerializedMDXWithError(mdxSource) ? (
-          <ArticleErrorModal {...mdxSource.error} />
-        ) : (
-          <article className="relative px-8 leading-snug tracking-tight text-blog-muted">
-            <MDXClient
-              compiledSource={mdxSource.compiledSource}
-              frontmatter={mdxSource.frontmatter}
-              scope={mdxSource.scope}
-              components={MDXComponents}
-            />
-          </article>
-        )}
+        <article className="relative px-8 leading-snug tracking-tight text-blog-muted">
+          <MDXClient
+            compiledSource={mdxSource.compiledSource}
+            frontmatter={mdxSource.frontmatter}
+            scope={mdxSource.scope}
+            components={MDXComponents}
+          />
+        </article>
       </div>
     </>
   );

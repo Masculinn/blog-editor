@@ -1,0 +1,11 @@
+{
+  "actions": {
+    "media": {
+      "webpQuality": 80,
+      "maxFileSize": 12582912,
+      "pageSize": 50,
+      "cacheControl": "31536000",
+      "bucket": "banner"
+    }
+  }
+}

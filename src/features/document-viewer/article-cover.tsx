@@ -10,6 +10,16 @@ type Props =
   | Omit<Blog, "content" | "description" | "id">
   | Omit<Draft, "id" | "content" | "description">;
 
+const imagePlaceholder: React.CSSProperties = {
+  backgroundImage: `
+      repeating-linear-gradient(180deg, rgba(255,255,255,0.1) 0 1px, transparent 1px 60px),
+      repeating-linear-gradient(90deg, rgba(255,255,255,0.1) 0 1px, transparent 1px 60px),
+      linear-gradient(#000000, #000000)`,
+  backgroundSize: "cover",
+  backgroundPosition: "center",
+  backgroundRepeat: "no-repeat",
+};
+
 export function ArticleCover({
   banner_image,
   level,
@@ -21,7 +31,7 @@ export function ArticleCover({
       className={cn(
         "md:h-auto md:min-h-80 h-auto w-full",
         "overflow-hidden relative md:p-12 p-6 mb-8",
-        "flex items-center-safe justify-center ",
+        "flex items-center-safe justify-center",
       )}
       tabIndex={-1}
     >
@@ -33,7 +43,7 @@ export function ArticleCover({
           {formatTime(published_at)}
         </time>
       )}
-      {banner_image && (
+      {banner_image ? (
         <Image
           alt={title}
           src={banner_image}
@@ -41,21 +51,17 @@ export function ArticleCover({
           fill
           className="absolute inset-0 object-cover md:object-center size-full -z-10 "
         />
+      ) : (
+        <div
+          className="absolute inset-0 transition-opacity duration-500 ease-in-out motion-reduce:transition-none scale-90"
+          style={imagePlaceholder}
+        />
       )}
       <PostDifficulty
         level={level}
         clasName="z-50 text-xs top-4 right-4 absolute"
       />
       <div className="bg-linear-to-b from-transparent dark:to-80% to-background size-full object-contain absolute inset-0" />
-      {/* {readingTime && (
-        <Badge
-          variant="outline"
-          className="absolute bottom-4 left-4 z-50 font-secondary font-extralight"
-        >
-          <Timer />
-          {Math.ceil(readingTime)} min
-        </Badge>
-      )} */}
     </header>
   );
 }

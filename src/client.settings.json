@@ -1,0 +1,22 @@
+{
+  "tools": {
+    "media": {
+      "maxFileSize": 12582912
+    },
+    "background": {
+      "storageKey": "editor.backgrounds.v1",
+      "changeEventName": "editor-backgrounds-change",
+      "maxItem": 10
+    }
+  },
+  "shortcuts": {
+    "toggleViewer": ["Control", "Shift", "L"],
+    "saveContent": ["Control", "Shift", "S"],
+    "toggleMarkdown": ["Control", "Shift", "M"],
+    "toggleCommandCenter": ["Control", "Shift", "K"]
+  },
+  "readingTime": {
+    "wordsPerMinute": 250,
+    "secondsPerImage": 12
+  }
+}

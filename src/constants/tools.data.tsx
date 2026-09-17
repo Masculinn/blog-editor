@@ -1,8 +1,8 @@
 ﻿import { Backgrounds } from "@/features/tools/background";
 import { CreateDraft } from "@/features/tools/create-draft";
 import { ManageDraft } from "@/features/tools/manage-draft";
+import { ManageMedia } from "@/features/tools/manage-media";
 import { ManagePosts } from "@/features/tools/manage-posts";
-import { MediaLibrary } from "@/features/tools/media-library";
 import { ViewDrafts } from "@/features/tools/view-drafts";
 import { ViewPosts } from "../features/tools/view-posts";
 import type { Tool } from "../types/tools.types";
@@ -64,7 +64,7 @@ export default [
     img: "/assets/command-icons/image-collection.webp",
     title: "Media Library",
     id: "media-library",
-    Component: MediaLibrary,
+    Component: ManageMedia,
     accent: {
       selected:
         "data-[selected=true]:bg-violet-500/10 data-[selected=true]:ring-2 data-[selected=true]:ring-violet-500",
