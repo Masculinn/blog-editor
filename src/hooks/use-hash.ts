@@ -2,9 +2,18 @@
 
 import { useSyncExternalStore } from "react";
 
+const events: Array<keyof WindowEventMap> = ["hashchange", "popstate"];
+
 function subscribe(callback: () => void): () => void {
-  window.addEventListener("hashchange", callback);
-  return () => window.removeEventListener("hashchange", callback);
+  const controller = new AbortController();
+
+  for (const ev of events) {
+    window.addEventListener(ev, callback, {
+      signal: controller.signal,
+    });
+  }
+
+  return () => controller.abort();
 }
 
 function getSnapshot(): string {

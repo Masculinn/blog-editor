@@ -215,9 +215,6 @@ export async function updatePostContent(
     };
   }
 
-  revalidatePath("/");
-  revalidatePath("/", "layout");
-
   return { success: true, data };
 }
 

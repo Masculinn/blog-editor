@@ -1,14 +1,16 @@
 ﻿"use client";
 
 import { PostDifficulty } from "@/components/blog/post-difficulty";
+import { PostReadingTime } from "@/components/blog/post-reading-time";
+import { PostSaveButton } from "@/components/blog/post-save-button";
 import { cn } from "@/lib/utils";
 import type { Blog, Draft } from "@/types/db.types";
 import { formatTime } from "@/utils/formatTime";
 import Image from "next/image";
 
 type Props =
-  | Omit<Blog, "content" | "description" | "id">
-  | Omit<Draft, "id" | "content" | "description">;
+  | Omit<Blog, "content" | "description">
+  | Omit<Draft, "content" | "description">;
 
 const imagePlaceholder: React.CSSProperties = {
   backgroundImage: `
@@ -25,6 +27,7 @@ export function ArticleCover({
   level,
   published_at,
   title,
+  id,
 }: Props) {
   return (
     <header
@@ -39,7 +42,7 @@ export function ArticleCover({
         {title}
       </h1>
       {published_at && (
-        <time className="font-secondary text-xs absolute md:bottom-6 md:right-6 bottom-4 right-4 z-50">
+        <time className="font-secondary text-xs absolute bottom-4 right-4 z-50">
           {formatTime(published_at)}
         </time>
       )}
@@ -57,6 +60,8 @@ export function ArticleCover({
           style={imagePlaceholder}
         />
       )}
+      <PostReadingTime />
+      <PostSaveButton contentId={id} className="z-50" />
       <PostDifficulty
         level={level}
         clasName="z-50 text-xs top-4 right-4 absolute"

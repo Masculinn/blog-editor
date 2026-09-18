@@ -1,4 +1,3 @@
-import { DocumentViewer } from "@/features/document-viewer";
 import { ArticleContent as _ArticleContent } from "@/features/document-viewer/article-content";
 import { ArticleCover as _ArticleCover } from "@/features/document-viewer/article-cover";
 import { Editor as _Editor } from "@/features/editor";
@@ -39,15 +38,15 @@ export default async function Page({ searchParams }: Props) {
         id={postId}
         draft={draft}
         className={cn(
-          "h-full w-7/12 p-2",
+          "h-full w-7/12 p-3",
           isViewer ? "border-y border-l rounded-l-md " : "rounded-md border",
         )}
       />
       {isViewer && postId && (
-        <DocumentViewer className="w-5/12 h-full border rounded-r-md relative bg-background/80 backdrop-blur-md">
+        <div className="overflow-y-scroll scrollbar-custom w-5/12 h-full border rounded-r-md relative bg-background/65 ">
           <ArticleCover id={postId} draft={draft} />
           <ArticleContent id={postId} draft={draft} />
-        </DocumentViewer>
+        </div>
       )}
     </main>
   );

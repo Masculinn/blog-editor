@@ -28,9 +28,10 @@ export async function docToHash(doc: SerializedDocument): Promise<string> {
   const cs = new CompressionStream("gzip");
   const writer = cs.writable.getWriter();
 
+  const { lastSaved, ...docObj } = doc;
   const [, compressed] = await Promise.all([
     writer
-      .write(new TextEncoder().encode(JSON.stringify(doc)))
+      .write(new TextEncoder().encode(JSON.stringify(docObj)))
       .then(() => writer.close()),
     readBytes(cs.readable.getReader()),
   ]);
@@ -45,7 +46,7 @@ export async function docToHash(doc: SerializedDocument): Promise<string> {
 
 export async function docFromHash(
   hash: string,
-): Promise<SerializedDocument | null> {
+): Promise<Omit<SerializedDocument, "lastSaved"> | null> {
   const m = /^#doc=(.*)$/.exec(hash);
   if (!m) return null;
 
@@ -65,9 +66,10 @@ export async function docFromHash(
   ]);
 
   try {
-    return JSON.parse(
-      new TextDecoder().decode(decompressed),
-    ) as SerializedDocument;
+    return JSON.parse(new TextDecoder().decode(decompressed)) as Omit<
+      SerializedDocument,
+      "lastSaved"
+    >;
   } catch {
     return null;
   }

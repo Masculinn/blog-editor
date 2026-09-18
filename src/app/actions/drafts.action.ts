@@ -268,8 +268,6 @@ export async function updateDraftContent(
     };
   }
 
-  revalidatePath("/");
-
   return { success: true, data };
 }
 

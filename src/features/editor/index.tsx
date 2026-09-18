@@ -161,7 +161,7 @@ export function Editor({
   const editorExtension = useMemo(
     () =>
       defineExtension({
-        name: "justcode-sessions-blog-editor",
+        name: "blog-editor",
         namespace: "Editor",
         theme: editorTheme,
 
@@ -286,8 +286,8 @@ export function Editor({
               >
                 <ContentEditable
                   placeholder={PLACEHOLDER}
-                  className="p-4 size-full selection:bg-primary/50 selection:text-foreground"
-                  placeholderClassName="top-4 left-4"
+                  className="px-4 py-8 size-full selection:bg-primary/50 selection:text-foreground"
+                  placeholderClassName="top-8 left-4"
                 />
               </div>
 

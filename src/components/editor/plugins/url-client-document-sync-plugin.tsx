@@ -9,6 +9,7 @@ import { useSyncStore, type SyncStatus } from "@/store/sync.store";
 import {
   editorStateFromSerializedDocument,
   serializedDocumentFromEditorState,
+  type SerializedDocument,
 } from "@lexical/file";
 import {
   $convertFromMarkdownString,
@@ -218,9 +219,7 @@ export function UrlClientDocumentSyncPlugin({
 
   const commitEditorState = useCallback(
     async (editorState: EditorState) => {
-      if (!initializedRef.current) {
-        return;
-      }
+      if (!initializedRef.current) return;
 
       const writeId = ++writeIdRef.current;
 
@@ -231,9 +230,7 @@ export function UrlClientDocumentSyncPlugin({
           shouldPreserveNewLinesInMarkdown,
         );
 
-        if (!initializedRef.current || writeId !== writeIdRef.current) {
-          return;
-        }
+        if (!initializedRef.current || writeId !== writeIdRef.current) return;
 
         const url =
           window.location.pathname + window.location.search + snapshot.hash;
@@ -244,10 +241,7 @@ export function UrlClientDocumentSyncPlugin({
 
         setSyncStatus("synced");
       } catch {
-        if (!initializedRef.current || writeId !== writeIdRef.current) {
-          return;
-        }
-
+        if (!initializedRef.current || writeId !== writeIdRef.current) return;
         setSyncStatus("error");
       }
     },
@@ -345,7 +339,7 @@ export function UrlClientDocumentSyncPlugin({
             if (document?.source === "editor") {
               const nextEditorState = editorStateFromSerializedDocument(
                 editor,
-                document,
+                document as SerializedDocument,
               );
 
               editor.setEditorState(nextEditorState, {

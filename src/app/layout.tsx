@@ -48,7 +48,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="h-screen min-h-full w-full font-primary">
         {children}
-        <Toaster richColors />
+        <Toaster richColors theme="dark" position="top-center" />
       </body>
     </html>
   );

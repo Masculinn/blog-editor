@@ -45,6 +45,17 @@ type StaticProps = Partial<Omit<Draft, "content">> &
 
 type Props = InteractiveDraftProps | InteractiveBlogProps | StaticProps;
 
+const showToast = ({
+  isDraft,
+  title,
+}: {
+  isDraft?: boolean;
+  title?: string;
+}) => {
+  toast(`Now viewing ${isDraft ? "draft" : "post"}`, {
+    description: title ? `Title: ${title}` : null,
+  });
+};
 export function PostCard(props: Props) {
   const router = useRouter();
   const { getSearchParamsHref } = useSearchParam();
@@ -92,6 +103,7 @@ export function PostCard(props: Props) {
             loading="lazy"
             fetchPriority="auto"
             src={banner_image}
+            sizes="auto"
             alt={title ?? "Post banner"}
             className="absolute inset-0 z-0 size-full object-cover object-center"
           />
@@ -160,11 +172,7 @@ export function PostCard(props: Props) {
       return;
     }
 
-    toast.info(`Viewing ${props.draft ? "draft" : "post"}...`, {
-      description: title,
-      position: "top-right",
-    });
-
+    showToast({ isDraft: props.draft, title });
     props.close();
   };
 
@@ -177,9 +185,7 @@ export function PostCard(props: Props) {
 
     event.preventDefault();
 
-    toast.info(`Now viewing ${props.draft ? "draft" : "post"}...`, {
-      description: `Title: ${title}`,
-    });
+    showToast({ isDraft: props.draft, title });
 
     props.close();
     router.push(href);

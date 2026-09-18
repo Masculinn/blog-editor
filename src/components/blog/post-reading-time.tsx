@@ -1,18 +1,33 @@
 ﻿"use client";
 
+import { cn } from "@/lib/utils";
 import settings from "@/settings/client";
+import { useDocumentSnapshot } from "@/store/document.store";
+import { useSyncStore } from "@/store/sync.store";
 import { TimerIcon } from "lucide-react";
 import { Badge } from "../ui/badge";
+import { Spinner } from "../ui/spinner";
 
-export function PostReadingTime({ source }: { source: string }) {
-  const readingTime = getReadingTime(source);
+export function PostReadingTime() {
+  const isPending = useSyncStore(({ syncStatus }) => syncStatus) !== "synced";
+  const snapshot = useDocumentSnapshot();
+
+  const source = snapshot.hash.startsWith("#doc=") ? snapshot.source : null;
+  const readingTime = source ? getReadingTime(source) : 0;
+
+  const Icon = isPending ? Spinner : TimerIcon;
   return (
     <Badge
-      variant="outline"
-      className="absolute top-70.5 left-4 z-50 font-secondary font-extralight"
+      variant={isPending ? "primary" : "outline"}
+      aria-busy={isPending}
+      aria-disabled={isPending}
+      className={cn(
+        "absolute bottom-4 left-4 z-50",
+        !isPending && "font-secondary font-extralight",
+      )}
     >
-      <TimerIcon />
-      {Math.ceil(readingTime)} min
+      <Icon />
+      {isPending ? "Calculating" : `${Math.ceil(readingTime)} min`}
     </Badge>
   );
 }
@@ -74,10 +89,6 @@ function countWords(text: string): number {
   return text.match(WORD_RE)?.length ?? 0;
 }
 
-/*
-    gets the total reading time of undergoing markdown content
-    will be delayed in the upstream
-*/
 function getReadingTime(content: string): number {
   const raw = (content ?? "").toString();
   if (!raw.trim()) return 0;

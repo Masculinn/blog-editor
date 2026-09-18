@@ -11,7 +11,7 @@
   },
   "shortcuts": {
     "toggleViewer": ["Control", "Shift", "L"],
-    "saveContent": ["Control", "Shift", "S"],
+    "saveContent": ["Control", "I"],
     "toggleMarkdown": ["Control", "Shift", "M"],
     "toggleCommandCenter": ["Control", "Shift", "K"]
   },

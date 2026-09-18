@@ -1,23 +1,12 @@
 ﻿"use client";
 
-import { updateDraftContent } from "@/app/actions/drafts.action";
-import { updatePostContent } from "@/app/actions/posts.action";
 import { serializeMDXAction } from "@/app/actions/serialize.action";
-import { PostReadingTime } from "@/components/blog/post-reading-time";
 import { MDXComponents } from "@/components/mdx/mdx-components";
-import { Button } from "@/components/ui/button";
-import {
-  type KeyboardShortcut,
-  useKeyboardShortcut,
-} from "@/hooks/use-keyboard-shortcut";
 import { useSearchParam } from "@/hooks/use-search-param";
 import { isSerializedMDXWithError } from "@/lib/mdx/isSerializedMDXWithError";
 import type { MDXRecord, SerializedMDXSource } from "@/lib/mdx/serializeMDX";
-import settings from "@/settings/client";
 import { useDocumentSnapshot } from "@/store/document.store";
-import { useSyncStore } from "@/store/sync.store";
 import type { Blog } from "@/types/db.types";
-import { LoaderCircleIcon, SaveIcon, ShieldAlertIcon } from "lucide-react";
 import { MDXClient } from "next-mdx-remote-client";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -27,62 +16,7 @@ type Props = Blog & SerializedMDXSource;
 
 type ArticleContentBodyProps = {
   article: Props;
-  isDraft: boolean;
 };
-
-type ArticleSaveButtonProps = {
-  hasChanges: boolean;
-  isSaving: boolean;
-  onSave: () => Promise<void>;
-};
-
-const shortcut = settings.shortcuts.saveContent as unknown as KeyboardShortcut;
-
-function ArticleSaveButton({
-  hasChanges,
-  isSaving,
-  onSave,
-}: ArticleSaveButtonProps) {
-  const syncStatus = useSyncStore((state) => state.syncStatus);
-
-  const isSyncPending = syncStatus === "loading" || syncStatus === "syncing";
-
-  const isBusy = isSaving || isSyncPending;
-
-  const disabled = syncStatus !== "synced" || !hasChanges || isSaving;
-
-  const label = isSaving
-    ? "Saving…"
-    : syncStatus === "loading"
-      ? "Loading…"
-      : syncStatus === "syncing"
-        ? "Syncing…"
-        : syncStatus === "error"
-          ? "Sync failed"
-          : "Save Changes";
-
-  return (
-    <Button
-      type="button"
-      size="lg"
-      className="shrink-0 left-3 top-3 absolute"
-      disabled={disabled}
-      variant={syncStatus === "error" ? "destructive" : "default"}
-      aria-busy={isBusy}
-      onClick={onSave}
-    >
-      {isBusy ? (
-        <LoaderCircleIcon className="size-4 animate-spin" />
-      ) : syncStatus === "error" ? (
-        <ShieldAlertIcon className="size-4" />
-      ) : (
-        <SaveIcon className="size-4" />
-      )}
-
-      {label}
-    </Button>
-  );
-}
 
 function getInitialMdxSource(props: Props): SerializedMDXSource {
   if (isSerializedMDXWithError(props)) {
@@ -109,12 +43,11 @@ export function ArticleContent(props: Props) {
     <ArticleContentBody
       key={JSON.stringify([isDraft, props.id, props.content])}
       article={props}
-      isDraft={isDraft}
     />
   );
 }
 
-function ArticleContentBody({ article, isDraft }: ArticleContentBodyProps) {
+function ArticleContentBody({ article }: ArticleContentBodyProps) {
   const {
     banner_image,
     description,
@@ -126,6 +59,8 @@ function ArticleContentBody({ article, isDraft }: ArticleContentBodyProps) {
     content,
   } = article;
 
+  const requestIdRef = useRef(0);
+
   const [initialMdxSource] = useState<SerializedMDXSource>(() =>
     getInitialMdxSource(article),
   );
@@ -133,64 +68,20 @@ function ArticleContentBody({ article, isDraft }: ArticleContentBodyProps) {
   const [mdxSource, setMdxSource] =
     useState<SerializedMDXSource>(initialMdxSource);
 
-  const [savedContent, setSavedContent] = useState(content);
-  const [currentHash, setCurrentHash] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
-
-  const requestIdRef = useRef(0);
-  const savingRef = useRef(false);
-
   const snapshot = useDocumentSnapshot();
+  const source = snapshot.hash.startsWith("#doc=") ? snapshot.source : null;
 
-  useEffect(() => {
-    const controller = new AbortController();
-
-    function updateCurrentHash() {
-      setCurrentHash(window.location.hash);
-    }
-
-    updateCurrentHash();
-
-    window.addEventListener("hashchange", updateCurrentHash, {
-      signal: controller.signal,
-    });
-
-    window.addEventListener("popstate", updateCurrentHash, {
-      signal: controller.signal,
-    });
-
-    return () => {
-      controller.abort();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (snapshot.hash === window.location.hash) {
-      setCurrentHash(snapshot.hash);
-    }
-  }, [snapshot.hash]);
-
-  const hasDocumentHash = currentHash.startsWith("#doc=");
-
-  const source =
-    hasDocumentHash && snapshot.hash === currentHash ? snapshot.source : null;
-
-  const hasChanges = source !== null && source !== (savedContent ?? "");
-
+  if (source) {
+    console.log(JSON.stringify(snapshot.source, null, 2));
+  }
   useEffect(() => {
     const requestId = ++requestIdRef.current;
 
-    if (source === null) {
-      return;
-    }
-
-    if (source === (content ?? "")) {
-      setMdxSource(initialMdxSource);
-      return;
-    }
+    if (source === null) return;
+    if (source === (content ?? "")) return setMdxSource(initialMdxSource);
 
     const timeout = window.setTimeout(() => {
-      void (async () => {
+      (async () => {
         const scope: MDXRecord = {
           banner_image,
           description,
@@ -204,15 +95,11 @@ function ArticleContentBody({ article, isDraft }: ArticleContentBodyProps) {
         try {
           const result = await serializeMDXAction(source, scope);
 
-          if (requestId !== requestIdRef.current) {
-            return;
-          }
+          if (requestId !== requestIdRef.current) return;
 
           setMdxSource(result);
         } catch (error) {
-          if (requestId !== requestIdRef.current) {
-            return;
-          }
+          if (requestId !== requestIdRef.current) return;
 
           toast.error("Failed to serialize live MDX");
           console.error("Failed to serialize live MDX:", error);
@@ -240,99 +127,18 @@ function ArticleContentBody({ article, isDraft }: ArticleContentBodyProps) {
     title,
   ]);
 
-  async function handleSave() {
-    const syncStatus = useSyncStore.getState().syncStatus;
-
-    if (syncStatus !== "synced") {
-      if (syncStatus === "error") {
-        toast.error("Cannot save while document sync has failed");
-      } else {
-        toast.info("Wait for the document to finish syncing");
-      }
-
-      return;
-    }
-
-    if (savingRef.current) {
-      return;
-    }
-
-    if (
-      source === null ||
-      !hasChanges ||
-      window.location.hash !== snapshot.hash
-    ) {
-      toast.info(`No changes to update the ${isDraft ? "draft" : "post"}`);
-      return;
-    }
-
-    const submittedContent = source;
-
-    savingRef.current = true;
-    setIsSaving(true);
-
-    try {
-      const updateContent = isDraft ? updateDraftContent : updatePostContent;
-
-      const result = await updateContent(id, submittedContent);
-
-      if (!result.success) {
-        toast.error(
-          isDraft ? "Failed to update draft" : "Failed to update post",
-          {
-            description: result.error,
-          },
-        );
-
-        return;
-      }
-
-      setSavedContent(result.data.content ?? submittedContent);
-
-      toast.success(isDraft ? "Draft content updated" : "Post content updated");
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "An unexpected error occurred. Please try again.";
-
-      toast.error("Failed to save content", {
-        description: message,
-        duration: 5000,
-      });
-    } finally {
-      savingRef.current = false;
-      setIsSaving(false);
-    }
+  if (isSerializedMDXWithError(mdxSource)) {
+    return <ArticleErrorModal {...mdxSource.error} />;
   }
 
-  useKeyboardShortcut(shortcut, handleSave, {
-    allowInEditable: true,
-    preventDefault: true,
-    stopPropagation: true,
-  });
-
-  if (isSerializedMDXWithError(mdxSource))
-    return <ArticleErrorModal {...mdxSource.error} />;
-
   return (
-    <>
-      <ArticleSaveButton
-        hasChanges={hasChanges}
-        isSaving={isSaving}
-        onSave={handleSave}
+    <article className="relative px-8 leading-snug tracking-tight text-blog-muted">
+      <MDXClient
+        compiledSource={mdxSource.compiledSource}
+        frontmatter={mdxSource.frontmatter}
+        scope={mdxSource.scope}
+        components={MDXComponents}
       />
-      <PostReadingTime source={mdxSource.compiledSource} />
-      <div className="space-y-6 relative">
-        <article className="relative px-8 leading-snug tracking-tight text-blog-muted">
-          <MDXClient
-            compiledSource={mdxSource.compiledSource}
-            frontmatter={mdxSource.frontmatter}
-            scope={mdxSource.scope}
-            components={MDXComponents}
-          />
-        </article>
-      </div>
-    </>
+    </article>
   );
 }
